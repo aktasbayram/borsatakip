@@ -49,9 +49,19 @@ export default function SymbolPage() {
         const loadPortfolios = async () => {
             try {
                 const res = await axios.get('/api/portfolio');
-                setPortfolios(res.data);
                 if (res.data.length > 0) {
+                    setPortfolios(res.data);
                     setSelectedPortfolioId(res.data[0].id);
+                } else {
+                    // Hiç portföy yoksa otomatik "Ana Portföy" oluştur
+                    try {
+                        const createRes = await axios.post('/api/portfolio/manage', { name: 'Ana Portföy' });
+                        const newPortfolio = createRes.data;
+                        setPortfolios([newPortfolio]);
+                        setSelectedPortfolioId(newPortfolio.id);
+                    } catch (createError) {
+                        console.error('Failed to create default portfolio', createError);
+                    }
                 }
             } catch (e) {
                 console.error('Failed to load portfolios', e);
