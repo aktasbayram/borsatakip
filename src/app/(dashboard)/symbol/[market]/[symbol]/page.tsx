@@ -4,7 +4,11 @@ import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
-import { PriceChart } from '@/components/charts/PriceChart';
+import TradingViewWidget from '@/components/TradingViewWidget';
+
+// ... inside the component ...
+
+
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSnackbar } from 'notistack';
@@ -12,6 +16,7 @@ import { Input } from '@/components/ui/input';
 
 import { CreateAlertDialog } from '@/components/alerts/CreateAlertDialog';
 import { TechnicalAnalysis } from '@/components/features/TechnicalAnalysis';
+import { AIAnalysisModal } from '@/components/ai/AIAnalysisModal';
 
 export default function SymbolPage() {
     const params = useParams();
@@ -24,6 +29,9 @@ export default function SymbolPage() {
     const [range, setRange] = useState('1M');
     const [kapNews, setKapNews] = useState<any[]>([]);
     const [selectedNews, setSelectedNews] = useState<any>(null);
+
+    // AI Analysis
+    const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
     // Trade Form
     const [tradeType, setTradeType] = useState<'BUY' | 'SELL'>('BUY');
@@ -136,6 +144,8 @@ export default function SymbolPage() {
         }
     };
 
+    // ... (rest of useEffects) ...
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -145,6 +155,15 @@ export default function SymbolPage() {
                 </div>
                 {quote && (
                     <div className="flex items-center gap-4">
+                        <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => setIsAIModalOpen(true)}
+                            className="hidden md:flex gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white border-0 shadow-lg shadow-indigo-500/20"
+                        >
+                            <span>✨</span>
+                            AI Analiz
+                        </Button>
                         <Button
                             variant="outline"
                             size="sm"
@@ -156,17 +175,27 @@ export default function SymbolPage() {
                             </svg>
                             Alarm Kur
                         </Button>
-                        {/* Mobile Alert Button */}
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => setIsAlertOpen(true)}
-                            className="md:hidden"
-                        >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                            </svg>
-                        </Button>
+                        {/* Mobile Buttons */}
+                        <div className="flex md:hidden gap-2">
+                            <Button
+                                variant="primary"
+                                size="icon"
+                                onClick={() => setIsAIModalOpen(true)}
+                                className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white border-0"
+                            >
+                                <span>✨</span>
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => setIsAlertOpen(true)}
+                            >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                </svg>
+                            </Button>
+                        </div>
+
                         <div className="text-right">
                             <div className="text-3xl font-bold">{quote.price.toFixed(2)}</div>
                             <div className={quote.change >= 0 ? 'text-green-600' : 'text-red-600'}>
@@ -177,6 +206,21 @@ export default function SymbolPage() {
                 )}
             </div>
 
+            <AIAnalysisModal
+                open={isAIModalOpen}
+                onClose={() => setIsAIModalOpen(false)}
+                type="STOCK"
+                title={`${symbol} Finansal Analizi`}
+                data={{
+                    symbol,
+                    market,
+                    price: quote?.price,
+                    change: quote?.changePercent,
+                    candles: candles.slice(-30), // Son 30 mum
+                    news: kapNews.slice(0, 3) // Son 3 haber
+                }}
+            />
+
             <CreateAlertDialog
                 open={isAlertOpen}
                 onClose={() => setIsAlertOpen(false)}
@@ -184,23 +228,8 @@ export default function SymbolPage() {
                 defaultMarket={market}
             />
 
-            <div className="h-[400px] w-full bg-white dark:bg-gray-800 rounded-lg p-4 shadow">
-                <div className="flex gap-2 mb-4">
-                    {['1D', '1W', '1M', '3M', '1Y'].map(r => (
-                        <button
-                            key={r}
-                            onClick={() => setRange(r)}
-                            className={`px-3 py-1 rounded text-sm ${range === r ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-700'}`}
-                        >
-                            {r}
-                        </button>
-                    ))}
-                </div>
-                {candles.length > 0 ? (
-                    <PriceChart data={candles} />
-                ) : (
-                    <div className="h-full flex items-center justify-center">Grafik yükleniyor veya veri yok</div>
-                )}
+            <div className="h-[600px] w-full bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden relative">
+                <TradingViewWidget symbol={symbol} height={600} />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

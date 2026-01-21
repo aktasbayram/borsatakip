@@ -11,9 +11,12 @@ export async function GET(request: Request) {
     }
 
     try {
+        console.log(`API Request: Symbol=${symbol}, Market=${market}`);
         const quote = await MarketService.getQuote(symbol, market);
+        console.log(`API Response for ${symbol}:`, quote);
         return NextResponse.json(quote);
-    } catch (error) {
-        return NextResponse.json({ error: 'Failed to fetch quote' }, { status: 500 });
+    } catch (error: any) { // Type as any to access message safely
+        console.error(`API Error for ${symbol}:`, error);
+        return NextResponse.json({ error: 'Failed to fetch quote', details: error.message }, { status: 500 });
     }
 }

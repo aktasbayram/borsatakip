@@ -8,6 +8,7 @@ import { PortfolioAllocationChart } from '@/components/charts/PortfolioAllocatio
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PortfolioAnalysis } from '@/components/features/PortfolioAnalysis';
+import { AIAnalysisModal } from '@/components/ai/AIAnalysisModal';
 
 const Trash2 = ({ size = 18, className = '' }: { size?: number; className?: string }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
@@ -56,6 +57,9 @@ export default function PortfolioPage() {
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [newPortfolioName, setNewPortfolioName] = useState('');
     const [createLoading, setCreateLoading] = useState(false);
+
+    // AI Analysis
+    const [isAIModalOpen, setIsAIModalOpen] = useState(false);
 
     // Edit trade modal state
     const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
@@ -232,6 +236,8 @@ export default function PortfolioPage() {
                 <h1 className="text-3xl font-bold">Portföy</h1>
 
                 <div className="flex items-center gap-2 w-full md:w-auto">
+
+                    {/* Portfolio Select */}
                     <select
                         value={selectedPortfolioId}
                         onChange={(e) => setSelectedPortfolioId(e.target.value)}
@@ -245,6 +251,17 @@ export default function PortfolioPage() {
                     <Button onClick={() => setIsCreateModalOpen(true)} size="sm" className="h-10">
                         <Plus className="mr-2" size={16} /> Yeni
                     </Button>
+
+                    {portfolios.length > 0 && (
+                        <Button
+                            variant="primary"
+                            size="sm"
+                            className="h-10 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white border-0 shadow-lg shadow-indigo-500/20"
+                            onClick={() => setIsAIModalOpen(true)}
+                        >
+                            <span>✨</span> AI Yorumla
+                        </Button>
+                    )}
 
                     {portfolios.length > 0 && portfolios.length > 1 && ( // Only show delete if > 1 or generally allowed? Let's allow deleting even the last one if we want empty state, but usually keep one.
                         <Button
@@ -373,6 +390,23 @@ export default function PortfolioPage() {
                             </table>
                         </div>
                     </Card>
+
+                    <AIAnalysisModal
+                        open={isAIModalOpen}
+                        onClose={() => setIsAIModalOpen(false)}
+                        type="PORTFOLIO"
+                        title={`${selectedPortfolio?.name} Genel Analizi`}
+                        data={{
+                            name: selectedPortfolio?.name,
+                            totalValue: totalValue,
+                            items: holdings.map(h => ({
+                                symbol: h.symbol,
+                                quantity: h.quantity,
+                                value: h.value,
+                                profitPercent: (h.profit / h.value) * 100
+                            }))
+                        }}
+                    />
                 </>
             )}
 

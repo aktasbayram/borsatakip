@@ -1,132 +1,237 @@
+
 import axios from 'axios';
+import * as cheerio from 'cheerio';
 import { MarketDataProvider, MarketQuote, MarketCandle, SymbolSearchResult } from './provider';
 import { marketCache } from './cache';
 
-
 export class YahooProvider implements MarketDataProvider {
+    // Mapping for common symbols to Google Finance format
+    // Google format: SYMBOL:MARKET (e.g. GARAN:IST)
     private SPECIAL_SYMBOLS: Record<string, string> = {
-        'XAGUSD': 'XAGUSD=X', // Silver
-        'XAGUS': 'XAGUSD=X',  // Handle common typo
-        'XAUUSD': 'XAUUSD=X', // Gold
+        'GUMUS': 'XAGUSD',
+        'XAGUSD': 'XAGUSD',
+        'XAUUSD': 'XAUUSD',
+        'USDTRY': 'USD-TRY', // Fixed: Google uses USD-TRY
+        'EURTRY': 'EUR-TRY', // Fixed: Google uses EUR-TRY
         'BTC': 'BTC-USD',
         'ETH': 'ETH-USD',
-        'USDT': 'USDT-USD'
+        'USDTRY=X': 'USD-TRY',
+        'EURTRY=X': 'EUR-TRY',
+        'XAUUSD=X': 'XAUUSD',
+        // Indices - These might still be problematic if Google blocks them or uses different DOM
+        'XU100': 'XU100:INDEXBIST',
+        'XU030': 'XU030:INDEXBIST'
     };
 
     private normalizeSymbol(symbol: string): string {
-        const upperSymbol = symbol.toUpperCase();
+        const upper = symbol.toUpperCase();
 
-        // Check special map first
-        if (this.SPECIAL_SYMBOLS[upperSymbol]) {
-            return this.SPECIAL_SYMBOLS[upperSymbol];
+        // Check special map first (Exact match)
+        if (this.SPECIAL_SYMBOLS[upper]) {
+            return this.SPECIAL_SYMBOLS[upper];
+        }
+        // Check special map with clean symbol (removing .IS)
+        const cleanSymbol = upper.replace('.IS', '');
+        if (this.SPECIAL_SYMBOLS[cleanSymbol]) {
+            return this.SPECIAL_SYMBOLS[cleanSymbol];
         }
 
-        // If it already has a suffix or is a special symbol (like currencies =X), leave it
-        if (symbol.includes('.') || symbol.includes('=') || symbol.includes('-')) {
-            return symbol;
+        // Handle BIST
+        if (upper.endsWith('.IS')) {
+            return `${upper.replace('.IS', '')}:IST`;
         }
-        // Default to BIST
-        return `${upperSymbol}.IS`;
+
+        // Default BIST assumption if no suffix and 4-5 chars
+        if (!upper.includes(':') && !upper.includes('-')) {
+            return `${upper}:IST`;
+        }
+
+        return upper;
     }
 
     async getQuote(symbol: string): Promise<MarketQuote> {
-        const yahooSymbol = this.normalizeSymbol(symbol);
-        const cacheKey = `quote:BIST:${symbol}`;
+        // Cache Logic
+        const cacheKey = `quote:GF:${symbol}`;
         const cached = marketCache.get<MarketQuote>(cacheKey);
         if (cached) return cached;
 
+        const googleSymbol = this.normalizeSymbol(symbol);
+        const url = `https://www.google.com/finance/quote/${googleSymbol}`;
+
         try {
-            // Unofficial API endpoint
-            console.log(`Fetching Yahoo quote for: ${yahooSymbol}`);
-            const response = await axios.get(`https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}`, {
-                params: { interval: '1m', range: '1d' },
+            // Priority 1: Google Finance Scraping (Best for RT price)
+            console.log(`Scraping Google Finance: ${url}`);
+            const response = await axios.get(url, {
                 headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-                }
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                    'Accept-Language': 'en-US,en;q=0.9'
+                },
+                timeout: 5000
             });
 
-            const result = response.data.chart.result[0];
-            const meta = result.meta;
-            const quote = result.indicators.quote[0];
-            const items = quote.close;
-            const price = items[items.length - 1] || meta.regularMarketPrice;
-            const prevClose = meta.chartPreviousClose;
+            const $ = cheerio.load(response.data);
+            let priceText = $('.YMlKec.fxKbKc').first().text();
+            if (!priceText) priceText = $('[data-last-price]').first().attr('data-last-price') || '0';
+
+            // Cleanup price text
+            let cleanPrice = priceText.replace('₺', '').replace('$', '').trim();
+            if (cleanPrice.includes(',') && !cleanPrice.includes('.')) {
+                cleanPrice = cleanPrice.replace(',', '.');
+            } else if (cleanPrice.includes('.') && cleanPrice.includes(',')) {
+                cleanPrice = cleanPrice.replace('.', '').replace(',', '.');
+            } else if (cleanPrice.includes(',')) {
+                cleanPrice = cleanPrice.replace(',', '');
+            }
+
+            let price = parseFloat(cleanPrice);
+
+            // If Google fails (e.g. for Indices like XU100 that return empty), TRY YAHOO BACKUP
+            if (isNaN(price) || price === 0) {
+                console.warn(`Google scrape failed for ${symbol}, trying Yahoo Backup...`);
+                return this.getQuoteFromYahooDirect(symbol);
+            }
+
+            let changePercentText = $('.JwB6zf').first().text();
+            let changePercent = parseFloat(changePercentText.replace('%', '').replace('+', '').trim()) || 0;
+            if (changePercentText.includes('-') && changePercent > 0) changePercent = -changePercent;
+
+            const prevClose = price / (1 + changePercent / 100);
+            const change = price - prevClose;
 
             const marketQuote: MarketQuote = {
-                symbol: symbol, // Return clean symbol
+                symbol: symbol,
                 price: price,
-                change: price - prevClose,
-                changePercent: ((price - prevClose) / prevClose) * 100,
+                change: change,
+                changePercent: changePercent,
                 currency: 'TRY',
                 market: 'BIST',
                 timestamp: Date.now(),
             };
 
-            marketCache.set(cacheKey, marketQuote, 30);
+            marketCache.set(cacheKey, marketQuote, 60);
             return marketQuote;
-        } catch (error) {
-            console.error('Yahoo quote error:', error);
-            throw new Error('Failed to fetch quote from Yahoo');
+
+        } catch (error: any) {
+            console.error(`Google Finance scrape error for ${symbol}:`, error.message);
+            // Fallback to Yahoo Direct if Google completely errors out
+            try {
+                return await this.getQuoteFromYahooDirect(symbol);
+            } catch (yahooError) {
+                console.error("Yahoo Backup also failed:", yahooError);
+                return {
+                    symbol: symbol,
+                    price: 0,
+                    change: 0,
+                    changePercent: 0,
+                    currency: 'TRY',
+                    market: 'BIST',
+                    timestamp: Date.now(),
+                };
+            }
         }
     }
 
+    // Backup method using direct Yahoo API (lightweight)
+    private async getQuoteFromYahooDirect(symbol: string): Promise<MarketQuote> {
+        // Map to Yahoo Symbol
+        let yahooSymbol = symbol;
+        if (symbol === 'XU100') yahooSymbol = 'XU100.IS';
+        if (symbol === 'XU030') yahooSymbol = 'XU030.IS';
+        if (symbol === 'USDTRY') yahooSymbol = 'USDTRY=X';
+        if (symbol === 'EURTRY') yahooSymbol = 'EURTRY=X';
+        if (!yahooSymbol.includes('=') && !yahooSymbol.includes('.') && !yahooSymbol.includes('-')) yahooSymbol += '.IS';
+
+        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?interval=1d&range=1d`;
+        console.log(`Fetching Yahoo Direct for ${symbol}: ${url}`);
+
+        const response = await axios.get(url, {
+            headers: { 'User-Agent': 'Mozilla/5.0' }
+        });
+
+        const result = response.data.chart.result[0];
+        const meta = result.meta;
+        const quote = result.indicators.quote[0]; // Could use close price
+
+        const price = meta.regularMarketPrice;
+        const prevClose = meta.chartPreviousClose;
+        const change = price - prevClose;
+        const changePercent = (change / prevClose) * 100;
+
+        return {
+            symbol: symbol,
+            price: price,
+            change: change,
+            changePercent: changePercent,
+            currency: meta.currency,
+            market: 'BIST',
+            timestamp: Date.now()
+        };
+    }
+
     async getCandles(symbol: string, range: '1D' | '1W' | '1M' | '3M' | '1Y'): Promise<MarketCandle[]> {
-        const yahooSymbol = this.normalizeSymbol(symbol);
-        const cacheKey = `candles:BIST:${symbol}:${range}`;
+        const cacheKey = `candles:YD:${symbol}:${range}`;
         const cached = marketCache.get<MarketCandle[]>(cacheKey);
         if (cached) return cached;
 
-        let interval = '1d';
-        let rangeParam = '1mo';
+        // Map to Yahoo Symbol
+        let yahooSymbol = symbol;
+        if (symbol === 'XU100') yahooSymbol = 'XU100.IS';
+        if (symbol === 'XU030') yahooSymbol = 'XU030.IS';
+        if (symbol === 'USDTRY') yahooSymbol = 'USDTRY=X';
+        if (symbol === 'EURTRY') yahooSymbol = 'EURTRY=X';
+        if (symbol === 'XAUUSD') yahooSymbol = 'GC=F';
+        if (!yahooSymbol.includes('=') && !yahooSymbol.includes('.') && !yahooSymbol.includes('-')) yahooSymbol += '.IS';
+
+        let yahooRange = '1d';
+        let yahooInterval = '15m';
 
         switch (range) {
-            case '1D': interval = '5m'; rangeParam = '1d'; break;
-            case '1W': interval = '1h'; rangeParam = '5d'; break;
-            case '1M': interval = '1d'; rangeParam = '1mo'; break;
-            case '3M': interval = '1d'; rangeParam = '3mo'; break;
-            case '1Y': interval = '1wk'; rangeParam = '1y'; break;
+            case '1D': yahooRange = '1d'; yahooInterval = '5m'; break;
+            case '1W': yahooRange = '5d'; yahooInterval = '15m'; break;
+            case '1M': yahooRange = '1mo'; yahooInterval = '1d'; break;
+            case '3M': yahooRange = '3mo'; yahooInterval = '1d'; break;
+            case '1Y': yahooRange = '1y'; yahooInterval = '1wk'; break;
         }
 
+        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?interval=${yahooInterval}&range=${yahooRange}`;
+
         try {
-            const response = await axios.get(`https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}`, {
-                params: { interval, range: rangeParam }
+            console.log(`Fetching Candles Direct: ${url}`);
+            const response = await axios.get(url, {
+                headers: { 'User-Agent': 'Mozilla/5.0' }
             });
 
             const result = response.data.chart.result[0];
-            const timestamp = result.timestamp;
-            const quote = result.indicators.quote[0];
+            const timestamps = result.timestamp;
+            const quotes = result.indicators.quote[0];
+
+            if (!timestamps || !quotes) return [];
 
             const candles: MarketCandle[] = [];
 
-            if (timestamp && quote) {
-                timestamp.forEach((t: number, i: number) => {
-                    if (quote.open[i] !== null) {
-                        candles.push({
-                            timestamp: t * 1000,
-                            open: quote.open[i],
-                            high: quote.high[i],
-                            low: quote.low[i],
-                            close: quote.close[i],
-                            volume: quote.volume[i] || 0
-                        });
-                    }
+            for (let i = 0; i < timestamps.length; i++) {
+                if (quotes.close[i] === null) continue;
+
+                candles.push({
+                    timestamp: timestamps[i] * 1000,
+                    open: quotes.open[i],
+                    high: quotes.high[i],
+                    low: quotes.low[i],
+                    close: quotes.close[i],
+                    volume: quotes.volume[i] || 0
                 });
             }
 
             marketCache.set(cacheKey, candles, 300);
             return candles;
 
-        } catch (error) {
-            console.error('Yahoo candle error:', error);
+        } catch (error: any) {
+            console.error(`Yahoo Candle Direct Error for ${symbol}:`, error.message);
             return [];
         }
     }
 
     async search(query: string): Promise<SymbolSearchResult[]> {
-        // Search in local DB for BIST symbols
-        // This assumes Prisma Client is available
-        // For now, implementing basic DB search logic
-        // PRIMARY: Search in Hardcoded List (Fastest & Most Reliable for common Stocks)
         const COMMON_STOCKS = [
             { s: 'THYAO', d: 'TURK HAVA YOLLARI' },
             { s: 'GARAN', d: 'TURKIYE GARANTI BANKASI' },
@@ -139,110 +244,16 @@ export class YahooProvider implements MarketDataProvider {
             { s: 'TUPRS', d: 'TUPRAS' },
             { s: 'EREGL', d: 'EREGLI DEMIR CELIK' },
             { s: 'SISE', d: 'SISE CAM' },
-            { s: 'BIMAS', d: 'BIM MAGAZALAR' },
-            { s: 'AEFES', d: 'ANADOLU EFES' },
-            { s: 'AGHOL', d: 'AG ANADOLU GRUBU HOLDING' },
-            { s: 'AKSA', d: 'AKSA' },
-            { s: 'AKSEN', d: 'AKSA ENERJI' },
-            { s: 'ALARK', d: 'ALARKO HOLDING' },
-            { s: 'ARCLK', d: 'ARCELIK' },
-            { s: 'ASTOR', d: 'ASTOR ENERJI' },
-            { s: 'BERA', d: 'BERA HOLDING' },
-            { s: 'BRSAN', d: 'BORUSAN BORU SANAYI' },
-            { s: 'CIMSA', d: 'CIMSA CIMENTO' },
-            { s: 'CWENE', d: 'CW ENERJI' },
-            { s: 'DOAS', d: 'DOGUS OTOMOTIV' },
-            { s: 'DOHOL', d: 'DOGAN HOLDING' },
-            { s: 'EGEEN', d: 'EGE ENDUSTRI' },
-            { s: 'EKGYO', d: 'EMLAK KONUT GAYRIMENKUL YATIRIM ORTAKLIGI' },
-            { s: 'ENJSA', d: 'ENERJISA ENERJI' },
-            { s: 'ENKAI', d: 'ENKA INSAAT' },
-            { s: 'EUPWR', d: 'EUROPOWER ENERJI' },
-            { s: 'FROTO', d: 'FORD OTOSAN' },
-            { s: 'GESAN', d: 'GIRISIM ELEKTRIK SANAYI' },
-            { s: 'GUBRF', d: 'GUBRE FABRIKALARI' },
-            { s: 'HEKTS', d: 'HEKTAS' },
-            { s: 'KONTR', d: 'KONTROLMATIK TEKNOLOJI' },
-            { s: 'KOZAA', d: 'KOZA ANADOLU METAL' },
-            { s: 'KOZAL', d: 'KOZA ALTIN ISLETMELERI' },
-            { s: 'KRDMD', d: 'KARDEMIR KARABUK DEMIR CELIK SANAYI VE TICARET' },
-            { s: 'MGROS', d: 'MIGROS TICARET' },
-            { s: 'MIATK', d: 'MIA TEKNOLOJI' },
-            { s: 'ODAS', d: 'ODAS ELEKTRIK' },
-            { s: 'OYAKC', d: 'OYAK CIMENTO' },
-            { s: 'PETKIM', d: 'PETKIM PETROKIMYA HOLDING' },
-            { s: 'PGSUS', d: 'PEGASUS HAVA TASIMACILIGI' },
-            { s: 'SASA', d: 'SASA POLYESTER' },
-            { s: 'SKBNK', d: 'SEKERBANK' },
-            { s: 'SOKM', d: 'SOK MARKETLER TICARET' },
-            { s: 'TAVHL', d: 'TAV HAVALIMANLARI HOLDING' },
-            { s: 'TCELL', d: 'TURKCELL ILETISIM HIZMETLERI' },
-            { s: 'TOASO', d: 'TOFAS TURK OTOMOBIL FABRIKASI' },
-            { s: 'TSKB', d: 'TURKIYE SINAI KALKINMA BANKASI' },
-            { s: 'TTKOM', d: 'TURK TELEKOMUNIKASYON' },
-            { s: 'ULKER', d: 'ULKER BISKUVI SANAYI' },
-            { s: 'VESTL', d: 'VESTEL ELEKTRONIK SANAYI VE TICARET' },
-            { s: 'YEOTK', d: 'YEO TEKNOLOJI ENERJI VE ENDUSTRI' }
+            { s: 'BIMAS', d: 'BIM MAGAZALAR' }
         ];
 
         const qUpper = query.toUpperCase();
-        const localMatches = COMMON_STOCKS
+        return COMMON_STOCKS
             .filter(item => item.s.includes(qUpper) || item.d.includes(qUpper))
             .map(item => ({
                 symbol: item.s,
                 description: item.d,
                 market: 'BIST' as 'BIST'
             }));
-
-        if (localMatches.length > 0) return localMatches;
-
-        // Fallback to DB (If seeded)
-        /*
-        try {
-            const results = await prisma.bistSymbol.findMany({
-                where: { OR: [{ code: { contains: qUpper } }, { title: { contains: qUpper } }], isActive: true },
-                take: 10
-            });
-            if (results.length > 0) return results.map(r => ({ symbol: r.code, description: r.title, market: 'BIST' }));
-        } catch (e) { console.error(e); }
-        */
-
-        try {
-            // Fallback to Yahoo API
-            const response = await axios.get(`https://query2.finance.yahoo.com/v1/finance/search`, {
-                params: {
-                    q: query,
-                    quotesCount: 10,
-                    newsCount: 0,
-                    enableFuzzyQuery: true
-                },
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                    'Accept': '*/*'
-                }
-            });
-
-            return response.data.quotes
-                .filter((q: any) =>
-                    q.exchange === 'IST' ||
-                    q.exchange === 'ISE' ||
-                    q.exchange === 'Istanbul' ||
-                    q.symbol.endsWith('.IS')
-                )
-                .map((q: any) => ({
-                    symbol: q.symbol.replace('.IS', ''), // Clean symbol
-                    description: q.longname || q.shortname || q.symbol,
-                    market: 'BIST'
-                }));
-
-        } catch (error: any) {
-            console.error("BIST search error", error);
-            // Return error as a result to make it visible to user
-            return [{
-                symbol: 'HATA',
-                description: `Arama başarısız: ${error.message}`,
-                market: 'BIST'
-            }];
-        }
     }
 }
