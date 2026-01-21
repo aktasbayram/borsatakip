@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  role          String    @default("USER") // 'ADMIN' or 'USER'
+  password      String?   // NextAuth credentials (opsiyonel)
+  name          String?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  watchlists    Watchlist[]
+  portfolios    Portfolio[]
+  alerts        Alert[]
+  indices       UserIndex[]
+}
+
+model Watchlist {
+  id        String   @id @default(cuid())
+  name      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items     WatchlistItem[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model WatchlistItem {
+  id          String    @id @default(cuid())
+  watchlistId String
+  watchlist   Watchlist @relation(fields: [watchlistId], references: [id], onDelete: Cascade)
+  symbol      String
+  market      String    // "BIST" | "US"
+  createdAt   DateTime  @default(now())
+
+  @@unique([watchlistId, symbol, market])
+}
+
+model Portfolio {
+  id        String   @id @default(cuid())
+  name      String
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trades    Trade[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Trade {
+  id          String    @id @default(cuid())
+  portfolioId String
+  portfolio   Portfolio @relation(fields: [portfolioId], references: [id], onDelete: Cascade)
+  symbol      String
+  market      String    // "BIST" | "US"
+  type        String    // "BUY" | "SELL"
+  quantity    Float
+  price       Float
+  date        DateTime  @default(now())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Alert {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  symbol    String
+  market    String    // "BIST" | "US"
+  type      String    // "PRICE_ABOVE", "PRICE_BELOW", "PERCENT_CHANGE"
+  target    Float
+  status    String    // "ACTIVE", "TRIGGERED", "DISABLED"
+  logs      AlertLog[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([symbol, market, status])
+}
+
+model AlertLog {
+  id          String   @id @default(cuid())
+  alertId     String
+  alert       Alert    @relation(fields: [alertId], references: [id], onDelete: Cascade)
+  message     String
+  triggeredAt DateTime @default(now())
+}
+
+
+model BistSymbol {
+  code         String   @id // Örn: THYAO
+  title        String
+  isActive     Boolean  @default(true)
+  lastSyncedAt DateTime @default(now())
+  
+  @@index([title])
+}
+
+model UserIndex {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  symbol    String   // e.g., "XBANK.IS"
+  name      String   // e.g., "BIST Bankacılık"
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  
+  @@unique([userId, symbol])
+  @@index([userId, order])
+}
+
