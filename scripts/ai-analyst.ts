@@ -64,10 +64,24 @@ async function runAnalyst() {
 
             if (existing) continue; // Skip
 
-            console.log(`Analyze: ${news.title}`);
+            // Artificial delay to respect rate limits (basic)
+            await new Promise(resolve => setTimeout(resolve, 5000));
 
-            // Analyze with AI
-            const analysis = await gemini.analyzeNews(symbol, news.title);
+            let analysis;
+            try {
+                analysis = await gemini.analyzeNews(symbol, news.title);
+            } catch (e) {
+                console.error("Gemini failed, using fallback.");
+            }
+
+            // Fallback if AI fails or returns null
+            if (!analysis) {
+                console.log("Using fallback analysis for", news.title);
+                analysis = {
+                    sentiment: 5,
+                    summary: "Yapay zeka servisi şu anda yoğun olduğu için otomatik analiz yapılamadı. Haberin detayları için başlığa tıklayarak kaynağa gidebilirsiniz."
+                };
+            }
 
             if (analysis) {
                 // Save to DB
