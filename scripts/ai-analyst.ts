@@ -1,14 +1,17 @@
-
-import { prisma } from '../src/lib/db';
+import { PrismaClient } from '@prisma/client';
 require('dotenv').config();
 import { marketCache } from '../src/services/market/cache'; // Reuse cache if helpful (or not)
 import { YahooProvider } from '../src/services/market/yahoo';
+import { GoogleNewsProvider } from '../src/services/market/google-news';
 import { GeminiService } from '../src/services/ai/gemini';
 import { TelegramService } from '../src/lib/telegram';
 import { EmailService } from '../src/lib/email';
 
+// Services
 const yahoo = new YahooProvider();
+const googleNews = new GoogleNewsProvider();
 const gemini = new GeminiService();
+const prisma = new PrismaClient();
 
 async function runAnalyst() {
     console.log("🤖 AI Analyst Starting...");
@@ -33,15 +36,27 @@ async function runAnalyst() {
     // 2. Iterate and Analyze
     for (const [symbol, data] of symbolDataMap.entries()) {
         const { users, market } = data;
-        console.log(`Checking news for ${symbol} (${market})...`);
+        // 2. Fetch News (Hybrid Approach)
+        let newsItems = [];
+        try {
+            if (market === 'BIST') {
+                console.log(`Fetching BIST news for ${symbol} via Google News...`);
+                // Use Google News for Turkish stocks
+                newsItems = await googleNews.getNews(symbol, 'BIST');
+            } else {
+                console.log(`Fetching US news for ${symbol} via Yahoo...`);
+                // Use Yahoo for US stocks
+                newsItems = await yahoo.getNews(symbol);
+            }
+        } catch (error) {
+            console.error(`Error fetching news for ${symbol}:`, error);
+            continue;
+        }
 
-        // Use suffixed symbol for BIST to get local news
-        const searchSymbol = market === 'BIST' ? `${symbol}.IS` : symbol;
-        const newsItems = await yahoo.getNews(searchSymbol);
+        // Limit to top 3 most recent news items to avoid rate limits and long processing
+        const recentNews = newsItems.slice(0, 3);
 
-        if (!newsItems || newsItems.length === 0) continue;
-
-        for (const news of newsItems) {
+        for (const news of recentNews) {
             // Check if already analyzed
             const existing = await prisma.newsAnalysis.findUnique({
                 where: { url: news.link }
