@@ -152,8 +152,8 @@ export class YahooProvider implements MarketDataProvider {
         };
     }
 
-    async getCandles(symbol: string, range: '1D' | '1W' | '1M' | '3M' | '1Y'): Promise<MarketCandle[]> {
-        const cacheKey = `candles:YD:${symbol}:${range}`;
+    async getCandles(symbol: string, range: '1D' | '1W' | '1M' | '3M' | '1Y', interval?: string): Promise<MarketCandle[]> {
+        const cacheKey = `candles:YD:${symbol}:${range}:${interval || 'auto'}`;
         const cached = marketCache.get<MarketCandle[]>(cacheKey);
         if (cached) return cached;
 
@@ -175,6 +175,13 @@ export class YahooProvider implements MarketDataProvider {
             case '1M': yahooRange = '1mo'; yahooInterval = '1d'; break;
             case '3M': yahooRange = '3mo'; yahooInterval = '1d'; break;
             case '1Y': yahooRange = '1y'; yahooInterval = '1wk'; break;
+        }
+
+        // Override if custom interval is provided
+        if (interval) {
+            yahooInterval = interval;
+            // Adjust range if needed to ensure we have enough data? 
+            // For now rely on frontend sending compatible range.
         }
 
         const url = `https://query1.finance.yahoo.com/v8/finance/chart/${yahooSymbol}?interval=${yahooInterval}&range=${yahooRange}`;

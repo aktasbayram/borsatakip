@@ -35,9 +35,16 @@ export function AIAnalysisModal({ open, onClose, type, data, title }: AIAnalysis
                 data
             });
             setAnalysis(res.data.analysis);
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
-            setError('Analiz oluşturulurken bir hata meydana geldi. Lütfen tekrar deneyin.');
+            let msg = err.response?.data?.error || err.message || 'Analiz oluşturulurken bir hata meydana geldi.';
+
+            // Handle Rate Limit specifically
+            if (msg.includes('429') || msg.includes('Too Many Requests') || msg.includes('quota')) {
+                msg = '⚠️ Hız sınırı aşıldı. Lütfen 30 saniye bekleyip tekrar deneyin.';
+            }
+
+            setError(msg);
         } finally {
             setLoading(false);
         }

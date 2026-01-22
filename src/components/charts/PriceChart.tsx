@@ -11,6 +11,7 @@ interface PriceChartProps {
         low: number;
         close: number;
     }[];
+    height?: number;
     colors?: {
         backgroundColor?: string;
         lineColor?: string;
@@ -23,6 +24,7 @@ interface PriceChartProps {
 export const PriceChart = (props: PriceChartProps) => {
     const {
         data,
+        height = 400,
         colors: {
             backgroundColor = 'transparent',
             lineColor = '#2962FF',
@@ -47,7 +49,8 @@ export const PriceChart = (props: PriceChartProps) => {
                 textColor,
             },
             width: chartContainerRef.current.clientWidth,
-            height: 400,
+            width: chartContainerRef.current.clientWidth,
+            height: height,
             grid: {
                 vertLines: { color: 'rgba(197, 203, 206, 0.2)' },
                 horzLines: { color: 'rgba(197, 203, 206, 0.2)' },

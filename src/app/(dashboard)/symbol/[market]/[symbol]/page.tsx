@@ -4,7 +4,10 @@ import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
-import TradingViewWidget from '@/components/TradingViewWidget';
+import { PriceChart } from '@/components/charts/PriceChart';
+
+// ... (existing imports)
+
 
 // ... inside the component ...
 
@@ -26,7 +29,9 @@ export default function SymbolPage() {
 
     const [quote, setQuote] = useState<any>(null);
     const [candles, setCandles] = useState<any[]>([]);
-    const [range, setRange] = useState('1M');
+    const [loading, setLoading] = useState(true);
+    const [range, setRange] = useState('3M'); // Default to daily view
+    const [interval, setInterval] = useState('1d'); // Default to daily interval
     const [kapNews, setKapNews] = useState<any[]>([]);
     const [selectedNews, setSelectedNews] = useState<any>(null);
 
@@ -81,9 +86,10 @@ export default function SymbolPage() {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                setLoading(true);
                 const requests = [
                     axios.get(`/api/market/quote?symbol=${symbol}&market=${market}`),
-                    axios.get(`/api/market/candles?symbol=${symbol}&market=${market}&range=${range}`)
+                    axios.get(`/api/market/candles?symbol=${symbol}&market=${market}&range=${range}&interval=${interval}`)
                 ];
 
                 // Fetch KAP news only for BIST stocks
@@ -107,12 +113,15 @@ export default function SymbolPage() {
                 }
             } catch (error) {
                 console.error(error);
+                setCandles([]);
+            } finally {
+                setLoading(false);
             }
         };
         fetchData();
-        const interval = setInterval(fetchData, 60000);
-        return () => clearInterval(interval);
-    }, [symbol, market, range]);
+        const dataInterval = window.setInterval(fetchData, 60000);
+        return () => window.clearInterval(dataInterval);
+    }, [symbol, market, range, interval]);
 
     const handleTransaction = async () => {
         try {
@@ -228,8 +237,52 @@ export default function SymbolPage() {
                 defaultMarket={market}
             />
 
-            <div className="h-[600px] w-full bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden relative">
-                <TradingViewWidget symbol={symbol} height={600} />
+            <div className="h-[600px] w-full bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden relative p-4">
+                <div className="flex justify-between items-center mb-2 px-1 gap-2 overflow-x-auto">
+                    <div className="flex bg-gray-100 dark:bg-gray-800 rounded-lg p-1 gap-1">
+                        {[
+                            { label: '15dk', range: '1D', interval: '15m' },
+                            { label: '1S', range: '5d', interval: '60m' }, // 1 Saat
+                            { label: '4S', range: '1M', interval: '60m' }, // 4 Saat Görünümü (1h candles)
+                            { label: 'Gün', range: '3M', interval: '1d' },
+                            { label: 'Haf', range: '1Y', interval: '1wk' },
+                            { label: 'Ay', range: '5Y', interval: '1mo' },
+                        ].map((tf) => (
+                            <button
+                                key={tf.label}
+                                onClick={() => {
+                                    setRange(tf.range);
+                                    setCandles([]); // Clear for loading state
+                                    // We need to fetch with new interval. 
+                                    // I'll update the effect dependency to include a new state 'interval'
+                                    setInterval(tf.interval);
+                                }}
+                                className={`px-3 py-1 text-xs font-medium rounded-md transition-all ${range === tf.range && interval === tf.interval
+                                    ? 'bg-white dark:bg-gray-700 shadow text-blue-600 dark:text-blue-400'
+                                    : 'text-gray-500 hover:text-gray-900 dark:hover:text-gray-300'
+                                    }`}
+                            >
+                                {tf.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {loading ? (
+                    <div className="flex items-center justify-center h-full text-gray-500 flex-col gap-2">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                        <span>Veriler yükleniyor...</span>
+                    </div>
+                ) : candles.length > 0 ? (
+                    <PriceChart data={candles} height={600} />
+                ) : (
+                    <div className="flex items-center justify-center h-full text-gray-500 flex-col gap-2">
+                        <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>Bu sembol için grafik verisi bulunamadı.</span>
+                    </div>
+                )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

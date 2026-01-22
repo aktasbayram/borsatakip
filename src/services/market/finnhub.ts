@@ -61,7 +61,7 @@ export class FinnhubProvider implements MarketDataProvider {
         }
     }
 
-    async getCandles(symbol: string, range: '1D' | '1W' | '1M' | '3M' | '1Y'): Promise<MarketCandle[]> {
+    async getCandles(symbol: string, range: '1D' | '1W' | '1M' | '3M' | '1Y', interval?: string): Promise<MarketCandle[]> {
         if (isMock) {
             const mockCandles: MarketCandle[] = [];
             const now = Date.now();

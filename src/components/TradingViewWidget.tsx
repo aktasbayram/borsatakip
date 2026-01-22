@@ -4,6 +4,7 @@ import React, { useEffect, useRef, memo } from 'react';
 
 interface TradingViewWidgetProps {
     symbol: string;
+    market?: string; // Add market prop
     theme?: 'light' | 'dark';
     autosize?: boolean;
     height?: number;
@@ -11,6 +12,7 @@ interface TradingViewWidgetProps {
 
 const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({
     symbol,
+    market = 'BIST', // Default to BIST if not specified
     theme = 'light',
     autosize = true,
     height = 500
@@ -20,74 +22,47 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({
     useEffect(() => {
         if (!container.current) return;
 
-        // Clear previous widget content if any (though React key usually handles this, safety check)
+        // Clear previous widget
         container.current.innerHTML = '';
 
         const script = document.createElement("script");
-        script.src = "https://s3.tradingview.com/external-embedding/embed-widget-symbol-overview.js";
+        script.src = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
         script.type = "text/javascript";
         script.async = true;
 
-        // Enhance symbol for BIST
-        // Google uses XU100:INDEXBIST, TradingView uses BIST:XU100
-        // Google uses THYAO, TradingView uses BIST:THYAO
         let tvSymbol = symbol;
 
+        // Special handling for common pairs
         if (symbol === 'USDTRY' || symbol === 'USD-TRY') tvSymbol = 'FX:USDTRY';
         else if (symbol === 'EURTRY' || symbol === 'EUR-TRY') tvSymbol = 'FX:EURTRY';
         else if (symbol === 'XU100' || symbol === 'XU100:INDEXBIST') tvSymbol = 'BIST:XU100';
         else if (symbol === 'XU030' || symbol === 'XU030:INDEXBIST') tvSymbol = 'BIST:XU030';
-        else if (symbol === 'XAGUSD') tvSymbol = 'TVC:XAGUSD'; // Silver
-        else if (symbol === 'XAUUSD') tvSymbol = 'TVC:XAUUSD'; // Gold
+        else if (symbol === 'XAGUSD') tvSymbol = 'TVC:XAGUSD';
+        else if (symbol === 'XAUUSD') tvSymbol = 'TVC:XAUUSD';
         else if (symbol === 'BTC-USD' || symbol === 'BTC') tvSymbol = 'BINANCE:BTCUSD';
         else if (!symbol.includes(':')) {
-            // Assume BIST for standard stocks (GARAN, THYAO etc)
-            // Check if it already has .IS suffix or similar
+            // Context-aware resolution
             const clean = symbol.replace('.IS', '');
-            tvSymbol = `BIST:${clean}`;
+
+            if (market === 'US') {
+                tvSymbol = clean;
+            } else {
+                tvSymbol = `BIST:${clean}`;
+            }
         }
 
         script.innerHTML = JSON.stringify({
-            "symbols": [
-                [
-                    symbol,
-                    tvSymbol  // e.g. "BIST:SASA"
-                ]
-            ],
-            "chartOnly": false,
-            "width": "100%",
-            "height": "100%",
-            "locale": "tr",
-            "colorTheme": theme,
             "autosize": true,
-            "showVolume": false,
-            "showMA": false,
-            "hideDateRanges": false,
-            "hideMarketStatus": false,
-            "hideSymbolLogo": false,
-            "scalePosition": "right",
-            "scaleMode": "Normal",
-            "fontFamily": "-apple-system, BlinkMacSystemFont, Trebuchet MS, Roboto, Ubuntu, sans-serif",
-            "fontSize": "10",
-            "noTimeScale": false,
-            "valuesTracking": "1",
-            "changeMode": "price-and-percent",
-            "chartType": "candlesticks", // Prefer candles
-            "maLineColor": "#2962FF",
-            "maLineWidth": 1,
-            "maLength": 9,
-            "dateTimeFormat": "dd MMM 'yy",
-            "lineWidth": 2,
-            "lineType": 0,
-            "dateRanges": [
-                "1d|1",
-                "1w|15",
-                "1m|30",
-                "3m|60",
-                "12m|1D",
-                "60m|1W",
-                "all|1M"
-            ]
+            "symbol": tvSymbol,
+            "interval": "D",
+            "timezone": "Europe/Istanbul",
+            "theme": theme,
+            "style": "1",
+            "locale": "tr",
+            "enable_publishing": false,
+            "allow_symbol_change": false,
+            "calendar": false,
+            "support_host": "https://www.tradingview.com"
         });
 
         container.current.appendChild(script);
@@ -97,7 +72,7 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({
             if (container.current) container.current.innerHTML = '';
         };
 
-    }, [symbol, theme, autosize, height]);
+    }, [symbol, market, theme, autosize, height]);
 
     return (
         <div className="tradingview-widget-container" ref={container} style={{ height: "100%", width: "100%" }}>

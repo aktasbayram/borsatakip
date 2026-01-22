@@ -116,7 +116,7 @@ export default function DashboardPage() {
                                 {watchlist.filter(item => item.market === 'BIST').map(item => (
                                     <Link href={`/symbol/${item.market}/${item.symbol}`} key={item.id}>
                                         <Card className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer relative group">
-                                            <CardHeader className="pb-2">
+                                            <CardHeader className="pb-10">
                                                 <div className="flex justify-between items-start">
                                                     <div>
                                                         <CardTitle>{item.symbol}</CardTitle>
@@ -165,7 +165,7 @@ export default function DashboardPage() {
                                 {watchlist.filter(item => item.market === 'US').map(item => (
                                     <Link href={`/symbol/${item.market}/${item.symbol}`} key={item.id}>
                                         <Card className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer relative group">
-                                            <CardHeader className="pb-2">
+                                            <CardHeader className="pb-10">
                                                 <div className="flex justify-between items-start">
                                                     <div>
                                                         <CardTitle>{item.symbol}</CardTitle>

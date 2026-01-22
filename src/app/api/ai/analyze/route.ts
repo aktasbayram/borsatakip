@@ -6,7 +6,7 @@ import { auth } from '@/lib/auth';
 // Initialize Gemini
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
-const model = genAI.getGenerativeModel({ model: 'gemini-flash-latest' });
+const model = genAI.getGenerativeModel({ model: 'gemini-flash-lite-latest' });
 
 export async function POST(request: Request) {
     const session = await auth();
