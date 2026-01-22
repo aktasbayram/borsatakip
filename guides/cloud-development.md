@@ -65,16 +65,28 @@ Codespace terminalinde (Ctrl+` ile açılır) sırasıyla şunları yapın:
 
 Sağ altta "Open in Browser" butonu çıkacak. Tıkladığınızda siteniz yeni sekmede açılacak!
 
-## 5. İpucu: Kalıcı Env Ayarı (Opsiyonel)
+## 5. Çalışma Döngüsü: Ev ve İş (Nasıl Senkronize Kalırım?) 🔄
 
-Her yeni Codespace açtığınızda `.env` oluşturmak istemiyorsanız:
-1.  GitHub Repo > **Settings** > **Secrets and variables** > **Codespaces** menüsüne gidin.
-2.  **New repository secret** butonuna basın.
-3.  `GEMINI_API_KEY`, `DATABASE_URL` vb. değişkenleri buraya ekleyin.
-4.  Artık Codespace açtığınızda bu değişkenler otomatik yüklü gelecek.
+Bu proje artık birden fazla yerde çalışmaya uyumludur. İşte takip etmeniz gereken basit kural:
 
-## Sık Sorulan Sorular
+### Adım 1: Evde Çalışmayı Bitirirken
+Evde Codespaces üzerinde kodlamayı bitirdiğinizde **mutlaka** değişikliklerinizi kaydedip GitHub'a gönderin (Push):
+1.  Soldaki "Source Control" ikonuna tıklayın.
+2.  Değişikliklerinizi "Commit"leyin (mesaj yazıp tike basın).
+3.  "Sync Changes" veya "Push" butonuna basın.
 
-*   **Tabletten kod yazabilir miyim?** Evet, iPad veya Android tablet tarayıcısından girebilirsiniz.
+### Adım 2: İşe Geldiğinizde (Local Bilgisayar)
+İş yerindeki (şu anki) bilgisayarınızı açtığınızda, evde yaptığınız değişiklikleri çekmeniz gerekir:
+1.  VS Code terminalini açın.
+2.  Şu komutu yazın:
+    ```bash
+    git pull
+    ```
+3.  🎉 Kodlar güncellendi! Kaldığınız yerden devam edebilirsiniz.
+
+> **Not (Veritabanı):** Veritabanınız bulutta (Neon) olduğu için **veri eşitlemeye gerek yoktur**. Evde eklediğiniz bir kullanıcı veya portföy, işte anında görünür. Sadece `git pull` ile kodları (yeni sayfa, stil vb.) çekmeniz yeterlidir.
+
+## 6. Sık Sorulan Sorular
+
 *   **İnternet koparsa ne olur?** Kodlarınız otomatik kaydedilir, tekrar bağlandığınızda kaldığınız yerden devam edersiniz.
 *   **Ücretli mi?** GitHub kişisel kullanıcılar için aylık 60 saat ücretsiz Codespace kullanımı sunar. Bu çoğu hobi projesi için yeterlidir.
