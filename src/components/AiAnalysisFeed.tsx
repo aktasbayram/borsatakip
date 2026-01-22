@@ -14,28 +14,16 @@ interface Analysis {
     market?: string;
 }
 
-export default function AiAnalysisFeed() {
-    const [analyses, setAnalyses] = useState<Analysis[]>([]);
-    const [loading, setLoading] = useState(true);
+interface AiAnalysisFeedProps {
+    analyses: any[]; // Using any[] for now to match the local interface if we export it later, or we can use the local Analysis interface
+    loading?: boolean;
+}
+
+export default function AiAnalysisFeed({ analyses, loading = false }: AiAnalysisFeedProps) {
     const [activeTab, setActiveTab] = useState<'ALL' | 'BIST' | 'US'>('ALL');
 
-    useEffect(() => {
-        async function fetchAnalysis() {
-            try {
-                const response = await fetch('/api/analysis');
-                if (response.ok) {
-                    const data = await response.json();
-                    setAnalyses(data);
-                }
-            } catch (error) {
-                console.error("Failed to load analysis", error);
-            } finally {
-                setLoading(false);
-            }
-        }
+    // Remove internal useEffect fetching logic
 
-        fetchAnalysis();
-    }, []);
 
     const filteredAnalyses = analyses.filter(item => {
         if (activeTab === 'ALL') return true;
