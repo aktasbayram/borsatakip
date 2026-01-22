@@ -51,60 +51,49 @@ export class YahooProvider implements MarketDataProvider {
 
     async getQuote(symbol: string): Promise<MarketQuote> {
         // Cache Logic
-        const cacheKey = `quote:GF:${symbol}`;
+        const cacheKey = `quote:YF:${symbol}`;
         const cached = marketCache.get<MarketQuote>(cacheKey);
         if (cached) return cached;
 
-        const googleSymbol = this.normalizeSymbol(symbol);
-        const url = `https://www.google.com/finance/quote/${googleSymbol}`;
-
         try {
-            // Priority 1: Google Finance Scraping (Best for RT price)
-            console.log(`Scraping Google Finance: ${url}`);
-            const response = await axios.get(url, {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                    'Accept-Language': 'en-US,en;q=0.9'
-                },
-                timeout: 5000
-            });
+            // Priority 1: Yahoo Finance Library (More stable than scraping)
+            // Correct instantiation for CJS/Next.js environment compatibility
+            const yahooFinance = require('yahoo-finance2').default;
+            const yf = new yahooFinance();
 
-            const $ = cheerio.load(response.data);
-            let priceText = $('.YMlKec.fxKbKc').first().text();
-            if (!priceText) priceText = $('[data-last-price]').first().attr('data-last-price') || '0';
+            // Map symbol to Yahoo format
+            let yahooSymbol = symbol;
+            if (symbol === 'XU100') yahooSymbol = 'XU100.IS';
+            if (symbol === 'XU030') yahooSymbol = 'XU030.IS';
+            if (symbol === 'USDTRY') yahooSymbol = 'USDTRY=X';
+            if (symbol === 'EURTRY') yahooSymbol = 'EURTRY=X';
+            if (symbol === 'XAUUSD') yahooSymbol = 'GC=F'; // Gold Futures
 
-            // Cleanup price text
-            let cleanPrice = priceText.replace('₺', '').replace('$', '').trim();
-            if (cleanPrice.includes(',') && !cleanPrice.includes('.')) {
-                cleanPrice = cleanPrice.replace(',', '.');
-            } else if (cleanPrice.includes('.') && cleanPrice.includes(',')) {
-                cleanPrice = cleanPrice.replace('.', '').replace(',', '.');
-            } else if (cleanPrice.includes(',')) {
-                cleanPrice = cleanPrice.replace(',', '');
+            // Auto-append .IS for simple tickers that look like BIST stocks
+            if (!yahooSymbol.includes('=') && !yahooSymbol.includes('.') &&
+                !yahooSymbol.includes('-') && !yahooSymbol.includes(':')) {
+                // If it is likely a currency pair (e.g. BTCUSD), don't add .IS, but here we assume stocks 
+                // However, for consistency with our previous logic:
+                if (symbol.length <= 5) yahooSymbol += '.IS';
             }
 
-            let price = parseFloat(cleanPrice);
+            const quote = await yf.quote(yahooSymbol);
 
-            // If Google fails (e.g. for Indices like XU100 that return empty), TRY YAHOO BACKUP
-            if (isNaN(price) || price === 0) {
-                console.warn(`Google scrape failed for ${symbol}, trying Yahoo Backup...`);
-                return this.getQuoteFromYahooDirect(symbol);
+            if (!quote) {
+                throw new Error(`No quote found for ${yahooSymbol}`);
             }
 
-            let changePercentText = $('.JwB6zf').first().text();
-            let changePercent = parseFloat(changePercentText.replace('%', '').replace('+', '').trim()) || 0;
-            if (changePercentText.includes('-') && changePercent > 0) changePercent = -changePercent;
-
-            const prevClose = price / (1 + changePercent / 100);
-            const change = price - prevClose;
+            const price = quote.regularMarketPrice || 0;
+            const change = quote.regularMarketChange || 0;
+            const changePercent = quote.regularMarketChangePercent || 0;
 
             const marketQuote: MarketQuote = {
-                symbol: symbol,
+                symbol: symbol, // Return original requested symbol (e.g. SASA)
                 price: price,
                 change: change,
                 changePercent: changePercent,
-                currency: 'TRY',
-                market: 'BIST',
+                currency: quote.currency || 'TRY',
+                market: 'BIST', // Todo: dynamic
                 timestamp: Date.now(),
             };
 
@@ -112,22 +101,17 @@ export class YahooProvider implements MarketDataProvider {
             return marketQuote;
 
         } catch (error: any) {
-            console.error(`Google Finance scrape error for ${symbol}:`, error.message);
-            // Fallback to Yahoo Direct if Google completely errors out
-            try {
-                return await this.getQuoteFromYahooDirect(symbol);
-            } catch (yahooError) {
-                console.error("Yahoo Backup also failed:", yahooError);
-                return {
-                    symbol: symbol,
-                    price: 0,
-                    change: 0,
-                    changePercent: 0,
-                    currency: 'TRY',
-                    market: 'BIST',
-                    timestamp: Date.now(),
-                };
-            }
+            console.error(`Yahoo Finance library error for ${symbol}:`, error.message);
+            // Fallback: return zero'd object to prevent UI crash
+            return {
+                symbol: symbol,
+                price: 0,
+                change: 0,
+                changePercent: 0,
+                currency: 'TRY',
+                market: 'BIST',
+                timestamp: Date.now(),
+            };
         }
     }
 
@@ -232,28 +216,50 @@ export class YahooProvider implements MarketDataProvider {
     }
 
     async search(query: string): Promise<SymbolSearchResult[]> {
-        const COMMON_STOCKS = [
-            { s: 'THYAO', d: 'TURK HAVA YOLLARI' },
-            { s: 'GARAN', d: 'TURKIYE GARANTI BANKASI' },
-            { s: 'ASELS', d: 'ASELSAN' },
-            { s: 'AKBNK', d: 'AKBANK' },
-            { s: 'YKBNK', d: 'YAPI VE KREDI BANKASI' },
-            { s: 'ISCTR', d: 'TURKIYE IS BANKASI' },
-            { s: 'SAHOL', d: 'SABANCI HOLDING' },
-            { s: 'KCHOL', d: 'KOC HOLDING' },
-            { s: 'TUPRS', d: 'TUPRAS' },
-            { s: 'EREGL', d: 'EREGLI DEMIR CELIK' },
-            { s: 'SISE', d: 'SISE CAM' },
-            { s: 'BIMAS', d: 'BIM MAGAZALAR' }
-        ];
+        if (!query || query.length < 2) return [];
 
-        const qUpper = query.toUpperCase();
-        return COMMON_STOCKS
-            .filter(item => item.s.includes(qUpper) || item.d.includes(qUpper))
-            .map(item => ({
-                symbol: item.s,
-                description: item.d,
-                market: 'BIST' as 'BIST'
-            }));
+        try {
+            // Correct instantiation for CJS/Next.js environment compatibility
+            const yahooFinance = require('yahoo-finance2').default;
+            const yf = new yahooFinance();
+
+            const results = await yf.search(query);
+
+            if (!results || !results.quotes) return [];
+
+            return results.quotes
+                .filter((q: any) => q.isYahooFinance) // Filter out news etc.
+                .map((q: any) => ({
+                    symbol: q.symbol.replace('.IS', ''), // Clean .IS suffix for display
+                    description: q.longname || q.shortname || q.symbol,
+                    market: q.exchange === 'IST' ? 'BIST' : 'US' // Simple heuristic
+                }));
+
+        } catch (error) {
+            console.error("Yahoo Search Error:", error);
+            // Fallback to static list if API fails
+            const COMMON_STOCKS = [
+                { s: 'THYAO.IS', d: 'TURK HAVA YOLLARI' },
+                { s: 'GARAN.IS', d: 'TURKIYE GARANTI BANKASI' },
+                { s: 'ASELS.IS', d: 'ASELSAN' },
+                { s: 'AKBNK.IS', d: 'AKBANK' },
+                { s: 'YKBNK.IS', d: 'YAPI VE KREDI BANKASI' },
+                { s: 'ISCTR.IS', d: 'TURKIYE IS BANKASI' },
+                { s: 'SAHOL.IS', d: 'SABANCI HOLDING' },
+                { s: 'KCHOL.IS', d: 'KOC HOLDING' },
+                { s: 'TUPRS.IS', d: 'TUPRAS' },
+                { s: 'EREGL.IS', d: 'EREGLI DEMIR CELIK' },
+                { s: 'SISE.IS', d: 'SISE CAM' },
+                { s: 'BIMAS.IS', d: 'BIM MAGAZALAR' }
+            ];
+            const qUpper = query.toUpperCase();
+            return COMMON_STOCKS
+                .filter(item => item.s.includes(qUpper) || item.d.includes(qUpper))
+                .map(item => ({
+                    symbol: item.s,
+                    description: item.d,
+                    market: 'BIST' as 'BIST'
+                }));
+        }
     }
 }

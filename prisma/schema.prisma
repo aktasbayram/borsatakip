@@ -21,6 +21,36 @@ model User {
   portfolios    Portfolio[]
   alerts        Alert[]
   indices       UserIndex[]
+  notificationSettings NotificationSettings?
+  globalAlerts         GlobalMarketAlert[]
+}
+
+model NotificationSettings {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  telegramChatId  String?  // Linked Telegram Chat ID
+  telegramEnabled Boolean  @default(false)
+  emailEnabled    Boolean  @default(false)
+  verificationCode String? // For linking Telegram
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model GlobalMarketAlert {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  symbol    String   // "XU100", "USDTRY", "GLD"
+  type      String   // "PERCENT_CHANGE", "PRICE_ABOVE", "PRICE_BELOW"
+  threshold Float    // 3.0 (for 3%), 1500.0 (price)
+  cooldown  Int      @default(60) // Minutes between alerts to avoid spam
+  lastTriggeredAt DateTime?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, symbol])
 }
 
 model Watchlist {

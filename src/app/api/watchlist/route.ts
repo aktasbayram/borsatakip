@@ -27,6 +27,8 @@ export async function POST(request: Request) {
 
     try {
         const json = await request.json();
+        console.log("Watchlist POST Body:", json); // Debug log
+
         const body = addItemSchema.parse(json);
 
         let watchlistId = body.watchlistId;
@@ -54,14 +56,23 @@ export async function POST(request: Request) {
         return NextResponse.json(item);
     } catch (error: any) {
         console.error('Watchlist add error:', error);
-        if (error instanceof z.ZodError) return NextResponse.json({ error: (error as any).errors }, { status: 400 });
+
+        if (error instanceof z.ZodError) {
+            return NextResponse.json({
+                error: 'Veri doğrulama hatası',
+                details: (error as any).errors
+            }, { status: 400 });
+        }
 
         // Prisma Unique Constraint Violation
         if (error.code === 'P2002') {
             return NextResponse.json({ error: 'Bu sembol zaten listenizde ekli.' }, { status: 409 });
         }
 
-        return NextResponse.json({ error: 'Ekleme işlemi başarısız oldu.' }, { status: 500 });
+        return NextResponse.json({
+            error: 'Ekleme işlemi başarısız oldu.',
+            details: error.message
+        }, { status: 500 });
     }
 }
 

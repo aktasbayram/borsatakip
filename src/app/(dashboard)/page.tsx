@@ -5,6 +5,7 @@ import { SymbolSearch } from '@/components/features/SymbolSearch';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MarketIndices } from '@/components/dashboard/MarketIndices';
+import TradingViewWidget from '@/components/TradingViewWidget';
 import { useSnackbar } from 'notistack';
 import axios from 'axios';
 import Link from 'next/link';

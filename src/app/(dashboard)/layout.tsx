@@ -115,6 +115,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                         >
                                             🌓 Tema Ayarları
                                         </button>
+                                        <Link
+                                            href="/settings/notifications"
+                                            className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                                        >
+                                            🔔 Bildirim Ayarları
+                                        </Link>
                                         {session.user?.role === 'ADMIN' && (
                                             <>
                                                 <div className="border-t border-gray-100 dark:border-gray-700 my-1"></div>
@@ -199,6 +205,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         >
                             🌓 Tema Ayarları
                         </button>
+                        <Link href="/settings/notifications" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800">
+                            🔔 Bildirim Ayarları
+                        </Link>
                         {session.user?.role === 'ADMIN' && (
                             <Link href="/admin" className="block px-3 py-2 rounded-md text-base font-medium text-purple-600 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-900/20">
                                 ⚡ Admin Panel
