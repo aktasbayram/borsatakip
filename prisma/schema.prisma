@@ -53,6 +53,20 @@ model GlobalMarketAlert {
   @@index([userId, symbol])
 }
 
+model NewsAnalysis {
+  id          String   @id @default(cuid())
+  symbol      String
+  url         String   @unique
+  title       String
+  sentiment   Float    // 1-10 Score (1=Negative, 10=Positive)
+  summary     String   // Short AI summary
+  market      String   @default("US") // "BIST" | "US"
+  publishedAt DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([symbol])
+}
+
 model Watchlist {
   id        String   @id @default(cuid())
   name      String

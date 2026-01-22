@@ -93,7 +93,7 @@ export class YahooProvider implements MarketDataProvider {
                 change: change,
                 changePercent: changePercent,
                 currency: quote.currency || 'TRY',
-                market: 'BIST', // Todo: dynamic
+                market: (quote.currency === 'TRY' || quote.exchange === 'IST') ? 'BIST' : 'US',
                 timestamp: Date.now(),
             };
 
@@ -147,7 +147,7 @@ export class YahooProvider implements MarketDataProvider {
             change: change,
             changePercent: changePercent,
             currency: meta.currency,
-            market: 'BIST',
+            market: meta.currency === 'TRY' ? 'BIST' : 'US',
             timestamp: Date.now()
         };
     }
@@ -260,6 +260,32 @@ export class YahooProvider implements MarketDataProvider {
                     description: item.d,
                     market: 'BIST' as 'BIST'
                 }));
+        }
+    }
+
+    async getNews(symbol: string): Promise<any[]> {
+        try {
+            const yahooFinance = require('yahoo-finance2').default;
+            const yf = new yahooFinance();
+
+            // Search usually returns news associated with the query
+            // Using a stricter query might help get relevant news
+            const results = await yf.search(symbol, { newsCount: 5 });
+
+            if (results && results.news) {
+                return results.news.map((n: any) => ({
+                    title: n.title,
+                    link: n.link,
+                    publisher: n.publisher,
+                    providerPublishTime: n.providerPublishTime,
+                    type: n.type,
+                    uuid: n.uuid
+                }));
+            }
+            return [];
+        } catch (error) {
+            console.error(`Yahoo News Error for ${symbol}:`, error);
+            return [];
         }
     }
 }
