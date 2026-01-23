@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { ThemeSettingsDialog } from "@/components/ui/theme-settings-dialog";
+import { PackageBadge } from '@/components/subscription/PackageBadge';
 import { useEffect, useState } from 'react';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
@@ -87,12 +88,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <Link
-                                href="/upgrade"
-                                className="hidden sm:flex items-center gap-1 px-3 py-1.5 rounded-md bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-sm font-medium transition-all shadow-sm"
-                            >
-                                <span>⚡</span>
-                                <span>Pro'ya Yükselt</span>
+                            <Link href="/upgrade">
+                                <PackageBadge />
                             </Link>
                             <ThemeToggle />
                             {/* Settings Dropdown - Hidden on very small screens if crowded, or keep it */}

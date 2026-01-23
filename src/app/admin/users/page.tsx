@@ -1,7 +1,9 @@
 import { prisma } from "@/lib/db";
 import { UserActions } from "./user-actions";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { auth } from "@/lib/auth";
+import Link from "next/link";
 
 export default async function UsersPage() {
     const session = await auth();
@@ -11,7 +13,9 @@ export default async function UsersPage() {
 
     return (
         <div className="space-y-6">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Kullanıcı Yönetimi</h1>
+            <div className="flex justify-between items-center">
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Kullanıcı Yönetimi</h1>
+            </div>
 
             <Card>
                 <CardHeader>
