@@ -15,10 +15,21 @@ export function TechnicalAnalysis({ candles }: TechnicalAnalysisProps) {
         const closes = candles.map(c => c.close); // Ensure chronological order (oldest first) if that's how candles come from API. 
         // Typically charts consume oldest-to-newest. Let's assume standard format.
 
-        const rsi = calculateRSI(closes, 14);
-        const sma50 = calculateSMA(closes, 50); // Will be null if length < 50
-        const sma200 = calculateSMA(closes, 200); // Will be null if length < 200
-        const ema20 = calculateEMA(closes, 20);
+        // For Chart we use (prices, times), here we just use prices for scalar
+        // We need to handle the different signatures or just use what we have.
+        // calculateRSI expects (prices, times). We can pass dummy times or empty array?
+        // Actually calculateRSI signature is (prices, times). 
+        // Let's make a dummy times array.
+        const dummyTimes = closes.map((_, i) => i);
+
+        const rsiArray = calculateRSI(closes, dummyTimes, 14);
+        const rsi = rsiArray.length > 0 ? rsiArray[rsiArray.length - 1].value : null;
+
+        const sma50 = calculateSMA(closes, 50);
+        const sma200 = calculateSMA(closes, 200);
+
+        const ema20Array = calculateEMA(closes, 20);
+        const ema20 = ema20Array.length > 0 ? ema20Array[ema20Array.length - 1] : null;
 
         return { rsi, sma50, sma200, ema20 };
     }, [candles]);

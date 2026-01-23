@@ -5,13 +5,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { PriceChart } from '@/components/charts/PriceChart';
-
-// ... (existing imports)
-
-
-// ... inside the component ...
-
-
+// import TradingViewWidget from '@/components/TradingViewWidget'; // Use the wrapper
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSnackbar } from 'notistack';
@@ -29,9 +23,14 @@ export default function SymbolPage() {
 
     const [quote, setQuote] = useState<any>(null);
     const [candles, setCandles] = useState<any[]>([]);
+    const [rsiData, setRsiData] = useState<any[]>([]);
+    const [macdData, setMacdData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [range, setRange] = useState('3M'); // Default to daily view
     const [interval, setInterval] = useState('1d'); // Default to daily interval
+
+    // ... imports ...
+    const { calculateRSI, calculateMACD } = require('@/lib/indicators');
     const [kapNews, setKapNews] = useState<any[]>([]);
     const [selectedNews, setSelectedNews] = useState<any>(null);
 
@@ -106,6 +105,19 @@ export default function SymbolPage() {
                     time: c.timestamp
                 }));
                 setCandles(formattedCandles);
+
+                // Calculate Indicators
+                const closes = formattedCandles.map((c: any) => c.close);
+                const times = formattedCandles.map((c: any) => c.time);
+
+                // Need to ensure calculations use the raw close prices
+                if (closes.length > 0) {
+                    setRsiData(calculateRSI(closes, times));
+                    setMacdData(calculateMACD(closes, times));
+                } else {
+                    setRsiData([]);
+                    setMacdData([]);
+                }
 
                 // Set KAP news if available
                 if (market === 'BIST' && responses[2]) {
@@ -274,7 +286,12 @@ export default function SymbolPage() {
                         <span>Veriler yükleniyor...</span>
                     </div>
                 ) : candles.length > 0 ? (
-                    <PriceChart data={candles} height={600} />
+                    <PriceChart
+                        data={candles}
+                        height={600}
+                        rsiData={rsiData}
+                        macdData={macdData}
+                    />
                 ) : (
                     <div className="flex items-center justify-center h-full text-gray-500 flex-col gap-2">
                         <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

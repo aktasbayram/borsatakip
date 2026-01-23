@@ -70,11 +70,18 @@ export function CreateAlertDialog({ open, onClose, defaultSymbol = "", defaultMa
         setLoading(true);
 
         try {
+            // Get values from form elements directly since we didn't bind them to state to keep it simple
+            const form = e.target as HTMLFormElement;
+            const triggerLimit = parseInt((form.elements.namedItem('triggerLimit') as HTMLInputElement).value) || 1;
+            const cooldown = parseInt((form.elements.namedItem('cooldown') as HTMLSelectElement).value) || 60;
+
             await axios.post("/api/alerts", {
                 symbol: symbol.toUpperCase(),
                 market,
                 type,
                 target: parseFloat(target),
+                triggerLimit,
+                cooldown
             });
 
             enqueueSnackbar("Alarm başarıyla oluşturuldu", { variant: "success" });
@@ -202,6 +209,38 @@ export function CreateAlertDialog({ open, onClose, defaultSymbol = "", defaultMa
                             placeholder="0.00"
                             required
                         />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Tekrar Sayısı
+                            </label>
+                            <Input
+                                type="number"
+                                min="1"
+                                max="100"
+                                defaultValue="1"
+                                name="triggerLimit"
+                                placeholder="Örn: 5"
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Bekleme (Dk)
+                            </label>
+                            <select
+                                name="cooldown"
+                                className="w-full rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm"
+                                defaultValue="60"
+                            >
+                                <option value="60">1 Dakika</option>
+                                <option value="300">5 Dakika</option>
+                                <option value="900">15 Dakika</option>
+                                <option value="3600">1 Saat</option>
+                                <option value="14400">4 Saat</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div className="flex justify-end gap-3 mt-6">

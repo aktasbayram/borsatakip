@@ -62,6 +62,10 @@ const TradingViewWidget: React.FC<TradingViewWidgetProps> = ({
             "enable_publishing": false,
             "allow_symbol_change": false,
             "calendar": false,
+            "studies": [
+                "RSI@tv-basicstudies",
+                "MACD@tv-basicstudies"
+            ],
             "support_host": "https://www.tradingview.com"
         });
 

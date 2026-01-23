@@ -9,6 +9,8 @@ const createAlertSchema = z.object({
     market: z.enum(["BIST", "US"]),
     type: z.enum(["PRICE_ABOVE", "PRICE_BELOW"]),
     target: z.number().positive(),
+    triggerLimit: z.number().int().min(1).default(1),
+    cooldown: z.number().int().min(0).default(60),
 });
 
 export async function GET(req: Request) {
@@ -59,6 +61,8 @@ export async function POST(req: Request) {
                 type: body.type,
                 target: body.target,
                 status: "ACTIVE",
+                triggerLimit: body.triggerLimit,
+                cooldown: body.cooldown,
             },
         });
 

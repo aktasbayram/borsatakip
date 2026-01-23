@@ -138,33 +138,60 @@ async function checkAlarms() {
             }
 
             if (isTriggered) {
-                console.log(`⚡ Triggered: ${alert.symbol} @ ${currentPrice} (Target: ${alert.target})`);
+                // Check Global Cooldown & Trigger Limit
+                // We use dynamic cooldown from alert settings
+                const now = new Date();
+                const cooldownMs = alert.cooldown * 1000;
 
-                // Anti-Spam Check
-                const lastLog = alert.logs[0];
-                if (lastLog) {
-                    const minutesSinceLastTrigger = (Date.now() - new Date(lastLog.triggeredAt).getTime()) / (1000 * 60);
-                    if (minutesSinceLastTrigger < COOLDOWN_MINUTES) {
-                        console.log(`   ⏳ Cooldown active (${minutesSinceLastTrigger.toFixed(1)}m < ${COOLDOWN_MINUTES}m). Skipping notification.`);
+                if (alert.lastTriggeredAt) {
+                    const timeSinceLast = now.getTime() - new Date(alert.lastTriggeredAt).getTime();
+                    if (timeSinceLast < cooldownMs) {
+                        // Cooldown active, skip
+                        // console.log(`   ⏳ Cooldown: ${alert.symbol} (${Math.round(timeSinceLast/1000)}s < ${alert.cooldown}s)`);
                         continue;
                     }
                 }
+
+                // Check Trigger Limit
+                if (alert.currentTriggers >= alert.triggerLimit) {
+                    console.log(`   🛑 Limit Reached: ${alert.symbol} (${alert.currentTriggers}/${alert.triggerLimit}). Deactivating.`);
+                    await prisma.alert.update({
+                        where: { id: alert.id },
+                        data: { status: 'COMPLETED' }
+                    });
+                    continue;
+                }
+
+                console.log(`⚡ Triggered: ${alert.symbol} @ ${currentPrice} (Target: ${alert.target}) | Count: ${alert.currentTriggers + 1}/${alert.triggerLimit}`);
+
+                // Update Alert State (increment count, set last triggered)
+                const newTriggerCount = alert.currentTriggers + 1;
+                const newStatus = newTriggerCount >= alert.triggerLimit ? 'COMPLETED' : 'ACTIVE';
+
+                await prisma.alert.update({
+                    where: { id: alert.id },
+                    data: {
+                        currentTriggers: newTriggerCount,
+                        lastTriggeredAt: now,
+                        status: newStatus
+                    }
+                });
 
                 // Create Log
                 await prisma.alertLog.create({
                     data: {
                         alertId: alert.id,
-                        message: `Fiyat hedefi yakalandı: ${currentPrice} (Hedef: ${alert.target})`
+                        message: `Fiyat hedefi yakalandı: ${currentPrice} (Hedef: ${alert.target}) - Tetiklenme: ${newTriggerCount}/${alert.triggerLimit}`
                     }
                 });
 
-                // Send Email
+                // Send Email & Telegram (Logic remains same)
                 const notifSettings = alert.user.notificationSettings;
 
                 // 1. Telegram Notification
                 if (notifSettings?.telegramEnabled && notifSettings.telegramChatId) {
                     console.log(`   📱 Sending Telegram message to ${notifSettings.telegramChatId}...`);
-                    const message = `🔔 *FİYAT ALARMI*\n\n` +
+                    const message = `🔔 *FİYAT ALARMI* (${newTriggerCount}/${alert.triggerLimit})\n\n` +
                         `📈 *${alert.symbol}* hedef fiyata ulaştı.\n` +
                         `💰 Güncel: ${currentPrice}\n` +
                         `🎯 Hedef: ${alert.target}\n` +
@@ -187,14 +214,14 @@ async function checkAlarms() {
                         },
                         {
                             to: alert.user.email,
-                            subject: `🔔 Fiyat Alarmı: ${alert.symbol}`,
+                            subject: `🔔 Fiyat Alarmı: ${alert.symbol} (${newTriggerCount}/${alert.triggerLimit})`,
                             html: `
                                 <h3>Fiyat Hedefi Yakalandı!</h3>
                                 <p>Takip ettiğiniz <strong>${alert.symbol}</strong> hissesi hedef fiyatınıza ulaştı.</p>
                                 <ul>
                                     <li><strong>Güncel Fiyat:</strong> ${currentPrice}</li>
                                     <li><strong>Hedef Fiyat:</strong> ${alert.target}</li>
-                                    <li><strong>Yön:</strong> ${alert.type === 'PRICE_ABOVE' ? 'Yukarı' : 'Aşağı'}</li>
+                                    <li><strong>Tetiklenme:</strong> ${newTriggerCount} / ${alert.triggerLimit}</li>
                                 </ul>
                                 <p>Borsa Takip Sistemi</p>
                             `
