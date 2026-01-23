@@ -29,15 +29,15 @@ export class TelegramService {
    * Get updates (useful for polling in a script)
    */
   static async getUpdates(offset?: number) {
-      if (!TELEGRAM_BOT_TOKEN) return [];
-      try {
-          const res = await axios.get(`${TELEGRAM_API_URL}/getUpdates`, {
-              params: { offset, timeout: 5 }
-          });
-          return res.data;
-      } catch (error) {
-          console.error("Error getting updates", error);
-          return null;
-      }
+    if (!TELEGRAM_BOT_TOKEN) return [];
+    try {
+      const res = await axios.get(`${TELEGRAM_API_URL}/getUpdates`, {
+        params: { offset, timeout: 5 }
+      });
+      return res.data.result;
+    } catch (error) {
+      console.error("Error getting updates", error);
+      return [];
+    }
   }
 }

@@ -12,12 +12,62 @@ import * as dotenv from 'dotenv';
 dotenv.config();
 
 const prisma = new PrismaClient();
+import { TelegramService } from '../src/lib/telegram';
+
+let lastUpdateId = 0;
+
 
 const CHECK_INTERVAL_MS = 60 * 1000; // Check every 60 seconds
 const COOLDOWN_MINUTES = 5;
 
 console.log("🚀 Price Alarm Worker started...");
 console.log(`⏱️ Check interval: ${CHECK_INTERVAL_MS / 1000}s`);
+
+async function checkTelegramUpdates() {
+    try {
+        const updates = await TelegramService.getUpdates(lastUpdateId + 1);
+        if (updates && Array.isArray(updates) && updates.length > 0) {
+            console.log(`📨 Received ${updates.length} Telegram updates.`);
+            for (const update of updates) {
+                lastUpdateId = update.update_id;
+
+                if (update.message && update.message.text) {
+                    const text = update.message.text.trim();
+                    const chatId = update.message.chat.id.toString();
+
+                    if (text.startsWith('/start ')) {
+                        const code = text.split(' ')[1];
+                        if (code) {
+                            console.log(`🔍 Checking verification code: ${code}`);
+                            // Find user with this code
+                            const settings = await prisma.notificationSettings.findFirst({
+                                where: { verificationCode: code }
+                            });
+
+                            if (settings) {
+                                await prisma.notificationSettings.update({
+                                    where: { id: settings.id },
+                                    data: {
+                                        telegramChatId: chatId,
+                                        telegramEnabled: true,
+                                        verificationCode: null // Consume code
+                                    }
+                                });
+                                await TelegramService.sendMessage(chatId, "✅ Hesabınız başarıyla eşleştirildi! Artık fiyat alarmlarını buradan alacaksınız.");
+                                console.log(`✅ Linked Chat ID ${chatId} to user ${settings.userId}`);
+                            } else {
+                                await TelegramService.sendMessage(chatId, "❌ Geçersiz veya süresi dolmuş kod.");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } catch (error) {
+        console.error("Error checking Telegram updates:", error);
+    }
+}
+
 
 async function checkAlarms() {
     try {
@@ -108,8 +158,22 @@ async function checkAlarms() {
                     }
                 });
 
-                // Send Email if enabled and configured
+                // Send Email
                 const notifSettings = alert.user.notificationSettings;
+
+                // 1. Telegram Notification
+                if (notifSettings?.telegramEnabled && notifSettings.telegramChatId) {
+                    console.log(`   📱 Sending Telegram message to ${notifSettings.telegramChatId}...`);
+                    const message = `🔔 *FİYAT ALARMI*\n\n` +
+                        `📈 *${alert.symbol}* hedef fiyata ulaştı.\n` +
+                        `💰 Güncel: ${currentPrice}\n` +
+                        `🎯 Hedef: ${alert.target}\n` +
+                        `📊 Yön: ${alert.type === 'PRICE_ABOVE' ? 'Yukarı' : 'Aşağı'}`;
+
+                    await TelegramService.sendMessage(notifSettings.telegramChatId, message);
+                }
+
+                // 2. Email Notification
                 if (notifSettings?.emailEnabled && notifSettings.smtpHost && notifSettings.smtpUser) {
                     console.log(`   📧 Sending email to ${alert.user.email}...`);
 
@@ -154,5 +218,17 @@ async function checkAlarms() {
 }
 
 // Start the loop
-checkAlarms(); // Run once immediately
-setInterval(checkAlarms, CHECK_INTERVAL_MS);
+async function run() {
+    await checkAlarms(); // Initial run
+
+    // Main loop
+    setInterval(async () => {
+        await checkTelegramUpdates();
+        await checkAlarms();
+    }, CHECK_INTERVAL_MS);
+
+    // Check telegram updates more frequently (every 5s)
+    setInterval(checkTelegramUpdates, 5000);
+}
+
+run();

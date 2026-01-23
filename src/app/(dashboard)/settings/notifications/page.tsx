@@ -104,7 +104,7 @@ export default function NotificationSettingsPage() {
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                <p className="text-sm">1. Botumuzu başlatın: <a href="https://t.me/YourBotName" target="_blank" className="font-bold underline text-primary">@BorsaTakipBot</a></p>
+                                <p className="text-sm">1. Botumuzu başlatın: <a href="https://t.me/byborsatakipbot" target="_blank" className="font-bold underline text-primary">@byborsatakipbot</a></p>
                                 <p className="text-sm">2. Aşağıdaki kodu bota gönderin: <b>/start {code || "..."}</b></p>
                                 {code ? (
                                     <div className="p-4 bg-muted font-mono text-center text-xl tracking-widest rounded-md border-2 border-primary border-dashed">
