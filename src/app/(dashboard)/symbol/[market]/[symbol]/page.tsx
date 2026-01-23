@@ -14,6 +14,8 @@ import { Input } from '@/components/ui/input';
 import { CreateAlertDialog } from '@/components/alerts/CreateAlertDialog';
 import { TechnicalAnalysis } from '@/components/features/TechnicalAnalysis';
 import { AIAnalysisModal } from '@/components/ai/AIAnalysisModal';
+import { CreditBadge } from '@/components/subscription/CreditBadge';
+import { UpgradeModal } from '@/components/subscription/UpgradeModal';
 
 export default function SymbolPage() {
     const params = useParams();
@@ -36,6 +38,7 @@ export default function SymbolPage() {
 
     // AI Analysis
     const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+    const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
     // Trade Form
     const [tradeType, setTradeType] = useState<'BUY' | 'SELL'>('BUY');
@@ -135,6 +138,22 @@ export default function SymbolPage() {
         return () => window.clearInterval(dataInterval);
     }, [symbol, market, range, interval]);
 
+    const handleAIAnalysisClick = async () => {
+        try {
+            // Deduct credit first
+            const creditRes = await axios.post('/api/user/credits');
+            if (creditRes.data.success) {
+                setIsAIModalOpen(true);
+            }
+        } catch (error: any) {
+            if (error.response?.data?.error === 'NO_CREDITS') {
+                setIsUpgradeModalOpen(true);
+            } else {
+                enqueueSnackbar('Hata oluştu', { variant: 'error' });
+            }
+        }
+    };
+
     const handleTransaction = async () => {
         try {
             await axios.post('/api/portfolio', {
@@ -185,11 +204,12 @@ export default function SymbolPage() {
                         <Button
                             variant="primary"
                             size="sm"
-                            onClick={() => setIsAIModalOpen(true)}
+                            onClick={handleAIAnalysisClick}
                             className="hidden md:flex gap-2 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white border-0 shadow-lg shadow-indigo-500/20"
                         >
                             <span>✨</span>
                             AI Analiz
+                            <CreditBadge />
                         </Button>
                         <Button
                             variant="outline"
@@ -246,6 +266,11 @@ export default function SymbolPage() {
                     candles: candles.slice(-30), // Son 30 mum
                     news: kapNews.slice(0, 3) // Son 3 haber
                 }}
+            />
+
+            <UpgradeModal
+                open={isUpgradeModalOpen}
+                onClose={() => setIsUpgradeModalOpen(false)}
             />
 
             <CreateAlertDialog
@@ -369,8 +394,8 @@ export default function SymbolPage() {
                                 variant={tradeType === 'BUY' ? 'primary' : 'outline'}
                                 onClick={() => setTradeType('BUY')}
                                 className={`flex-1 font-bold text-lg h-12 transition-all ${tradeType === 'BUY'
-                                        ? 'bg-green-600 hover:bg-green-700 text-white ring-2 ring-green-600 ring-offset-2 dark:ring-offset-gray-900'
-                                        : 'text-green-600 border-green-600 hover:bg-green-50'
+                                    ? 'bg-green-600 hover:bg-green-700 text-white ring-2 ring-green-600 ring-offset-2 dark:ring-offset-gray-900'
+                                    : 'text-green-600 border-green-600 hover:bg-green-50'
                                     }`}
                             >
                                 AL
@@ -380,8 +405,8 @@ export default function SymbolPage() {
                                 variant={tradeType === 'SELL' ? 'primary' : 'outline'}
                                 onClick={() => setTradeType('SELL')}
                                 className={`flex-1 font-bold text-lg h-12 transition-all ${tradeType === 'SELL'
-                                        ? 'bg-red-600 hover:bg-red-700 text-white ring-2 ring-red-600 ring-offset-2 dark:ring-offset-gray-900'
-                                        : 'text-red-600 border-red-600 hover:bg-red-50'
+                                    ? 'bg-red-600 hover:bg-red-700 text-white ring-2 ring-red-600 ring-offset-2 dark:ring-offset-gray-900'
+                                    : 'text-red-600 border-red-600 hover:bg-red-50'
                                     }`}
                             >
                                 SAT
@@ -393,8 +418,8 @@ export default function SymbolPage() {
                         </div>
                         <Button
                             className={`w-full font-bold h-12 text-lg mt-4 ${tradeType === 'BUY'
-                                    ? 'bg-green-600 hover:bg-green-700 text-white'
-                                    : 'bg-red-600 hover:bg-red-700 text-white'
+                                ? 'bg-green-600 hover:bg-green-700 text-white'
+                                : 'bg-red-600 hover:bg-red-700 text-white'
                                 }`}
                             onClick={handleTransaction}
                         >

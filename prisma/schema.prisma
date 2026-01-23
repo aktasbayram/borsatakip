@@ -16,6 +16,10 @@ model User {
   image                String?
   balanceTRY           Float                 @default(100000)
   balanceUSD           Float                 @default(10000)
+  aiCredits            Int                   @default(5)
+  aiCreditsTotal       Int                   @default(5)
+  aiCreditsResetAt     DateTime              @default(now())
+  subscriptionTier     String                @default("FREE")
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
   alerts               Alert[]

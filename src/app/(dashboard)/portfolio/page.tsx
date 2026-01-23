@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PortfolioAnalysis } from '@/components/features/PortfolioAnalysis';
 import { AIAnalysisModal } from '@/components/ai/AIAnalysisModal';
+import { CreditBadge } from '@/components/subscription/CreditBadge';
+import { UpgradeModal } from '@/components/subscription/UpgradeModal';
 
 const Trash2 = ({ size = 18, className = '' }: { size?: number; className?: string }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
@@ -60,6 +62,7 @@ export default function PortfolioPage() {
 
     // AI Analysis
     const [isAIModalOpen, setIsAIModalOpen] = useState(false);
+    const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
 
     // Edit trade modal state
     const [editingTrade, setEditingTrade] = useState<Trade | null>(null);
@@ -257,9 +260,23 @@ export default function PortfolioPage() {
                             variant="primary"
                             size="sm"
                             className="h-10 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white border-0 shadow-lg shadow-indigo-500/20"
-                            onClick={() => setIsAIModalOpen(true)}
+                            onClick={async () => {
+                                try {
+                                    const creditRes = await axios.post('/api/user/credits');
+                                    if (creditRes.data.success) {
+                                        setIsAIModalOpen(true);
+                                    }
+                                } catch (error: any) {
+                                    if (error.response?.data?.error === 'NO_CREDITS') {
+                                        setIsUpgradeModalOpen(true);
+                                    } else {
+                                        enqueueSnackbar('Hata oluştu', { variant: 'error' });
+                                    }
+                                }
+                            }}
                         >
                             <span>✨</span> AI Yorumla
+                            <CreditBadge className="ml-2" />
                         </Button>
                     )}
 
@@ -481,6 +498,19 @@ export default function PortfolioPage() {
                     </Card>
                 </div>
             )}
+
+            <AIAnalysisModal
+                open={isAIModalOpen}
+                onClose={() => setIsAIModalOpen(false)}
+                type="PORTFOLIO"
+                title="Portföy Analizi"
+                data={{ portfolios, selectedPortfolioId }}
+            />
+
+            <UpgradeModal
+                open={isUpgradeModalOpen}
+                onClose={() => setIsUpgradeModalOpen(false)}
+            />
         </div>
     );
 }

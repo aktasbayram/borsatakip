@@ -87,6 +87,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
+                            <Link
+                                href="/upgrade"
+                                className="hidden sm:flex items-center gap-1 px-3 py-1.5 rounded-md bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white text-sm font-medium transition-all shadow-sm"
+                            >
+                                <span>⚡</span>
+                                <span>Pro'ya Yükselt</span>
+                            </Link>
                             <ThemeToggle />
                             {/* Settings Dropdown - Hidden on very small screens if crowded, or keep it */}
                             <div className="relative group hidden sm:block">
@@ -208,6 +215,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         </button>
                         <Link href="/settings/notifications" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800">
                             🔔 Bildirim Ayarları
+                        </Link>
+                        <div className="border-t border-gray-200 dark:border-gray-800 my-2"></div>
+                        <Link href="/upgrade" className="block px-3 py-2 rounded-md text-base font-medium bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-700 hover:to-indigo-700">
+                            ⚡ Pro'ya Yükselt
                         </Link>
                         {session.user?.role === 'ADMIN' && (
                             <Link href="/admin" className="block px-3 py-2 rounded-md text-base font-medium text-purple-600 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-900/20">
