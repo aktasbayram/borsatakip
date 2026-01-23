@@ -30,6 +30,14 @@ model NotificationSettings {
   telegramChatId   String?
   telegramEnabled  Boolean  @default(false)
   emailEnabled     Boolean  @default(false)
+  
+  // SMTP Settings
+  smtpHost         String?
+  smtpPort         Int?
+  smtpUser         String?
+  smtpPassword     String?
+  smtpSecure       Boolean  @default(true) // true for 465, false for 587 (usually) with StartTLS
+  
   verificationCode String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt

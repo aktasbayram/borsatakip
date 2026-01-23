@@ -51,3 +51,29 @@ export async function getNotificationSettings() {
         where: { userId: session.user.id }
     });
 }
+
+export async function updateSmtpSettings(data: any) {
+    const session = await auth();
+    if (!session?.user?.id) throw new Error("Unauthorized");
+
+    await prisma.notificationSettings.upsert({
+        where: { userId: session.user.id },
+        create: {
+            userId: session.user.id,
+            smtpHost: data.host,
+            smtpPort: data.port,
+            smtpUser: data.user,
+            smtpPassword: data.password,
+            smtpSecure: data.secure
+        },
+        update: {
+            smtpHost: data.host,
+            smtpPort: data.port,
+            smtpUser: data.user,
+            smtpPassword: data.password,
+            smtpSecure: data.secure
+        }
+    });
+
+    revalidatePath('/settings/notifications');
+}
