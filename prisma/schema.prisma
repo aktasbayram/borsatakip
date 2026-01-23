@@ -14,6 +14,8 @@ model User {
   password             String?
   name                 String?
   image                String?
+  balanceTRY           Float                 @default(100000)
+  balanceUSD           Float                 @default(10000)
   createdAt            DateTime              @default(now())
   updatedAt            DateTime              @updatedAt
   alerts               Alert[]
@@ -22,6 +24,18 @@ model User {
   portfolios           Portfolio[]
   indices              UserIndex[]
   watchlists           Watchlist[]
+}
+
+// ... (other models) ...
+
+model Portfolio {
+  id        String   @id @default(cuid())
+  name      String
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trades    Trade[]
 }
 
 model NotificationSettings {
@@ -95,15 +109,7 @@ model WatchlistItem {
   @@unique([watchlistId, symbol, market])
 }
 
-model Portfolio {
-  id        String   @id @default(cuid())
-  name      String
-  userId    String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  trades    Trade[]
-}
+
 
 model Trade {
   id          String    @id @default(cuid())

@@ -146,8 +146,14 @@ export default function SymbolPage() {
                 price: Number(price)
             });
             enqueueSnackbar('İşlem kaydedildi', { variant: 'success' });
-        } catch (error) {
-            enqueueSnackbar('Hata oluştu', { variant: 'error' });
+
+            // Refresh portfolios to update balance
+            const res = await axios.get('/api/portfolio');
+            if (res.data.length > 0) {
+                setPortfolios(res.data);
+            }
+        } catch (error: any) {
+            enqueueSnackbar(error.response?.data?.error || 'Hata oluştu', { variant: 'error' });
         }
     };
 
@@ -324,23 +330,76 @@ export default function SymbolPage() {
                             </div>
                         )}
 
-                        <div className="flex gap-2">
+                        {/* Buying Power Display */}
+                        {portfolios.length > 0 && selectedPortfolioId && (
+                            <div className="flex flex-col gap-2 mb-4">
+                                <div className="flex justify-between items-center text-sm px-3 py-2 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-100 dark:border-gray-700">
+                                    <span className="text-gray-500 dark:text-gray-400 font-medium">Bakiye <span className="text-xs text-amber-600 bg-amber-100 px-1 py-0.5 rounded ml-1">(Demo)</span>:</span>
+                                    <span className="font-bold font-mono text-gray-900 dark:text-gray-100">
+                                        {(() => {
+                                            const p = portfolios.find(p => p.id === selectedPortfolioId);
+                                            if (!p) return '-';
+                                            return market === 'BIST'
+                                                ? `₺${p.balanceTRY?.toLocaleString('tr-TR', { minimumFractionDigits: 2 }) ?? '-'}`
+                                                : `$${p.balanceUSD?.toLocaleString('en-US', { minimumFractionDigits: 2 }) ?? '-'}`;
+                                        })()}
+                                    </span>
+                                </div>
+                                {tradeType === 'SELL' && (
+                                    <div className="flex justify-between items-center text-sm px-3 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-md border border-blue-100 dark:border-blue-800">
+                                        <span className="text-blue-600 dark:text-blue-400 font-medium">Satılabilir Adet:</span>
+                                        <span className="font-bold font-mono text-blue-700 dark:text-blue-300">
+                                            {(() => {
+                                                const p = portfolios.find(p => p.id === selectedPortfolioId);
+                                                if (!p || !p.trades) return 0;
+                                                const qty = p.trades
+                                                    .filter((t: any) => t.symbol === symbol)
+                                                    .reduce((acc: number, t: any) => acc + (t.type === 'BUY' ? t.quantity : -t.quantity), 0);
+                                                return qty;
+                                            })()}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        <div className="flex gap-3 mb-4">
                             <Button
-                                variant={tradeType === 'BUY' ? 'primary' : 'ghost'}
+                                type="button"
+                                variant={tradeType === 'BUY' ? 'primary' : 'outline'}
                                 onClick={() => setTradeType('BUY')}
-                                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                            >AL</Button>
+                                className={`flex-1 font-bold text-lg h-12 transition-all ${tradeType === 'BUY'
+                                        ? 'bg-green-600 hover:bg-green-700 text-white ring-2 ring-green-600 ring-offset-2 dark:ring-offset-gray-900'
+                                        : 'text-green-600 border-green-600 hover:bg-green-50'
+                                    }`}
+                            >
+                                AL
+                            </Button>
                             <Button
-                                variant={tradeType === 'SELL' ? 'primary' : 'ghost'}
+                                type="button"
+                                variant={tradeType === 'SELL' ? 'primary' : 'outline'}
                                 onClick={() => setTradeType('SELL')}
-                                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-                            >SAT</Button>
+                                className={`flex-1 font-bold text-lg h-12 transition-all ${tradeType === 'SELL'
+                                        ? 'bg-red-600 hover:bg-red-700 text-white ring-2 ring-red-600 ring-offset-2 dark:ring-offset-gray-900'
+                                        : 'text-red-600 border-red-600 hover:bg-red-50'
+                                    }`}
+                            >
+                                SAT
+                            </Button>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <Input label="Adet" type="number" value={quantity} onChange={e => setQuantity(Number(e.target.value))} />
                             <Input label="Fiyat" type="number" value={price} onChange={e => setPrice(Number(e.target.value))} />
                         </div>
-                        <Button className="w-full" onClick={handleTransaction}>İşlemi Kaydet</Button>
+                        <Button
+                            className={`w-full font-bold h-12 text-lg mt-4 ${tradeType === 'BUY'
+                                    ? 'bg-green-600 hover:bg-green-700 text-white'
+                                    : 'bg-red-600 hover:bg-red-700 text-white'
+                                }`}
+                            onClick={handleTransaction}
+                        >
+                            {tradeType === 'BUY' ? `${symbol} AL` : `${symbol} SAT`}
+                        </Button>
                     </CardContent>
                 </Card>
 
@@ -363,114 +422,118 @@ export default function SymbolPage() {
             </div>
 
             {/* KAP News Section - Only for BIST stocks */}
-            {market === 'BIST' && kapNews.length > 0 && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2">
-                            <span>📰</span>
-                            KAP Haberleri
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="space-y-4">
-                            {kapNews.map((news) => (
-                                <button
-                                    key={news.id}
-                                    onClick={() => setSelectedNews(news)}
-                                    className="w-full text-left block p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                                >
-                                    <div className="flex justify-between items-start gap-4">
-                                        <div className="flex-1">
-                                            <h3 className="font-semibold text-sm mb-1">{news.title}</h3>
-                                            <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                                                {news.summary}
-                                            </p>
-                                            <span className="text-xs text-gray-500">
-                                                {new Date(news.date).toLocaleDateString('tr-TR', {
-                                                    year: 'numeric',
-                                                    month: 'long',
-                                                    day: 'numeric'
-                                                })}
-                                            </span>
+            {
+                market === 'BIST' && kapNews.length > 0 && (
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <span>📰</span>
+                                KAP Haberleri
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="space-y-4">
+                                {kapNews.map((news) => (
+                                    <button
+                                        key={news.id}
+                                        onClick={() => setSelectedNews(news)}
+                                        className="w-full text-left block p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                                    >
+                                        <div className="flex justify-between items-start gap-4">
+                                            <div className="flex-1">
+                                                <h3 className="font-semibold text-sm mb-1">{news.title}</h3>
+                                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                                                    {news.summary}
+                                                </p>
+                                                <span className="text-xs text-gray-500">
+                                                    {new Date(news.date).toLocaleDateString('tr-TR', {
+                                                        year: 'numeric',
+                                                        month: 'long',
+                                                        day: 'numeric'
+                                                    })}
+                                                </span>
+                                            </div>
+                                            <svg
+                                                className="w-4 h-4 text-gray-400 flex-shrink-0 mt-1"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                            >
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                            </svg>
                                         </div>
-                                        <svg
-                                            className="w-4 h-4 text-gray-400 flex-shrink-0 mt-1"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                        >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
-                                    </div>
-                                </button>
-                            ))}
-                        </div>
-                    </CardContent>
-                </Card>
-            )}
+                                    </button>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+                )
+            }
 
             {/* KAP News Modal - Rendered via Portal to avoid z-index/overflow issues */}
-            {selectedNews && typeof document !== 'undefined' && createPortal(
-                <div
-                    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
-                    onClick={() => setSelectedNews(null)}
-                >
+            {
+                selectedNews && typeof document !== 'undefined' && createPortal(
                     <div
-                        className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-2xl"
-                        onClick={(e) => e.stopPropagation()}
+                        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
+                        onClick={() => setSelectedNews(null)}
                     >
-                        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b p-4 flex justify-between items-start z-10">
-                            <div className="flex-1 pr-4">
-                                <h2 className="text-xl font-bold mb-2">{selectedNews.title}</h2>
-                                <span className="text-sm text-gray-500">
-                                    {selectedNews.date ? new Date(selectedNews.date).toLocaleDateString('tr-TR', {
-                                        year: 'numeric',
-                                        month: 'long',
-                                        day: 'numeric',
-                                        hour: '2-digit',
-                                        minute: '2-digit'
-                                    }) : ''}
-                                </span>
-                            </div>
-                            <button
-                                onClick={() => setSelectedNews(null)}
-                                className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-                            >
-                                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-                        <div className="p-6">
-                            <div className="prose dark:prose-invert max-w-none">
-                                <p className="text-gray-700 dark:text-gray-300 mb-4 whitespace-pre-line">
-                                    {selectedNews.summary}
-                                </p>
-                            </div>
-                            <div className="mt-6 flex flex-col sm:flex-row gap-3">
-                                <a
-                                    href={selectedNews.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-center flex items-center justify-center gap-2"
-                                >
-                                    <span>KAP&apos;ta Görüntüle</span>
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                    </svg>
-                                </a>
+                        <div
+                            className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-2xl"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b p-4 flex justify-between items-start z-10">
+                                <div className="flex-1 pr-4">
+                                    <h2 className="text-xl font-bold mb-2">{selectedNews.title}</h2>
+                                    <span className="text-sm text-gray-500">
+                                        {selectedNews.date ? new Date(selectedNews.date).toLocaleDateString('tr-TR', {
+                                            year: 'numeric',
+                                            month: 'long',
+                                            day: 'numeric',
+                                            hour: '2-digit',
+                                            minute: '2-digit'
+                                        }) : ''}
+                                    </span>
+                                </div>
                                 <button
                                     onClick={() => setSelectedNews(null)}
-                                    className="flex-1 bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                                    className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                                 >
-                                    Kapat
+                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
                                 </button>
                             </div>
+                            <div className="p-6">
+                                <div className="prose dark:prose-invert max-w-none">
+                                    <p className="text-gray-700 dark:text-gray-300 mb-4 whitespace-pre-line">
+                                        {selectedNews.summary}
+                                    </p>
+                                </div>
+                                <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                                    <a
+                                        href={selectedNews.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-center flex items-center justify-center gap-2"
+                                    >
+                                        <span>KAP&apos;ta Görüntüle</span>
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                        </svg>
+                                    </a>
+                                    <button
+                                        onClick={() => setSelectedNews(null)}
+                                        className="flex-1 bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                                    >
+                                        Kapat
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>,
-                document.body
-            )}
-        </div>
+                    </div>,
+                    document.body
+                )
+            }
+        </div >
     );
 }
