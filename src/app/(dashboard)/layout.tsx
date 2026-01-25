@@ -7,12 +7,15 @@ import { Button } from '@/components/ui/button';
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { ThemeSettingsDialog } from "@/components/ui/theme-settings-dialog";
 import { PackageBadge } from '@/components/subscription/PackageBadge';
+import { useLayoutWidth } from '@/hooks/useLayoutWidth';
+import { Footer } from '@/components/layout/Footer';
 import { useEffect, useState } from 'react';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const { data: session, status } = useSession();
     const pathname = usePathname();
     const router = useRouter();
+    const { getContainerClass, getContentClass } = useLayoutWidth();
     const [themeDialogOpen, setThemeDialogOpen] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -43,7 +46,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return (
         <div className="min-h-screen bg-background transition-colors duration-300">
             <nav className="bg-card shadow-sm border-b border-border sticky top-0 z-40 transition-colors duration-300">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div className={`mx-auto ${getContainerClass()} px-4 sm:px-6 lg:px-8`}>
                     <div className="flex h-16 justify-between items-center">
                         <div className="flex items-center">
                             {/* Mobile menu button */}
@@ -114,12 +117,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                         >
                                             🔐 Hesap Ayarları
                                         </Link>
-                                        <Link
-                                            href="/settings/appearance"
-                                            className="block px-4 py-2 text-sm text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                                        <button
+                                            onClick={() => setThemeDialogOpen(true)}
+                                            className="w-full text-left block px-4 py-2 text-sm text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
                                         >
                                             🌓 Tema ve Görünüm
-                                        </Link>
+                                        </button>
                                         <Link
                                             href="/settings/notifications"
                                             className="block px-4 py-2 text-sm text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
@@ -204,13 +207,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         <Link href="/settings/account" className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-primary/10 hover:text-foreground">
                             🔐 Hesap Ayarları
                         </Link>
-                        <Link
-                            href="/settings/appearance"
-                            onClick={() => setMobileMenuOpen(false)}
-                            className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-primary/10 hover:text-foreground"
+                        <button
+                            onClick={() => {
+                                setThemeDialogOpen(true);
+                                setMobileMenuOpen(false);
+                            }}
+                            className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-primary/10 hover:text-foreground"
                         >
                             🌓 Tema ve Görünüm
-                        </Link>
+                        </button>
                         <Link href="/settings/notifications" className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-primary/10 hover:text-foreground">
                             🔔 Bildirim Ayarları
                         </Link>
@@ -234,9 +239,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </div>
             </div>
 
-            <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8 transition-colors duration-300">
+            <main className={`mx-auto ${getContentClass()} px-4 sm:px-6 lg:px-8 py-8 transition-colors duration-300`}>
                 {children}
             </main>
+
+            <Footer />
 
             <ThemeSettingsDialog open={themeDialogOpen} onClose={() => setThemeDialogOpen(false)} />
         </div >

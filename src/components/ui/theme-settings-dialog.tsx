@@ -1,6 +1,7 @@
 "use client";
 
 import { useTheme } from "next-themes";
+import { useLayoutWidth } from "@/hooks/useLayoutWidth";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -11,6 +12,7 @@ interface ThemeSettingsDialogProps {
 
 export function ThemeSettingsDialog({ open, onClose }: ThemeSettingsDialogProps) {
     const { theme, setTheme } = useTheme();
+    const { layoutWidth, setLayoutWidth } = useLayoutWidth();
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -60,7 +62,7 @@ export function ThemeSettingsDialog({ open, onClose }: ThemeSettingsDialogProps)
                     </button>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     {/* Light Mode */}
                     <div
                         className={`cursor-pointer group flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all ${theme === "light"
@@ -109,6 +111,139 @@ export function ThemeSettingsDialog({ open, onClose }: ThemeSettingsDialogProps)
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-gray-400/20 to-transparent transform -skew-x-12"></div>
                         </div>
                         <span className={`font-medium text-sm ${theme === "system" ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-400"}`}>Sistem</span>
+                    </div>
+
+                    {/* Minimal Theme */}
+                    <div
+                        className={`cursor-pointer group flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all ${theme === "minimal"
+                            ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/20 shadow-md"
+                            : "border-gray-200 dark:border-gray-800 hover:border-blue-200 dark:hover:border-blue-800"
+                            }`}
+                        onClick={() => { setTheme("minimal"); onClose(); }}
+                    >
+                        <div className="w-full aspect-video rounded-lg bg-white border border-gray-200 p-2 flex gap-2 pointer-events-none">
+                            <div className="w-1/3 h-full bg-gray-50 rounded-sm border border-dashed border-gray-300"></div>
+                            <div className="w-2/3 h-full flex flex-col gap-2">
+                                <div className="w-full h-8 bg-gray-50 rounded-sm border border-dashed border-gray-300"></div>
+                                <div className="w-full h-full bg-gray-50 rounded-sm border border-dashed border-gray-300"></div>
+                            </div>
+                        </div>
+                        <span className={`font-medium text-sm ${theme === "minimal" ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-400"}`}>Minimal (Açık)</span>
+                    </div>
+
+                    {/* Fintech Theme */}
+                    <div
+                        className={`cursor-pointer group flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all ${theme === "fintech"
+                            ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/20 shadow-md"
+                            : "border-gray-200 dark:border-gray-800 hover:border-blue-200 dark:hover:border-blue-800"
+                            }`}
+                        onClick={() => { setTheme("fintech"); onClose(); }}
+                    >
+                        <div className="w-full aspect-video rounded-lg bg-[#1e1b4b] border border-indigo-900 p-2 flex gap-2 pointer-events-none">
+                            <div className="w-1/3 h-full bg-[#312e81] rounded shadow-sm border border-indigo-800"></div>
+                            <div className="w-2/3 h-full flex flex-col gap-2">
+                                <div className="w-full h-8 bg-[#312e81] rounded shadow-sm border border-indigo-800"></div>
+                                <div className="w-full h-full bg-[#312e81] rounded shadow-sm border border-indigo-800"></div>
+                            </div>
+                        </div>
+                        <span className={`font-medium text-sm ${theme === "fintech" ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-400"}`}>Fintech</span>
+                    </div>
+
+                    {/* Terminal Theme */}
+                    <div
+                        className={`cursor-pointer group flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all ${theme === "terminal"
+                            ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/20 shadow-md"
+                            : "border-gray-200 dark:border-gray-800 hover:border-blue-200 dark:hover:border-blue-800"
+                            }`}
+                        onClick={() => { setTheme("terminal"); onClose(); }}
+                    >
+                        <div className="w-full aspect-video rounded-lg bg-black border border-green-900 p-2 flex gap-2 pointer-events-none font-mono">
+                            <div className="w-1/3 h-full bg-black rounded shadow-sm border border-green-800"></div>
+                            <div className="w-2/3 h-full flex flex-col gap-2">
+                                <div className="w-full h-8 bg-black rounded shadow-sm border border-green-800"></div>
+                                <div className="w-full h-full bg-black rounded shadow-sm border border-green-800"></div>
+                            </div>
+                        </div>
+                        <span className={`font-medium text-sm ${theme === "terminal" ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-400"}`}>Terminal</span>
+                    </div>
+
+
+                </div>
+
+                {/* Layout Width Section */}
+                <div className="mt-8">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Layout Genişliği</h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                        {/* Compact Width */}
+                        {/* Compact Width */}
+                        <div
+                            className={`cursor-pointer group flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all ${layoutWidth === 'compact'
+                                ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-900/20 shadow-md'
+                                : 'border-gray-200 dark:border-gray-800 hover:border-blue-200 dark:hover:border-blue-800'
+                                }`}
+                            onClick={() => {
+                                setLayoutWidth('compact');
+                                setTimeout(() => window.location.reload(), 100);
+                            }}
+                        >
+                            <div className="w-full aspect-video rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-2 flex items-center justify-center pointer-events-none">
+                                <div className="w-3/4 h-3/4 bg-white dark:bg-gray-700 rounded shadow-sm border border-gray-300 dark:border-gray-600"></div>
+                            </div>
+                            <div className="text-center">
+                                <span className={`font-medium text-sm block ${layoutWidth === 'compact' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'}`}>
+                                    Kompakt
+                                </span>
+                                <span className="text-xs text-gray-500 dark:text-gray-500">1280px</span>
+                            </div>
+                        </div>
+
+                        {/* Wide Width */}
+                        <div
+                            className={`cursor-pointer group flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all ${layoutWidth === 'wide'
+                                ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-900/20 shadow-md'
+                                : 'border-gray-200 dark:border-gray-800 hover:border-blue-200 dark:hover:border-blue-800'
+                                }`}
+                            onClick={() => {
+                                setLayoutWidth('wide');
+                                setTimeout(() => window.location.reload(), 100);
+                            }}
+                        >
+                            <div className="w-full aspect-video rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-2 flex items-center justify-center pointer-events-none">
+                                <div className="w-full h-3/4 bg-white dark:bg-gray-700 rounded shadow-sm border border-gray-300 dark:border-gray-600"></div>
+                            </div>
+                            <div className="text-center">
+                                <span className={`font-medium text-sm block ${layoutWidth === 'wide' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'}`}>
+                                    Değişik
+                                </span>
+                                <span className="text-xs text-gray-500 dark:text-gray-500">1000px</span>
+                            </div>
+                        </div>
+
+                        {/* Automatic Width */}
+                        <div
+                            className={`cursor-pointer group flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all ${layoutWidth === 'auto'
+                                ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-900/20 shadow-md'
+                                : 'border-gray-200 dark:border-gray-800 hover:border-blue-200 dark:hover:border-blue-800'
+                                }`}
+                            onClick={() => {
+                                setLayoutWidth('auto');
+                                setTimeout(() => window.location.reload(), 100);
+                            }}
+                        >
+                            <div className="w-full aspect-video rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-2 flex items-center justify-center pointer-events-none">
+                                <div className="w-full h-full bg-white dark:bg-gray-700 rounded shadow-sm border border-gray-300 dark:border-gray-600 flex items-center justify-center">
+                                    <svg className="w-6 h-6 text-gray-400 dark:text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
+                                    </svg>
+                                </div>
+                            </div>
+                            <div className="text-center">
+                                <span className={`font-medium text-sm block ${layoutWidth === 'auto' ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-400'}`}>
+                                    Otomatik
+                                </span>
+                                <span className="text-xs text-gray-500 dark:text-gray-500">Tam Ekran</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
