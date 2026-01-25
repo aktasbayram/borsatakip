@@ -47,7 +47,7 @@ export default function AppearancePage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                         {/* Light Mode */}
                         <div
                             className={`cursor-pointer group flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${theme === "light"
@@ -56,14 +56,14 @@ export default function AppearancePage() {
                                 }`}
                             onClick={() => handleThemeChange("light")}
                         >
-                            <div className="w-full aspect-video rounded-lg bg-[#f3f4f6] border border-gray-200 p-2 flex gap-2">
-                                <div className="w-1/3 h-full bg-white rounded shadow-sm"></div>
+                            <div className="w-full aspect-video rounded-lg bg-[#ffffff] border border-gray-200 p-2 flex gap-2">
+                                <div className="w-1/3 h-full bg-gray-100 rounded shadow-sm"></div>
                                 <div className="w-2/3 h-full flex flex-col gap-2">
-                                    <div className="w-full h-8 bg-white rounded shadow-sm"></div>
-                                    <div className="w-full h-full bg-white rounded shadow-sm"></div>
+                                    <div className="w-full h-8 bg-gray-50 rounded shadow-sm"></div>
+                                    <div className="w-full h-full bg-gray-50 rounded shadow-sm"></div>
                                 </div>
                             </div>
-                            <span className="font-medium text-sm text-gray-900 dark:text-gray-100">Aydınlık</span>
+                            <span className="font-medium text-sm text-gray-900 dark:text-gray-100">Minimal (Açık)</span>
                         </div>
 
                         {/* Dark Mode */}
@@ -74,14 +74,51 @@ export default function AppearancePage() {
                                 }`}
                             onClick={() => handleThemeChange("dark")}
                         >
-                            <div className="w-full aspect-video rounded-lg bg-[#111827] border border-gray-700 p-2 flex gap-2">
-                                <div className="w-1/3 h-full bg-[#1f2937] rounded shadow-sm border border-gray-600"></div>
+                            <div className="w-full aspect-video rounded-lg bg-[#0a0a0a] border border-gray-800 p-2 flex gap-2">
+                                <div className="w-1/3 h-full bg-[#171717] rounded shadow-sm border border-gray-800"></div>
                                 <div className="w-2/3 h-full flex flex-col gap-2">
-                                    <div className="w-full h-8 bg-[#1f2937] rounded shadow-sm border border-gray-600"></div>
-                                    <div className="w-full h-full bg-[#1f2937] rounded shadow-sm border border-gray-600"></div>
+                                    <div className="w-full h-8 bg-[#171717] rounded shadow-sm border border-gray-800"></div>
+                                    <div className="w-full h-full bg-[#171717] rounded shadow-sm border border-gray-800"></div>
                                 </div>
                             </div>
-                            <span className="font-medium text-sm text-gray-900 dark:text-gray-100">Karanlık</span>
+                            <span className="font-medium text-sm text-gray-900 dark:text-gray-100">Standart (Koyu)</span>
+                        </div>
+
+                        {/* Fintech Mode */}
+                        <div
+                            className={`cursor-pointer group flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${theme === "fintech"
+                                ? "border-purple-500 bg-purple-50/50 dark:bg-purple-900/20"
+                                : "border-gray-200 dark:border-gray-800 hover:border-purple-300 dark:hover:border-purple-700"
+                                }`}
+                            onClick={() => handleThemeChange("fintech")}
+                        >
+                            <div className="w-full aspect-video rounded-lg bg-[#0f0c29] border border-purple-900 p-2 flex gap-2 relative overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-br from-purple-900/30 to-blue-900/30"></div>
+                                <div className="w-1/3 h-full bg-white/10 backdrop-blur-sm rounded border border-white/10 z-10"></div>
+                                <div className="w-2/3 h-full flex flex-col gap-2 z-10">
+                                    <div className="w-full h-8 bg-white/10 backdrop-blur-sm rounded border border-white/10"></div>
+                                    <div className="w-full h-full bg-white/5 backdrop-blur-sm rounded border border-white/5"></div>
+                                </div>
+                            </div>
+                            <span className="font-medium text-sm text-gray-900 dark:text-gray-100">Fintech</span>
+                        </div>
+
+                        {/* Terminal Mode */}
+                        <div
+                            className={`cursor-pointer group flex flex-col items-center gap-2 p-4 rounded-xl border-2 transition-all ${theme === "terminal"
+                                ? "border-green-500 bg-green-50/50 dark:bg-green-900/20"
+                                : "border-gray-200 dark:border-gray-800 hover:border-green-300 dark:hover:border-green-700"
+                                }`}
+                            onClick={() => handleThemeChange("terminal")}
+                        >
+                            <div className="w-full aspect-video rounded-lg bg-black border border-green-900 p-2 flex gap-2 font-mono">
+                                <div className="w-1/3 h-full bg-[#111] border border-green-900/50 rounded-none"></div>
+                                <div className="w-2/3 h-full flex flex-col gap-2">
+                                    <div className="w-full h-8 bg-[#111] border border-green-900/50 rounded-none"></div>
+                                    <div className="w-full h-full bg-[#111] border border-green-900/50 rounded-none"></div>
+                                </div>
+                            </div>
+                            <span className="font-medium text-sm text-gray-900 dark:text-gray-100">Terminal</span>
                         </div>
 
                         {/* System Mode */}

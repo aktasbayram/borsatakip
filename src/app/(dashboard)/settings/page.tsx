@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useSnackbar } from 'notistack';
+import Link from 'next/link';
 import axios from 'axios';
 
 interface UserIndex {
@@ -125,6 +126,25 @@ export default function SettingsPage() {
                 </h1>
                 <p className="text-gray-500 dark:text-gray-400 mt-2">Hesap ayarlarınızı yönetin</p>
             </div>
+
+            {/* Theme Settings Link */}
+            <Link href="/settings/appearance" className="block relative overflow-hidden rounded-2xl bg-white/70 dark:bg-gray-900/70 backdrop-blur-2xl border-4 border-gray-200/80 dark:border-white/20 shadow-[0_8px_40px_rgb(0,0,0,0.16)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] transition-all duration-300 hover:scale-[1.01] hover:shadow-2xl group cursor-pointer">
+                <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-gradient-to-br from-pink-500 to-orange-600 rounded-full blur-3xl opacity-20 group-hover:opacity-30 transition-opacity"></div>
+
+                <div className="relative p-8 flex items-center justify-between">
+                    <div>
+                        <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Tema ve Görünüm</h3>
+                        <p className="text-gray-500 dark:text-gray-400">
+                            Uygulamanın renk temasını (Aydınlık, Karanlık, Fintech, Terminal) değiştirin.
+                        </p>
+                    </div>
+                    <div className="bg-gray-100 dark:bg-gray-800 p-4 rounded-full group-hover:bg-blue-50 dark:group-hover:bg-blue-900/20 transition-colors">
+                        <svg className="w-8 h-8 text-gray-600 dark:text-gray-300 group-hover:text-blue-600 dark:group-hover:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                        </svg>
+                    </div>
+                </div>
+            </Link>
 
             {/* Indices Management */}
             <div className="relative overflow-hidden rounded-2xl bg-white/70 dark:bg-gray-900/70 backdrop-blur-2xl border-4 border-gray-200/80 dark:border-white/20 shadow-[0_8px_40px_rgb(0,0,0,0.16)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] transition-all duration-300">

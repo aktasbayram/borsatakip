@@ -60,14 +60,14 @@ export function MarketIndices() {
                 return (
                     <Card key={idx.symbol} className="overflow-hidden hover:shadow-md transition-shadow">
                         <CardContent className="p-3 md:p-4">
-                            <div className="text-xs text-gray-500 font-medium mb-1 truncate" title={idx.name}>
+                            <div className="text-xs text-muted-foreground font-medium mb-1 truncate" title={idx.name}>
                                 {idx.name}
                             </div>
-                            <div className="text-lg md:text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+                            <div className="text-lg md:text-xl font-bold tracking-tight text-foreground">
                                 {idx.price.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
                             <div className={`flex items-center text-xs font-semibold mt-1 ${isPositive ? 'text-green-600 dark:text-green-400' :
-                                    isNegative ? 'text-red-600 dark:text-red-400' : 'text-gray-500'
+                                isNegative ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground'
                                 }`}>
                                 {isPositive ? <ArrowUpIcon className="w-3 h-3 mr-1" /> :
                                     isNegative ? <ArrowDownIcon className="w-3 h-3 mr-1" /> :

@@ -37,12 +37,12 @@ export default function AiAnalysisFeed({ analyses, loading = false }: AiAnalysis
     return (
         <div className="space-y-4">
             {/* Tabs */}
-            <div className="flex space-x-2 border-b border-gray-200 dark:border-gray-800 pb-2 overflow-x-auto">
+            <div className="flex space-x-2 border-b border-border pb-2 overflow-x-auto">
                 <button
                     onClick={() => setActiveTab('ALL')}
                     className={`px-4 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${activeTab === 'ALL'
-                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                        : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                         }`}
                 >
                     Tümü
@@ -50,8 +50,8 @@ export default function AiAnalysisFeed({ analyses, loading = false }: AiAnalysis
                 <button
                     onClick={() => setActiveTab('BIST')}
                     className={`px-4 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${activeTab === 'BIST'
-                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                        : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                         }`}
                 >
                     🇹🇷 Borsa İstanbul
@@ -59,8 +59,8 @@ export default function AiAnalysisFeed({ analyses, loading = false }: AiAnalysis
                 <button
                     onClick={() => setActiveTab('US')}
                     className={`px-4 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap ${activeTab === 'US'
-                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                        : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200'
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-accent'
                         }`}
                 >
                     🇺🇸 ABD Borsaları
@@ -68,7 +68,7 @@ export default function AiAnalysisFeed({ analyses, loading = false }: AiAnalysis
             </div>
 
             {filteredAnalyses.length === 0 ? (
-                <div className="p-8 text-center text-gray-500 bg-white dark:bg-gray-800 rounded-lg border border-dashed border-gray-300 dark:border-gray-700">
+                <div className="p-8 text-center text-muted-foreground bg-card rounded-lg border border-dashed border-border">
                     {analyses.length === 0 ? "Henüz analiz edilmiş haber yok." : "Bu kategoride gösterilecek analiz bulunamadı."}
                 </div>
             ) : (
@@ -76,13 +76,13 @@ export default function AiAnalysisFeed({ analyses, loading = false }: AiAnalysis
                     {filteredAnalyses.map((item) => {
                         const isPositive = item.sentiment >= 7;
                         const isNegative = item.sentiment <= 4;
-                        const sentimentColor = isPositive ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : isNegative ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+                        const sentimentColor = isPositive ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : isNegative ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300' : 'bg-secondary text-secondary-foreground';
                         const sentimentLabel = isPositive ? 'POZİTİF' : isNegative ? 'NEGATİF' : 'NÖTR';
 
                         return (
-                            <div key={item.id} className="bg-white dark:bg-gray-900 rounded-lg shadow-sm border border-gray-200 dark:border-gray-800 p-4 hover:shadow-md transition-shadow flex flex-col h-full">
+                            <div key={item.id} className="bg-card rounded-lg shadow-sm border border-border p-4 hover:shadow-md transition-shadow flex flex-col h-full">
                                 <div className="flex justify-between items-start mb-2">
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
                                         {item.symbol}
                                     </span>
                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${sentimentColor}`}>
@@ -91,16 +91,16 @@ export default function AiAnalysisFeed({ analyses, loading = false }: AiAnalysis
                                 </div>
 
                                 <a href={item.url} target="_blank" rel="noopener noreferrer" className="block mt-2 mb-2 flex-grow">
-                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                                    <h3 className="text-lg font-semibold text-card-foreground line-clamp-2 hover:text-primary transition-colors">
                                         {item.title}
                                     </h3>
                                 </a>
 
-                                <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-3 mb-4">
+                                <p className="mt-2 text-sm text-muted-foreground line-clamp-3 mb-4">
                                     {item.summary}
                                 </p>
 
-                                <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-800 flex items-center justify-between text-xs text-gray-400">
+                                <div className="mt-auto pt-4 border-t border-border flex items-center justify-between text-xs text-muted-foreground">
                                     <time dateTime={item.publishedAt}>
                                         {new Date(item.publishedAt).toLocaleString('tr-TR', {
                                             day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit'
@@ -111,7 +111,7 @@ export default function AiAnalysisFeed({ analyses, loading = false }: AiAnalysis
                                         Gemini AI
                                     </span>
 
-                                    <a href={item.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 font-medium transition-colors">
+                                    <a href={item.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-primary hover:text-primary/80 font-medium transition-colors">
                                         Habere Git
                                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
                                     </a>

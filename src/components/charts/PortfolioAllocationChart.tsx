@@ -13,7 +13,7 @@ const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8', '#82ca9d'
 export function PortfolioAllocationChart({ holdings }: { holdings: Holding[] }) {
     if (!holdings || holdings.length === 0) {
         return (
-            <div className="h-[300px] flex items-center justify-center text-gray-400 bg-gray-50/50 dark:bg-gray-800/50 rounded-xl border-2 border-dashed border-gray-200 dark:border-gray-700">
+            <div className="h-[300px] flex items-center justify-center text-muted-foreground bg-muted/50 rounded-xl border-2 border-dashed border-border">
                 Veri yok
             </div>
         );
@@ -27,12 +27,12 @@ export function PortfolioAllocationChart({ holdings }: { holdings: Holding[] }) 
     const CustomTooltip = ({ active, payload, label }: any) => {
         if (active && payload && payload.length) {
             return (
-                <div className="bg-white dark:bg-gray-800 p-3 border border-gray-100 dark:border-gray-700 rounded-lg shadow-lg">
-                    <p className="font-bold text-gray-900 dark:text-white">{payload[0].name}</p>
-                    <p className="text-sm text-blue-600 dark:text-blue-400">
+                <div className="bg-popover text-popover-foreground p-3 border border-border rounded-lg shadow-lg">
+                    <p className="font-bold">{payload[0].name}</p>
+                    <p className="text-sm text-primary">
                         {payload[0].value.toLocaleString('tr-TR', { maximumFractionDigits: 0 })} ₺
                     </p>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted-foreground">
                         %{(payload[0].payload.percent * 100).toFixed(1)}
                     </p>
                 </div>
@@ -65,7 +65,7 @@ export function PortfolioAllocationChart({ holdings }: { holdings: Holding[] }) 
                         verticalAlign="middle"
                         align="right"
                         formatter={(value, entry: any) => (
-                            <span className="text-sm text-gray-700 dark:text-gray-300 ml-2">
+                            <span className="text-sm text-foreground ml-2">
                                 {value}
                             </span>
                         )}

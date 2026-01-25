@@ -41,7 +41,7 @@ export function TechnicalAnalysis({ candles }: TechnicalAnalysisProps) {
                     <CardTitle className="text-lg">Teknik Analiz</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-muted-foreground">
                         {candles?.length > 0 ? "Veri hesaplanıyor..." : "Veri bekleniyor..."}
                         <br />
                         <span className="text-xs">(Mum sayısı: {candles?.length || 0})</span>
@@ -54,7 +54,7 @@ export function TechnicalAnalysis({ candles }: TechnicalAnalysisProps) {
     const getRsiStatus = (rsi: number) => {
         if (rsi > 70) return { text: "Aşırı Alım (Overbought)", color: "text-red-500" };
         if (rsi < 30) return { text: "Aşırı Satım (Oversold)", color: "text-green-500" };
-        return { text: "Nötr", color: "text-gray-500" };
+        return { text: "Nötr", color: "text-muted-foreground" };
     };
 
     const rsiStatus = analysis.rsi ? getRsiStatus(analysis.rsi) : { text: "-", color: "" };
@@ -67,13 +67,13 @@ export function TechnicalAnalysis({ candles }: TechnicalAnalysisProps) {
             <CardContent>
                 <div className="space-y-4">
                     {/* RSI */}
-                    <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
+                    <div className="flex items-center justify-between border-b border-border pb-3">
                         <div>
-                            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">RSI (14)</p>
+                            <p className="text-sm font-medium text-muted-foreground">RSI (14)</p>
                             <p className={`text-xs font-semibold ${rsiStatus.color}`}>{rsiStatus.text}</p>
                         </div>
                         <div className="text-right">
-                            <span className="text-xl font-bold text-gray-900 dark:text-white">
+                            <span className="text-xl font-bold text-foreground">
                                 {analysis.rsi?.toFixed(2) ?? "-"}
                             </span>
                         </div>
@@ -81,21 +81,21 @@ export function TechnicalAnalysis({ candles }: TechnicalAnalysisProps) {
 
                     {/* Moving Averages */}
                     <div className="grid grid-cols-3 gap-2 text-center">
-                        <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded">
-                            <p className="text-xs text-gray-500">EMA (20)</p>
-                            <p className="font-semibold text-gray-900 dark:text-white text-sm">
+                        <div className="bg-muted p-2 rounded">
+                            <p className="text-xs text-muted-foreground">EMA (20)</p>
+                            <p className="font-semibold text-foreground text-sm">
                                 {analysis.ema20?.toFixed(2) ?? "-"}
                             </p>
                         </div>
-                        <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded">
-                            <p className="text-xs text-gray-500">SMA (50)</p>
-                            <p className="font-semibold text-gray-900 dark:text-white text-sm">
+                        <div className="bg-muted p-2 rounded">
+                            <p className="text-xs text-muted-foreground">SMA (50)</p>
+                            <p className="font-semibold text-foreground text-sm">
                                 {analysis.sma50?.toFixed(2) ?? "-"}
                             </p>
                         </div>
-                        <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded">
-                            <p className="text-xs text-gray-500">SMA (200)</p>
-                            <p className="font-semibold text-gray-900 dark:text-white text-sm">
+                        <div className="bg-muted p-2 rounded">
+                            <p className="text-xs text-muted-foreground">SMA (200)</p>
+                            <p className="font-semibold text-foreground text-sm">
                                 {analysis.sma200?.toFixed(2) ?? "-"}
                             </p>
                         </div>

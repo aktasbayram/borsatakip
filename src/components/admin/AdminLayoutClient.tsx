@@ -4,6 +4,8 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+
+
 export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const pathname = usePathname();
@@ -14,9 +16,9 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
             <Link
                 href={href}
                 onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors ${isActive
-                    ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-300 ${isActive
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:bg-accent hover:text-foreground'
                     }`}
             >
                 {icon}
@@ -26,13 +28,13 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex">
+        <div className="min-h-screen bg-background flex transition-colors duration-300">
             {/* Mobile Header */}
-            <div className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800 px-4 h-16 flex items-center justify-between">
+            <div className="lg:hidden fixed top-0 left-0 right-0 z-30 bg-card border-b border-border px-4 h-16 flex items-center justify-between transition-colors duration-300">
                 <div className="flex items-center gap-3">
                     <button
                         onClick={() => setSidebarOpen(true)}
-                        className="p-2 -ml-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        className="p-2 -ml-2 rounded-md text-foreground hover:bg-accent transition-colors duration-300 lg:hidden"
                     >
                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -47,14 +49,14 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
             {/* Mobile Sidebar Overlay */}
             {sidebarOpen && (
                 <div
-                    className="fixed inset-0 z-40 bg-gray-900/50 backdrop-blur-sm lg:hidden animate-in fade-in duration-200"
+                    className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm lg:hidden animate-in fade-in duration-200"
                     onClick={() => setSidebarOpen(false)}
                 />
             )}
 
             {/* Sidebar (Desktop & Mobile) */}
             <aside className={`
-                fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-950 border-r border-gray-200 dark:border-gray-800
+                fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border
                 transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:h-screen
                 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
             `}>
@@ -65,7 +67,7 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
                 </div>
 
                 {/* Mobile Sidebar Header */}
-                <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-800 lg:hidden">
+                <div className="flex items-center justify-between p-4 border-b border-border lg:hidden">
                     <span className="font-bold text-lg">Menü</span>
                     <button
                         onClick={() => setSidebarOpen(false)}

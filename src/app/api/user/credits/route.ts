@@ -26,8 +26,8 @@ export async function GET(request: Request) {
 
         // Check if monthly reset is needed
         const now = new Date();
-        const resetDate = new Date(user.aiCreditsResetAt);
-        const needsReset = now.getMonth() !== resetDate.getMonth() || now.getFullYear() !== resetDate.getFullYear();
+        const resetDate = user.aiCreditsResetAt ? new Date(user.aiCreditsResetAt) : new Date(0);
+        const needsReset = !user.aiCreditsResetAt || now.getMonth() !== resetDate.getMonth() || now.getFullYear() !== resetDate.getFullYear();
 
         if (needsReset) {
             // Reset credits to tier total
@@ -83,8 +83,8 @@ export async function POST(request: Request) {
 
         // Check if monthly reset is needed first
         const now = new Date();
-        const resetDate = new Date(user.aiCreditsResetAt);
-        const needsReset = now.getMonth() !== resetDate.getMonth() || now.getFullYear() !== resetDate.getFullYear();
+        const resetDate = user.aiCreditsResetAt ? new Date(user.aiCreditsResetAt) : new Date(0);
+        const needsReset = !user.aiCreditsResetAt || now.getMonth() !== resetDate.getMonth() || now.getFullYear() !== resetDate.getFullYear();
 
         let currentCredits = user.aiCredits;
 
