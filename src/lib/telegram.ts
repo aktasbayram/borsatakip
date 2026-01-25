@@ -1,21 +1,28 @@
 import axios from 'axios';
 
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-const TELEGRAM_API_URL = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}`;
+import { ConfigService } from "@/services/config";
+
+const getTelegramConfig = async () => {
+  const token = await ConfigService.get("TELEGRAM_BOT_TOKEN");
+  return {
+    token,
+    url: `https://api.telegram.org/bot${token}`
+  }
+}
 
 export class TelegramService {
   /**
    * Send a text message to a chat ID
    */
   static async sendMessage(chatId: string, text: string) {
-    if (!TELEGRAM_BOT_TOKEN) {
+    const { token, url } = await getTelegramConfig();
+    if (!token) {
       console.warn('TELEGRAM_BOT_TOKEN is not set');
-      // In development we might want to throw or log only
       return;
     }
 
     try {
-      await axios.post(`${TELEGRAM_API_URL}/sendMessage`, {
+      await axios.post(`${url}/sendMessage`, {
         chat_id: chatId,
         text: text,
         parse_mode: 'Markdown',
@@ -29,9 +36,10 @@ export class TelegramService {
    * Get updates (useful for polling in a script)
    */
   static async getUpdates(offset?: number) {
-    if (!TELEGRAM_BOT_TOKEN) return [];
+    const { token, url } = await getTelegramConfig();
+    if (!token) return [];
     try {
-      const res = await axios.get(`${TELEGRAM_API_URL}/getUpdates`, {
+      const res = await axios.get(`${url}/getUpdates`, {
         params: { offset, timeout: 5 }
       });
       return res.data.result;

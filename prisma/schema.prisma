@@ -178,3 +178,12 @@ model UserIndex {
   @@unique([userId, symbol])
   @@index([userId, order])
 }
+
+model SystemSetting {
+  key         String   @id
+  value       String
+  description String?
+  category    String   @default("GENERAL") // AI, MARKET, SYSTEM, NOTIFICATION
+  isSecret    Boolean  @default(false)     // specific keys should be masked in UI
+  updatedAt   DateTime @updatedAt
+}

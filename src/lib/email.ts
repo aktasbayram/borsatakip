@@ -1,25 +1,37 @@
 import nodemailer from 'nodemailer';
 
-const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: process.env.SMTP_SECURE === 'true',
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-    },
-});
+import { ConfigService } from "@/services/config";
 
 export class EmailService {
+    private static async getTransporter() {
+        const host = await ConfigService.get("SMTP_HOST") || 'smtp.gmail.com';
+        const port = parseInt(await ConfigService.get("SMTP_PORT") || '587');
+        const secure = (await ConfigService.get("SMTP_SECURE")) === 'true';
+        const user = await ConfigService.get("SMTP_USER");
+        const pass = await ConfigService.get("SMTP_PASS");
+
+        return {
+            transporter: nodemailer.createTransport({
+                host,
+                port,
+                secure,
+                auth: { user, pass },
+            }),
+            user
+        };
+    }
+
     static async sendAlertEmail(to: string, subject: string, htmlDetails: string) {
-        if (!process.env.SMTP_USER) {
+        const { transporter, user } = await this.getTransporter();
+
+        if (!user) {
             console.warn("SMTP_USER not set, skipping email");
             return;
         }
 
         try {
             await transporter.sendMail({
-                from: `"Borsa Takip" <${process.env.SMTP_USER}>`,
+                from: `"Borsa Takip" <${user}>`,
                 to,
                 subject,
                 html: `

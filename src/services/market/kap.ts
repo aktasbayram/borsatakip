@@ -1,9 +1,14 @@
 import axios from 'axios';
 
-// Environment variables
-const KAP_API_URL = process.env.KAP_API_URL || 'https://apigwdev.mkk.com.tr/api/vyk';
-const KAP_USERNAME = process.env.KAP_API_USERNAME;
-const KAP_PASSWORD = process.env.KAP_API_PASSWORD;
+import { ConfigService } from "@/services/config";
+
+const getKapConfig = async () => {
+    return {
+        url: await ConfigService.get("KAP_API_URL") || 'https://apigwdev.mkk.com.tr/api/vyk',
+        username: await ConfigService.get("KAP_API_USERNAME"),
+        password: await ConfigService.get("KAP_API_PASSWORD")
+    }
+}
 
 // Caching configuration
 let memberCache: Record<string, string> | null = null;
@@ -36,9 +41,10 @@ function getValue(obj: any): string {
 }
 
 export class KAPService {
-    private static getAuthHeader() {
-        if (!KAP_USERNAME || !KAP_PASSWORD) return {};
-        const auth = Buffer.from(`${KAP_USERNAME}:${KAP_PASSWORD}`).toString('base64');
+    private static async getAuthHeader() {
+        const { username, password } = await getKapConfig();
+        if (!username || !password) return {};
+        const auth = Buffer.from(`${username}:${password}`).toString('base64');
         return { Authorization: `Basic ${auth}` };
     }
 
@@ -50,8 +56,9 @@ export class KAPService {
 
         try {
             console.log('Fetching KAP members from API...');
-            const response = await axios.get(`${KAP_API_URL}/members`, {
-                headers: this.getAuthHeader(),
+            const { url } = await getKapConfig();
+            const response = await axios.get(`${url}/members`, {
+                headers: await this.getAuthHeader(),
                 timeout: 5000
             });
 
@@ -97,8 +104,9 @@ export class KAPService {
 
     private static async getLastDisclosureIndex(): Promise<number | null> {
         try {
-            const response = await axios.get(`${KAP_API_URL}/lastDisclosureIndex`, {
-                headers: this.getAuthHeader(),
+            const { url } = await getKapConfig();
+            const response = await axios.get(`${url}/lastDisclosureIndex`, {
+                headers: await this.getAuthHeader(),
                 timeout: 3000
             });
 
@@ -133,12 +141,13 @@ export class KAPService {
 
             console.log(`Fetching KAP news for ${symbol} (MemberID: ${memberId}, QueryIndex: ${queryIndex})...`);
 
-            const response = await axios.get(`${KAP_API_URL}/disclosures`, {
+            const { url } = await getKapConfig();
+            const response = await axios.get(`${url}/disclosures`, {
                 params: {
                     disclosureIndex: queryIndex,
                     companyId: memberId,
                 },
-                headers: this.getAuthHeader(),
+                headers: await this.getAuthHeader(),
                 timeout: 5000
             });
 

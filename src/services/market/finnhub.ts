@@ -1,15 +1,27 @@
 import axios from 'axios';
 import { MarketDataProvider, MarketQuote, MarketCandle, SymbolSearchResult } from './provider';
 import { marketCache } from './cache';
+import { ConfigService } from "../config";
 
-const API_KEY = process.env.FINNHUB_API_KEY;
 const BASE_URL = 'https://finnhub.io/api/v1';
 
-const isMock = !API_KEY || API_KEY === 'your_finnhub_api_key';
+let finnhubApiKey: string | undefined;
+
+const getFinnhubApiKey = async (): Promise<string | undefined> => {
+    if (!finnhubApiKey) {
+        finnhubApiKey = await ConfigService.get("FINNHUB_API_KEY");
+    }
+    return finnhubApiKey;
+};
+
+const isMock = async () => {
+    const key = await getFinnhubApiKey();
+    return !key || key === 'your_finnhub_api_key';
+};
 
 export class FinnhubProvider implements MarketDataProvider {
     async getQuote(symbol: string): Promise<MarketQuote> {
-        if (isMock) {
+        if (await isMock()) {
             console.warn('Finnhub API Key invalid. Returning mock data for', symbol);
             return {
                 symbol,
@@ -27,8 +39,10 @@ export class FinnhubProvider implements MarketDataProvider {
         if (cached) return cached;
 
         try {
+            const apiKey = await getFinnhubApiKey();
+            if (!apiKey) throw new Error("FINNHUB_API_KEY not configured");
             const response = await axios.get(`${BASE_URL}/quote`, {
-                params: { symbol, token: API_KEY },
+                params: { symbol, token: apiKey },
             });
 
             const data = response.data;
@@ -62,7 +76,7 @@ export class FinnhubProvider implements MarketDataProvider {
     }
 
     async getCandles(symbol: string, range: '1D' | '1W' | '1M' | '3M' | '1Y', interval?: string): Promise<MarketCandle[]> {
-        if (isMock) {
+        if (await isMock()) {
             const mockCandles: MarketCandle[] = [];
             const now = Date.now();
             let price = 150;
@@ -99,13 +113,14 @@ export class FinnhubProvider implements MarketDataProvider {
         }
 
         try {
+            const apiKey = await getFinnhubApiKey();
             const response = await axios.get(`${BASE_URL}/stock/candle`, {
                 params: {
                     symbol,
                     resolution,
                     from,
                     to: Math.floor(Date.now() / 1000),
-                    token: API_KEY,
+                    token: apiKey,
                 },
             });
 
@@ -149,14 +164,15 @@ export class FinnhubProvider implements MarketDataProvider {
     }
 
     async search(query: string): Promise<SymbolSearchResult[]> {
-        if (isMock) {
+        if (await isMock()) {
             if (query.toUpperCase().includes('A')) return [{ symbol: 'AAPL', description: 'Apple Inc', market: 'US', type: 'Common Stock' }];
             return [];
         }
 
         try {
+            const apiKey = await getFinnhubApiKey();
             const response = await axios.get(`${BASE_URL}/search`, {
-                params: { q: query, token: API_KEY },
+                params: { q: query, token: apiKey },
             });
 
             return response.data.result
