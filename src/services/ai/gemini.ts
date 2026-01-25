@@ -47,25 +47,15 @@ export const analyzeWithGemini = async (prompt: string) => {
 };
 
 export class GeminiService {
-    private model: any;
-
-    constructor() {
-        this.initializeModel();
-    }
-
-    private async initializeModel() {
+    async analyzeNews(symbol: string, newsTitle: string): Promise<{ sentiment: number; summary: string } | null> {
         const apiKey = await getApiKey();
         if (!apiKey) {
             console.error("GEMINI_API_KEY is not set!");
-        } else {
-            const genAI = new GoogleGenerativeAI(apiKey);
-            // Upgrade to Pro model
-            this.model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+            return null;
         }
-    }
 
-    async analyzeNews(symbol: string, newsTitle: string): Promise<{ sentiment: number; summary: string } | null> {
-        if (!this.model) return null;
+        const genAI = new GoogleGenerativeAI(apiKey);
+        const model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
 
         const prompt = `
         Sen bir Borsa ve Finans Analistisin.
@@ -88,7 +78,7 @@ export class GeminiService {
 
         while (retries <= maxRetries) {
             try {
-                const result = await this.model.generateContent(prompt);
+                const result = await model.generateContent(prompt);
                 const response = await result.response;
                 const text = response.text();
 
