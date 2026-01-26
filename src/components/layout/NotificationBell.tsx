@@ -19,8 +19,15 @@ export function NotificationBell() {
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [isOpen, setIsOpen] = useState(false);
-    const { enqueueSnackbar } = useSnackbar();
+    const { enqueueSnackbar, closeSnackbar } = useSnackbar();
     const lastNotifiedId = useRef<string | null>(null);
+
+    // Request browser notification permission on mount
+    useEffect(() => {
+        if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    }, []);
 
     const fetchNotifications = async (isPoll = false) => {
         try {
@@ -29,7 +36,7 @@ export function NotificationBell() {
             setNotifications(newNotifications);
             setUnreadCount(res.data.unreadCount);
 
-            // Toast Logic
+            // Toast + Browser Notification Logic
             if (isPoll && newNotifications.length > 0) {
                 const latest = newNotifications[0];
                 // If it's new and unread and we haven't toasted it yet
@@ -39,10 +46,41 @@ export function NotificationBell() {
                     const secondsAgo = (new Date().getTime() - new Date(latest.createdAt).getTime()) / 1000;
 
                     if (secondsAgo < 60) {
+                        // Site içi toast
                         enqueueSnackbar(`${latest.title}: ${latest.message}`, {
                             variant: latest.type === 'ERROR' ? 'error' : 'default',
-                            anchorOrigin: { vertical: 'top', horizontal: 'right' }
+                            anchorOrigin: { vertical: 'top', horizontal: 'right' },
+                            action: (key) => (
+                                <button
+                                    onClick={() => closeSnackbar(key)}
+                                    className="ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+                                >
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            )
                         });
+
+                        // Browser notification
+                        if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+                            try {
+                                const notification = new Notification(latest.title, {
+                                    body: latest.message,
+                                    icon: '/favicon.ico',
+                                    requireInteraction: true,
+                                    silent: false
+                                });
+
+                                notification.onclick = function () {
+                                    window.focus();
+                                    this.close();
+                                };
+                            } catch (e) {
+                                console.error('Browser notification failed', e);
+                            }
+                        }
+
                         lastNotifiedId.current = latest.id;
                     }
                 }
@@ -90,7 +128,9 @@ export function NotificationBell() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                 </svg>
                 {unreadCount > 0 && (
-                    <span className="absolute top-2 right-2 h-2.5 w-2.5 bg-red-500 rounded-full ring-2 ring-white dark:ring-gray-900 animate-pulse" />
+                    <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center ring-2 ring-white dark:ring-gray-900">
+                        {unreadCount > 9 ? '9+' : unreadCount}
+                    </span>
                 )}
             </Button>
 
