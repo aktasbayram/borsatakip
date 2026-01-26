@@ -5,6 +5,8 @@ import { SymbolSearch } from '@/components/features/SymbolSearch';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MarketIndices } from '@/components/dashboard/MarketIndices';
+import { NewsFeed } from "@/components/news/NewsFeed";
+import { AgendaWidget } from "@/components/dashboard/AgendaWidget"; // New Import
 import { useSnackbar } from 'notistack';
 import axios from 'axios';
 import {
@@ -148,6 +150,8 @@ export default function DashboardPage() {
     return (
         <div className="space-y-6">
             <MarketIndices />
+
+            <AgendaWidget />
 
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h1 className="text-3xl font-bold tracking-tight">Takip Listem</h1>

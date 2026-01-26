@@ -54,7 +54,7 @@ export function NewsFeed({ initialMarket = 'BIST' }: NewsFeedProps) {
             <div className="flex flex-col md:flex-row gap-4 justify-between items-center bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
                 <div className="flex items-center gap-2 w-full md:w-auto p-1 bg-gray-100 dark:bg-gray-700/50 rounded-lg">
                     <Button
-                        variant={market === 'BIST' ? 'white' : 'ghost'}
+                        variant={market === 'BIST' ? 'secondary' : 'ghost'}
                         onClick={() => setMarket('BIST')}
                         size="sm"
                         className={market === 'BIST' ? 'bg-white shadow-sm text-gray-900 font-semibold' : 'text-gray-500 hover:text-gray-900'}
@@ -62,7 +62,7 @@ export function NewsFeed({ initialMarket = 'BIST' }: NewsFeedProps) {
                         Borsa İstanbul
                     </Button>
                     <Button
-                        variant={market === 'US' ? 'white' : 'ghost'}
+                        variant={market === 'US' ? 'secondary' : 'ghost'}
                         onClick={() => setMarket('US')}
                         size="sm"
                         className={market === 'US' ? 'bg-white shadow-sm text-gray-900 font-semibold' : 'text-gray-500 hover:text-gray-900'}
@@ -98,7 +98,7 @@ export function NewsFeed({ initialMarket = 'BIST' }: NewsFeedProps) {
                 <Card className="border-dashed">
                     <CardContent className="flex flex-col items-center justify-center py-16 text-gray-500">
                         <p className="text-lg">Kriterlere uygun haber bulunamadı.</p>
-                        <Button variant="link" onClick={() => setQuery('')}>Aramayı Temizle</Button>
+                        <Button variant="ghost" onClick={() => setQuery('')}>Aramayı Temizle</Button>
                     </CardContent>
                 </Card>
             ) : (
