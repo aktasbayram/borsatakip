@@ -10,6 +10,8 @@ import { PackageBadge } from '@/components/subscription/PackageBadge';
 import { useLayoutWidth } from '@/hooks/useLayoutWidth';
 import { Footer } from '@/components/layout/Footer';
 import { useEffect, useState } from 'react';
+import { Chatbot } from '@/components/ai/Chatbot';
+import { NotificationBell } from '@/components/layout/NotificationBell';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const { data: session, status } = useSession();
@@ -40,6 +42,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         { name: 'Takip Listesi', href: '/' },
         { name: 'Portföy', href: '/portfolio' },
         { name: 'Analizler', href: '/analysis' },
+        { name: 'Haberler', href: '/news' },
         { name: 'Alarmlar', href: '/alerts' },
     ];
 
@@ -90,10 +93,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 })}
                             </div>
                         </div>
+
                         <div className="flex items-center gap-2">
                             <Link href="/upgrade">
                                 <PackageBadge />
                             </Link>
+                            <NotificationBell />
                             <ThemeToggle />
                             {/* Settings Dropdown - Hidden on very small screens if crowded, or keep it */}
                             <div className="relative group hidden sm:block">
@@ -246,6 +251,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Footer />
 
             <ThemeSettingsDialog open={themeDialogOpen} onClose={() => setThemeDialogOpen(false)} />
+            <Chatbot />
         </div >
     );
 }

@@ -6,6 +6,7 @@ export interface MarketQuote {
     currency: string;
     market: 'BIST' | 'US';
     timestamp: number;
+    name?: string;
 }
 
 export interface MarketCandle {

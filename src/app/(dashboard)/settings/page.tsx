@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { useSnackbar } from 'notistack';
 import Link from 'next/link';
 import axios from 'axios';
+import { NotificationSettings } from '@/components/settings/NotificationSettings';
 
 interface UserIndex {
     id: string;
@@ -144,10 +145,14 @@ export default function SettingsPage() {
                         </svg>
                     </div>
                 </div>
-            </Link>
+        </div>
+            </Link >
 
-            {/* Indices Management */}
-            <div className="relative overflow-hidden rounded-2xl bg-white/70 dark:bg-gray-900/70 backdrop-blur-2xl border-4 border-gray-200/80 dark:border-white/20 shadow-[0_8px_40px_rgb(0,0,0,0.16)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] transition-all duration-300">
+        {/* Notification Settings */ }
+        < NotificationSettings />
+
+        {/* Indices Management */ }
+        < div className = "relative overflow-hidden rounded-2xl bg-white/70 dark:bg-gray-900/70 backdrop-blur-2xl border-4 border-gray-200/80 dark:border-white/20 shadow-[0_8px_40px_rgb(0,0,0,0.16)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] transition-all duration-300" >
                 <div className="absolute top-0 right-0 -mt-16 -mr-16 w-32 h-32 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full blur-3xl opacity-30"></div>
 
                 <div className="relative p-8">
@@ -232,10 +237,10 @@ export default function SettingsPage() {
                         </form>
                     </div>
                 </div>
-            </div>
+            </div >
 
-            {/* Password Change (existing) */}
-            <div className="relative overflow-hidden rounded-2xl bg-white/70 dark:bg-gray-900/70 backdrop-blur-2xl border-4 border-gray-200/80 dark:border-white/20 shadow-[0_8px_40px_rgb(0,0,0,0.16)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] transition-all duration-300">
+        {/* Password Change (existing) */ }
+        < div className = "relative overflow-hidden rounded-2xl bg-white/70 dark:bg-gray-900/70 backdrop-blur-2xl border-4 border-gray-200/80 dark:border-white/20 shadow-[0_8px_40px_rgb(0,0,0,0.16)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] transition-all duration-300" >
                 <div className="absolute bottom-0 left-0 -mb-16 -ml-16 w-32 h-32 bg-gradient-to-tr from-emerald-500 to-teal-600 rounded-full blur-3xl opacity-30"></div>
 
                 <div className="relative p-8">
@@ -308,7 +313,7 @@ export default function SettingsPage() {
                         </div>
                     </form>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }

@@ -15,7 +15,12 @@ export async function GET(request: Request) {
 
     const watchlists = await prisma.watchlist.findMany({
         where: { userId: session.user.id },
-        include: { items: true },
+        include: {
+            items: {
+                orderBy: { order: 'asc' }
+            }
+        },
+
     });
 
     return NextResponse.json(watchlists);

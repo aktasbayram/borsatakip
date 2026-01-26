@@ -8,12 +8,15 @@
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate && prisma db push",
-    "worker": "npx ts-node --project tsconfig.script.json scripts/price_alarm_worker.ts"
+    "worker": "npx ts-node -r tsconfig-paths/register --project tsconfig.script.json scripts/alert-worker.ts"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@google/generative-ai": "^0.24.1",
     "@prisma/client": "5.19.1",
     "@radix-ui/react-dialog": "^1.1.15",

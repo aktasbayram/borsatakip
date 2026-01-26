@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import { ConfigService } from "@/services/config";
+import { ConfigService } from "../services/config";
 
 const getTelegramConfig = async () => {
   const token = await ConfigService.get("TELEGRAM_BOT_TOKEN");

@@ -2,22 +2,38 @@
 
 import { useState, useEffect } from 'react';
 import { SymbolSearch } from '@/components/features/SymbolSearch';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MarketIndices } from '@/components/dashboard/MarketIndices';
-import TradingViewWidget from '@/components/TradingViewWidget';
 import { useSnackbar } from 'notistack';
 import axios from 'axios';
-import Link from 'next/link';
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragEndEvent
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    rectSortingStrategy
+} from '@dnd-kit/sortable';
+import { SortableWatchlistItem } from '@/components/dashboard/SortableWatchlistItem';
 
 interface WatchlistItem {
     id: string;
     symbol: string;
     market: 'BIST' | 'US';
+    order: number;
     quote?: {
         price: number;
         change: number;
         changePercent: number;
+        name?: string;
     } | null;
 }
 
@@ -25,6 +41,17 @@ export default function DashboardPage() {
     const [watchlist, setWatchlist] = useState<WatchlistItem[]>([]);
     const [loading, setLoading] = useState(true);
     const { enqueueSnackbar } = useSnackbar();
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 5, // Require 5px movement to start drag
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
 
     const fetchWatchlist = async () => {
         try {
@@ -51,7 +78,7 @@ export default function DashboardPage() {
             }
         } catch (error) {
             console.error(error);
-            enqueueSnackbar('Takip listesi yüklenemedi', { variant: 'error' });
+            // enqueueSnackbar('Takip listesi yüklenemedi', { variant: 'error' });
         } finally {
             setLoading(false);
         }
@@ -89,6 +116,35 @@ export default function DashboardPage() {
         }
     };
 
+    const handleDragEnd = async (event: DragEndEvent) => {
+        const { active, over } = event;
+
+        if (active.id !== over?.id) {
+            setWatchlist((items) => {
+                const oldIndex = items.findIndex((i) => i.id === active.id);
+                const newIndex = items.findIndex((i) => i.id === over?.id);
+
+                if (oldIndex === -1 || newIndex === -1) return items;
+
+                const newItems = arrayMove(items, oldIndex, newIndex);
+
+                // Trigger API update
+                const updates = newItems.map((item, index) => ({
+                    id: item.id,
+                    order: index
+                }));
+
+                axios.put('/api/watchlist/reorder', { items: updates })
+                    .catch(err => console.error('Reorder failed', err));
+
+                return newItems;
+            });
+        }
+    };
+
+    const bistItems = watchlist.filter(item => item.market === 'BIST');
+    const usItems = watchlist.filter(item => item.market === 'US');
+
     return (
         <div className="space-y-6">
             <MarketIndices />
@@ -98,115 +154,77 @@ export default function DashboardPage() {
                 <SymbolSearch onSelect={handleAddSymbol} />
             </div>
 
-            {loading && watchlist.length === 0 ? (
-                <div>Yükleniyor...</div>
-            ) : (
-                <div className="space-y-8">
-                    {/* BIST Stocks Section */}
-                    {watchlist.filter(item => item.market === 'BIST').length > 0 && (
-                        <div>
-                            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                                <span className="text-2xl">🇹🇷</span>
-                                BIST Hisseleri
-                                <span className="text-sm font-normal text-gray-500">
-                                    ({watchlist.filter(item => item.market === 'BIST').length})
-                                </span>
-                            </h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {watchlist.filter(item => item.market === 'BIST').map(item => (
-                                    <Link href={`/symbol/${item.market}/${item.symbol}`} key={item.id}>
-                                        <Card className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer relative group">
-                                            <CardHeader className="pb-10">
-                                                <div className="flex justify-between items-start">
-                                                    <div>
-                                                        <CardTitle>{item.symbol}</CardTitle>
-                                                        <span className="text-xs text-gray-500">{item.market}</span>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        {item.quote ? (
-                                                            <>
-                                                                <div className="text-lg font-bold">
-                                                                    ₺{item.quote.price.toFixed(2)}
-                                                                </div>
-                                                                <div className={`text-sm font-medium ${item.quote.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                                                    {item.quote.change >= 0 ? '+' : ''}{item.quote.changePercent.toFixed(2)}%
-                                                                </div>
-                                                            </>
-                                                        ) : (
-                                                            <div className="animate-pulse bg-gray-200 h-6 w-16 rounded"></div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </CardHeader>
-                                            <button
-                                                onClick={(e) => handleRemove(item.id, e)}
-                                                className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 p-1 text-red-500 hover:text-red-700 text-xs"
-                                            >
-                                                Sil
-                                            </button>
-                                        </Card>
-                                    </Link>
-                                ))}
+            <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+            >
+                {loading && watchlist.length === 0 ? (
+                    <div>Yükleniyor...</div>
+                ) : (
+                    <div className="space-y-8">
+                        {/* BIST Stocks Section */}
+                        {bistItems.length > 0 && (
+                            <div>
+                                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                                    <span className="text-2xl">🇹🇷</span>
+                                    BIST Hisseleri
+                                    <span className="text-sm font-normal text-gray-500">
+                                        ({bistItems.length})
+                                    </span>
+                                </h2>
+                                <SortableContext
+                                    items={bistItems.map(i => i.id)}
+                                    strategy={rectSortingStrategy}
+                                >
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {bistItems.map((item) => (
+                                            <SortableWatchlistItem
+                                                key={item.id}
+                                                item={item}
+                                                onRemove={handleRemove}
+                                            />
+                                        ))}
+                                    </div>
+                                </SortableContext>
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    {/* US Stocks Section */}
-                    {watchlist.filter(item => item.market === 'US').length > 0 && (
-                        <div>
-                            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                                <span className="text-2xl">🇺🇸</span>
-                                ABD Hisseleri
-                                <span className="text-sm font-normal text-gray-500">
-                                    ({watchlist.filter(item => item.market === 'US').length})
-                                </span>
-                            </h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                {watchlist.filter(item => item.market === 'US').map(item => (
-                                    <Link href={`/symbol/${item.market}/${item.symbol}`} key={item.id}>
-                                        <Card className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors cursor-pointer relative group">
-                                            <CardHeader className="pb-10">
-                                                <div className="flex justify-between items-start">
-                                                    <div>
-                                                        <CardTitle>{item.symbol}</CardTitle>
-                                                        <span className="text-xs text-gray-500">{item.market}</span>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        {item.quote ? (
-                                                            <>
-                                                                <div className="text-lg font-bold">
-                                                                    ${item.quote.price.toFixed(2)}
-                                                                </div>
-                                                                <div className={`text-sm font-medium ${item.quote.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                                                                    {item.quote.change >= 0 ? '+' : ''}{item.quote.changePercent.toFixed(2)}%
-                                                                </div>
-                                                            </>
-                                                        ) : (
-                                                            <div className="animate-pulse bg-gray-200 h-6 w-16 rounded"></div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </CardHeader>
-                                            <button
-                                                onClick={(e) => handleRemove(item.id, e)}
-                                                className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 p-1 text-red-500 hover:text-red-700 text-xs"
-                                            >
-                                                Sil
-                                            </button>
-                                        </Card>
-                                    </Link>
-                                ))}
+                        {/* US Stocks Section */}
+                        {usItems.length > 0 && (
+                            <div>
+                                <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                                    <span className="text-2xl">🇺🇸</span>
+                                    ABD Hisseleri
+                                    <span className="text-sm font-normal text-gray-500">
+                                        ({usItems.length})
+                                    </span>
+                                </h2>
+                                <SortableContext
+                                    items={usItems.map(i => i.id)}
+                                    strategy={rectSortingStrategy}
+                                >
+                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                        {usItems.map((item) => (
+                                            <SortableWatchlistItem
+                                                key={item.id}
+                                                item={item}
+                                                onRemove={handleRemove}
+                                            />
+                                        ))}
+                                    </div>
+                                </SortableContext>
                             </div>
-                        </div>
-                    )}
+                        )}
 
-                    {watchlist.length === 0 && !loading && (
-                        <div className="col-span-full text-center py-10 text-gray-500">
-                            Listeniz boş. Yukarıdan sembol ekleyin.
-                        </div>
-                    )}
-                </div>
-            )}
+                        {watchlist.length === 0 && !loading && (
+                            <div className="col-span-full text-center py-10 text-gray-500">
+                                Listeniz boş. Yukarıdan sembol ekleyin.
+                            </div>
+                        )}
+                    </div>
+                )}
+            </DndContext>
         </div>
     );
 }

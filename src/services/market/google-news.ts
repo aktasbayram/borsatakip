@@ -44,7 +44,8 @@ export class GoogleNewsProvider {
                 link: item.link || '',
                 pubDate: item.pubDate ? new Date(item.pubDate) : new Date(),
                 summary: item.contentSnippet,
-                source: item.source
+                source: item.source,
+                id: item.guid || item.link || Math.random().toString(36).substr(2, 9)
             }));
 
         } catch (error) {

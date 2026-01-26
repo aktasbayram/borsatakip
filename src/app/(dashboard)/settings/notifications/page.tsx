@@ -48,9 +48,10 @@ export default function NotificationSettingsPage() {
         enqueueSnackbar("Doğrulama kodu oluşturuldu!", { variant: 'success' });
     };
 
-    const handleToggle = async (type: 'telegram' | 'email', checked: boolean) => {
+    const handleToggle = async (type: 'telegram' | 'email' | 'site', checked: boolean) => {
         // Optimistic update
-        setSettings((prev: any) => ({ ...prev, [type === 'telegram' ? 'telegramEnabled' : 'emailEnabled']: checked }));
+        const key = type === 'telegram' ? 'telegramEnabled' : type === 'email' ? 'emailEnabled' : 'siteEnabled';
+        setSettings((prev: any) => ({ ...prev, [key]: checked }));
         await toggleNotification(type, checked);
         enqueueSnackbar("Ayarlar güncellendi", { variant: 'success' });
     };
@@ -95,20 +96,59 @@ export default function NotificationSettingsPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         {settings?.telegramChatId ? (
-                            <div className="flex items-center justify-between bg-green-500/10 p-4 rounded-lg">
-                                <span className="text-green-600 font-medium">✅ Bağlandı</span>
-                                <Switch
-                                    checked={settings.telegramEnabled}
-                                    onCheckedChange={(c) => handleToggle('telegram', c)}
-                                />
+                            <div className="flex flex-col gap-4 bg-green-500/10 p-4 rounded-lg">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-green-600 font-medium flex items-center gap-2">
+                                        ✅ Bağlandı
+                                        <span className="text-xs text-muted-foreground font-mono">({settings.telegramChatId})</span>
+                                    </span>
+                                    <Switch
+                                        checked={settings.telegramEnabled}
+                                        onCheckedChange={(c) => handleToggle('telegram', c)}
+                                    />
+                                </div>
+                                <Button
+                                    variant="danger"
+                                    size="sm"
+                                    onClick={async () => {
+                                        if (!confirm('Bağlantıyı koparmak istediğinize emin misiniz?')) return;
+                                        // We need to implement disconnect logic here.
+                                        // Since we used actions in this file, let's use a server action or API.
+                                        // I'll assume we can add a disconnectTelegram action or use fetch.
+                                        // Let's use fetch to my new API for consistency/ease since I know it works.
+                                        try {
+                                            await fetch('/api/user/notifications', {
+                                                method: 'POST',
+                                                body: JSON.stringify({ telegramChatId: '', telegramEnabled: false, emailEnabled: settings.emailEnabled })
+                                            });
+                                            setSettings((prev: any) => ({ ...prev, telegramChatId: '', telegramEnabled: false }));
+                                            enqueueSnackbar("Bağlantı koparıldı", { variant: 'success' });
+                                        } catch (e) {
+                                            enqueueSnackbar("Hata oluştu", { variant: 'error' });
+                                        }
+                                    }}
+                                >
+                                    Bağlantıyı Kopar
+                                </Button>
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                <p className="text-sm">1. Botumuzu başlatın: <a href="https://t.me/byborsatakipbot" target="_blank" className="font-bold underline text-primary">@byborsatakipbot</a></p>
-                                <p className="text-sm">2. Aşağıdaki kodu bota gönderin: <b>/start {code || "..."}</b></p>
+                                <div className="space-y-2 text-sm">
+                                    <p>1. <a href="https://t.me/byborsatakipbot" target="_blank" className="font-bold underline text-blue-500 hover:text-blue-600">@byborsatakipbot</a> adresine gidin ve <strong>BAŞLAT</strong> butonuna tıklayın.</p>
+                                    <p>2. "Kod Oluştur" butonuna tıklayıp size özel komutu alın.</p>
+                                    <p>3. Aşağıdaki komutu olduğu gibi kopyalayıp bota gönderin (Sadece kodu değil, başındaki /start ile birlikte).</p>
+                                </div>
                                 {code ? (
-                                    <div className="p-4 bg-muted font-mono text-center text-xl tracking-widest rounded-md border-2 border-primary border-dashed">
-                                        {code}
+                                    <div className="space-y-2">
+                                        <div className="p-4 bg-muted font-mono text-center text-2xl tracking-widest font-bold rounded-md border-2 border-primary border-dashed select-all cursor-pointer hover:bg-muted/80 transition-colors"
+                                            onClick={() => {
+                                                navigator.clipboard.writeText(`/start ${code}`);
+                                                enqueueSnackbar("Komut kopyalandı!", { variant: 'success' });
+                                            }}
+                                        >
+                                            /start {code}
+                                        </div>
+                                        <p className="text-xs text-center text-muted-foreground">Kopyalamak için kutuya tıklayın</p>
                                     </div>
                                 ) : (
                                     <Button onClick={handleGenerateCode} className="w-full">
@@ -117,6 +157,32 @@ export default function NotificationSettingsPage() {
                                 )}
                             </div>
                         )}
+                        {/* Site Notifications */}
+                        <Card className={settings?.siteEnabled ? "border-violet-500/50" : ""}>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <span className="text-2xl">🔔</span> Site Bildirimleri
+                                </CardTitle>
+                                <CardDescription>
+                                    Tarayıcı ve uygulama içi anlık bildirimler.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex items-center justify-between p-4 bg-violet-50 dark:bg-violet-900/10 border border-violet-100 dark:border-violet-800 rounded-lg">
+                                    <div className="flex flex-col">
+                                        <span className="font-medium text-violet-900 dark:text-violet-100">Site İçi Uyarılar</span>
+                                        <span className="text-sm text-violet-600 dark:text-violet-300">
+                                            {settings?.siteEnabled ? 'Aktif' : 'Pasif'}
+                                        </span>
+                                    </div>
+                                    <Switch
+                                        checked={settings?.siteEnabled}
+                                        onCheckedChange={(c) => handleToggle('site', c)}
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
+
                     </CardContent>
                 </Card>
 

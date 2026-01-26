@@ -25,18 +25,20 @@ export async function generateTelegramCode() {
     return code;
 }
 
-export async function toggleNotification(type: 'telegram' | 'email', enabled: boolean) {
+export async function toggleNotification(type: 'telegram' | 'email' | 'site', enabled: boolean) {
     const session = await auth();
     if (!session?.user?.id) throw new Error("Unauthorized");
+
+    const field = type === 'telegram' ? 'telegramEnabled' : type === 'email' ? 'emailEnabled' : 'siteEnabled';
 
     await prisma.notificationSettings.upsert({
         where: { userId: session.user.id },
         create: {
             userId: session.user.id,
-            [type === 'telegram' ? 'telegramEnabled' : 'emailEnabled']: enabled
+            [field]: enabled
         },
         update: {
-            [type === 'telegram' ? 'telegramEnabled' : 'emailEnabled']: enabled
+            [field]: enabled
         }
     });
 

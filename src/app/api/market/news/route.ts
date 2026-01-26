@@ -1,75 +1,40 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { KAPService } from '@/services/market/kap';
+import { NextResponse } from 'next/server';
+import { GoogleNewsProvider } from '@/services/market/google-news';
+import { YahooProvider } from '@/services/market/yahoo';
 
-interface KAPNews {
-    id: string;
-    title: string;
-    date: string;
-    summary: string;
-    url: string;
-}
+const googleNews = new GoogleNewsProvider();
+const yahoo = new YahooProvider();
 
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
+    const query = searchParams.get('query');
     const symbol = searchParams.get('symbol');
-    const market = searchParams.get('market');
-
-    // Only support BIST stocks for KAP news
-    if (market !== 'BIST' || !symbol) {
-        return NextResponse.json([]);
-    }
+    const market = (searchParams.get('market') as 'BIST' | 'US') || 'BIST';
 
     try {
-        // Try to fetch real news from KAP API
-        let news = await KAPService.getNews(symbol);
+        let newsItems = [];
 
-        // Fallback to mock data if no news found (or API error/auth missing)
-        if (news.length === 0) {
-            console.log(`No news found for ${symbol}, using mock data fallback.`);
-
-            const mockNews: KAPNews[] = [
-                {
-                    id: '1',
-                    title: `${symbol} - Finansal Tablolar ve Faaliyet Raporu Açıklaması`,
-                    date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-                    summary: 'Şirketimizin 2024 yılı 4. çeyrek finansal tabloları ve faaliyet raporu kamuya açıklanmıştır. (MOCK)',
-                    url: 'https://www.kap.org.tr'
-                },
-                {
-                    id: '2',
-                    title: `${symbol} - Yönetim Kurulu Kararları`,
-                    date: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-                    summary: 'Yönetim kurulu toplantısında alınan kararlar hakkında bilgilendirme. (MOCK)',
-                    url: 'https://www.kap.org.tr'
-                },
-                {
-                    id: '3',
-                    title: `${symbol} - Ortaklık Yapısında Değişiklik`,
-                    date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-                    summary: 'Şirket ortaklık yapısında meydana gelen değişiklikler hakkında açıklama. (MOCK)',
-                    url: 'https://www.kap.org.tr'
-                },
-                {
-                    id: '4',
-                    title: `${symbol} - Temettü Dağıtım Kararı`,
-                    date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-                    summary: 'Genel kurul kararı ile temettü dağıtımına ilişkin açıklama. (MOCK)',
-                    url: 'https://www.kap.org.tr'
-                },
-                {
-                    id: '5',
-                    title: `${symbol} - Özel Durum Açıklaması`,
-                    date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-                    summary: 'Şirket faaliyetlerini etkileyebilecek özel durum açıklaması. (MOCK)',
-                    url: 'https://www.kap.org.tr'
-                }
-            ];
-            news = mockNews;
+        if (symbol) {
+            // Priority to Yahoo for specific symbol news as it links to financial data often
+            // But Google News is also good. Let's try Google News with symbol first as it's our main provider here.
+            // Actually, Yahoo's getNews might be better for specific tickers.
+            // Let's stick to GoogleNewsProvider for consistency based on previous plan mostly.
+            // But the plan said "If symbol is provided, use YahooProvider".
+            newsItems = await yahoo.getNews(symbol);
+            if (newsItems.length === 0) {
+                newsItems = await googleNews.getNews(symbol, market);
+            }
+        } else if (query) {
+            newsItems = await googleNews.getNews(query, market);
+        } else {
+            // Default feed
+            const defaultQuery = market === 'BIST' ? 'Borsa İstanbul ekonomi' : 'Stock market economy';
+            newsItems = await googleNews.getNews(defaultQuery, market);
         }
 
-        return NextResponse.json(news);
-    } catch (error) {
-        console.error('KAP news fetch error:', error);
-        return NextResponse.json([]);
+        return NextResponse.json(newsItems);
+    } catch (error: any) {
+        console.error('News API Error:', error);
+        return NextResponse.json({ error: 'Failed to fetch news', details: error.message }, { status: 500 });
     }
 }

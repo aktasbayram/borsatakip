@@ -95,6 +95,7 @@ export class YahooProvider implements MarketDataProvider {
                 currency: quote.currency || 'TRY',
                 market: (quote.currency === 'TRY' || quote.exchange === 'IST') ? 'BIST' : 'US',
                 timestamp: Date.now(),
+                name: quote.longName || quote.shortName || quote.displayName
             };
 
             marketCache.set(cacheKey, marketQuote, 60);
@@ -286,7 +287,8 @@ export class YahooProvider implements MarketDataProvider {
                     publisher: n.publisher,
                     providerPublishTime: n.providerPublishTime,
                     type: n.type,
-                    uuid: n.uuid
+                    uuid: n.uuid,
+                    id: n.uuid
                 }));
             }
             return [];
