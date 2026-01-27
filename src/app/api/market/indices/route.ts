@@ -7,8 +7,11 @@ import { prisma } from '@/lib/db';
 const DEFAULT_INDICES = [
     { symbol: 'XU100.IS', name: 'BIST 100' },
     { symbol: 'XU030.IS', name: 'BIST 30' },
+    { symbol: 'XBANK.IS', name: 'BIST Banka' },
+    { symbol: 'XUSIN.IS', name: 'BIST Sınai' },
     { symbol: 'USDTRY=X', name: 'Dolar/TL' },
     { symbol: 'EURTRY=X', name: 'Euro/TL' },
+    { symbol: 'GC=F', name: 'Altın' },
 ];
 
 export async function GET() {

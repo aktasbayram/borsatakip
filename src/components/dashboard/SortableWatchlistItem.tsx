@@ -36,33 +36,33 @@ export function SortableWatchlistItem({ item, onRemove }: SortableItemProps) {
                 {/* Drag Handle */}
                 <div
                     {...listeners}
-                    className="absolute top-2 right-2 p-2 cursor-grab active:cursor-grabbing z-20 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors opacity-0 group-hover:opacity-100"
+                    className="absolute top-1.5 right-1.5 p-1.5 cursor-grab active:cursor-grabbing z-20 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors opacity-0 group-hover:opacity-100"
                     title="Sürükle"
                 >
-                    <GripVertical size={20} />
+                    <GripVertical size={16} />
                 </div>
 
                 <Link href={`/symbol/${item.market}/${item.symbol}`} className="block h-full flex-1" draggable={false}>
-                    <CardHeader className="pb-10 pt-6"> {/* Added pt-6 for spacing if needed */}
+                    <CardHeader className="pb-8 pt-4 px-3">
                         <div className="flex justify-between items-start">
                             <div>
-                                <CardTitle>{item.symbol}</CardTitle>
-                                <div className="text-xs text-muted-foreground truncate max-w-[200px]" title={item.quote?.name}>
+                                <CardTitle className="text-base">{item.symbol}</CardTitle>
+                                <div className="text-[10px] text-muted-foreground truncate max-w-[150px]" title={item.quote?.name}>
                                     {item.quote?.name || item.market}
                                 </div>
                             </div>
-                            <div className="text-right pr-6"> {/* Added pr-6 to avoid overlap with handle if visible */}
+                            <div className="text-right pr-5">
                                 {item.quote ? (
                                     <>
-                                        <div className="text-lg font-bold">
+                                        <div className="text-base font-bold">
                                             {item.market === 'US' ? '$' : '₺'}{item.quote.price?.toFixed(2)}
                                         </div>
-                                        <div className={`text-sm font-medium ${item.quote.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                        <div className={`text-xs font-medium ${item.quote.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
                                             {item.quote.change >= 0 ? '+' : ''}{item.quote.changePercent?.toFixed(2)}%
                                         </div>
                                     </>
                                 ) : (
-                                    <div className="animate-pulse bg-gray-200 h-6 w-16 rounded"></div>
+                                    <div className="animate-pulse bg-gray-200 h-5 w-14 rounded"></div>
                                 )}
                             </div>
                         </div>
@@ -73,10 +73,10 @@ export function SortableWatchlistItem({ item, onRemove }: SortableItemProps) {
                 <button
                     onPointerDown={(e) => e.stopPropagation()}
                     onClick={(e) => onRemove(item.id, e)}
-                    className="absolute bottom-3 right-3 opacity-0 group-hover:opacity-100 p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-all z-20"
+                    className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-all z-20"
                     title="Listeden Çıkar"
                 >
-                    <Trash2 size={16} />
+                    <Trash2 size={14} />
                 </button>
             </Card>
         </div>

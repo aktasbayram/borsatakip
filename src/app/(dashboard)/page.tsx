@@ -145,7 +145,7 @@ export default function DashboardPage() {
         }
     };
 
-    const [preferences, setPreferences] = useState({ showAgenda: true, showIpo: true });
+    const [preferences, setPreferences] = useState({ showAgenda: true, showIpo: true, showIndices: true });
 
     useEffect(() => {
         const fetchPreferences = async () => {
@@ -155,7 +155,8 @@ export default function DashboardPage() {
                     // Start true by default if keys are missing, but respect false if set
                     setPreferences(prev => ({
                         showAgenda: res.data.showAgenda !== false,
-                        showIpo: res.data.showIpo !== false
+                        showIpo: res.data.showIpo !== false,
+                        showIndices: res.data.showIndices !== false
                     }));
                 }
             } catch (error) {
@@ -177,7 +178,7 @@ export default function DashboardPage() {
 
     return (
         <div className="space-y-6">
-            <MarketIndices />
+            {preferences.showIndices && <MarketIndices />}
 
             {(preferences.showAgenda || preferences.showIpo) && (
                 <div className={`grid grid-cols-1 ${preferences.showAgenda && preferences.showIpo ? 'lg:grid-cols-2' : ''} gap-6`}>

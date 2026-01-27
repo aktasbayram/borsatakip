@@ -11,7 +11,8 @@ export default function DashboardSettingsPage() {
     const { enqueueSnackbar } = useSnackbar();
     const [preferences, setPreferences] = useState({
         showAgenda: true,
-        showIpo: true
+        showIpo: true,
+        showIndices: true
     });
     const [loading, setLoading] = useState(true);
 
@@ -62,6 +63,20 @@ export default function DashboardSettingsPage() {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                    <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                            <Label htmlFor="showIndices" className="text-base font-medium">Piyasa Endeksleri</Label>
+                            <p className="text-sm text-muted-foreground">
+                                BIST, döviz ve emtia endekslerini göster.
+                            </p>
+                        </div>
+                        <Switch
+                            id="showIndices"
+                            checked={preferences.showIndices}
+                            onCheckedChange={(checked) => updatePreference('showIndices', checked)}
+                            disabled={loading}
+                        />
+                    </div>
                     <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
                             <Label htmlFor="showAgenda" className="text-base font-medium">Ekonomik Takvim</Label>
