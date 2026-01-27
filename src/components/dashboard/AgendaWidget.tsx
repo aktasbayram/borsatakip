@@ -78,10 +78,10 @@ export function AgendaWidget() {
 
                 {/* Right Side: Content */}
                 <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-gray-950">
-                    <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100 dark:border-gray-800">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100 dark:border-gray-800">
                         <div className="flex items-center gap-2">
-                            <Calendar className="w-3.5 h-3.5 text-primary" />
-                            <h3 className="font-semibold text-xs text-foreground">Ekonomik Takvim</h3>
+                            <Calendar className="w-4 h-4 text-primary" />
+                            <h3 className="font-semibold text-sm text-foreground">Ekonomik Takvim</h3>
                         </div>
                         <div className="flex items-center gap-0.5">
                             <Button

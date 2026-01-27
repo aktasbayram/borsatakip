@@ -29,6 +29,7 @@ model User {
   indices              UserIndex[]
   watchlists           Watchlist[]
   notifications        Notification[]
+  preferences          Json?                 @default("{}") // Stores UI preferences like widget visibility
 }
 
 // ... (other models) ...

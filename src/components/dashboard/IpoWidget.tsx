@@ -41,7 +41,7 @@ export function IpoWidget() {
     }, []);
 
     return (
-        <Card className="h-[320px] flex flex-col shadow-sm border-gray-100 dark:border-gray-800">
+        <Card className="h-[280px] flex flex-col shadow-sm border-gray-100 dark:border-gray-800">
             <CardHeader className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 shrink-0">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -65,59 +65,59 @@ export function IpoWidget() {
                     ) : (
                         <div className="divide-y divide-gray-100 dark:divide-gray-800">
                             {ipos.map((ipo, index) => (
-                                <div key={index} className="p-4 hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
-                                    <div className="flex items-start gap-4">
+                                <div key={index} className="p-3 hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
+                                    <div className="flex items-start gap-3">
                                         {/* Logo or Placeholder */}
-                                        <div className="w-12 h-12 rounded-lg bg-white p-1 border border-gray-100 dark:border-gray-800 shrink-0 overflow-hidden flex items-center justify-center">
+                                        <div className="w-10 h-10 rounded-lg bg-white p-1 border border-gray-100 dark:border-gray-800 shrink-0 overflow-hidden flex items-center justify-center">
                                             {ipo.imageUrl ? (
                                                 <img src={ipo.imageUrl} alt={ipo.code} className="w-full h-full object-contain" />
                                             ) : (
-                                                <span className="text-xs font-bold">{ipo.code}</span>
+                                                <span className="text-[10px] font-bold">{ipo.code}</span>
                                             )}
                                         </div>
 
-                                        <div className="flex-1 space-y-2 min-w-0">
+                                        <div className="flex-1 space-y-1.5 min-w-0">
                                             {/* Header */}
                                             <div className="flex items-start justify-between gap-2">
                                                 <div>
-                                                    <div className="flex items-center gap-2">
+                                                    <div className="flex items-center gap-1.5">
                                                         <Link
                                                             href={`/market/ipo/${ipo.url.split('/').filter(Boolean).pop()}`}
                                                             className="hover:underline decoration-primary underline-offset-4"
                                                         >
-                                                            <h4 className="font-bold text-sm tracking-tight">{ipo.company}</h4>
+                                                            <h4 className="font-bold text-xs tracking-tight line-clamp-1">{ipo.company}</h4>
                                                         </Link>
                                                         {ipo.isNew && (
-                                                            <Badge className="h-4 px-1 text-[9px] bg-green-500 hover:bg-green-600">YENİ</Badge>
+                                                            <Badge className="h-3.5 px-1 text-[9px] bg-green-500 hover:bg-green-600">YENİ</Badge>
                                                         )}
                                                     </div>
-                                                    <div className="flex items-center gap-2 mt-0.5">
-                                                        <Badge variant="outline" className="h-4 px-1.5 text-[9px] font-normal border-gray-200 dark:border-gray-700 text-muted-foreground">
+                                                    <div className="flex items-center gap-1.5 mt-0.5">
+                                                        <Badge variant="outline" className="h-3.5 px-1 text-[9px] font-normal border-gray-200 dark:border-gray-700 text-muted-foreground">
                                                             {ipo.code}
                                                         </Badge>
-                                                        <span className="text-[10px] text-muted-foreground">{ipo.market}</span>
+                                                        <span className="text-[9px] text-muted-foreground">{ipo.market}</span>
                                                     </div>
                                                 </div>
                                                 <Link
                                                     href={`/market/ipo/${ipo.url.split('/').filter(Boolean).pop()}`}
                                                     className="text-muted-foreground hover:text-primary transition-colors"
                                                 >
-                                                    <ExternalLink className="w-3.5 h-3.5" />
+                                                    <ExternalLink className="w-3 h-3" />
                                                 </Link>
                                             </div>
 
                                             {/* Grid Details */}
-                                            <div className="grid grid-cols-2 gap-2 text-xs bg-gray-50 dark:bg-gray-900/40 p-2 rounded-md border border-gray-100 dark:border-gray-800/50">
-                                                <div className="flex flex-col gap-0.5">
-                                                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Fiyat</span>
+                                            <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[10px] bg-gray-50 dark:bg-gray-900/40 p-1.5 rounded-md border border-gray-100 dark:border-gray-800/50">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[9px] text-muted-foreground uppercase tracking-wider scale-90 origin-left">Fiyat</span>
                                                     <span className="font-semibold text-foreground">{ipo.price}</span>
                                                 </div>
-                                                <div className="flex flex-col gap-0.5">
-                                                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Tarih</span>
+                                                <div className="flex flex-col">
+                                                    <span className="text-[9px] text-muted-foreground uppercase tracking-wider scale-90 origin-left">Tarih</span>
                                                     <span className="font-semibold text-foreground">{ipo.date}</span>
                                                 </div>
-                                                <div className="flex flex-col gap-0.5 col-span-2">
-                                                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider">Notlar</span>
+                                                <div className="flex flex-col col-span-2 border-t border-gray-100 dark:border-gray-800/50 pt-1 mt-0.5">
+                                                    <span className="text-[9px] text-muted-foreground uppercase tracking-wider scale-90 origin-left">Notlar</span>
                                                     <span className="text-muted-foreground line-clamp-1">{ipo.lotCount} • {ipo.distributionMethod}</span>
                                                 </div>
                                             </div>

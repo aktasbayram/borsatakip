@@ -145,6 +145,33 @@ export default function DashboardPage() {
         }
     };
 
+    const [preferences, setPreferences] = useState({ showAgenda: true, showIpo: true });
+
+    useEffect(() => {
+        const fetchPreferences = async () => {
+            try {
+                const res = await axios.get('/api/user/preferences');
+                if (res.data) {
+                    // Start true by default if keys are missing, but respect false if set
+                    setPreferences(prev => ({
+                        showAgenda: res.data.showAgenda !== false,
+                        showIpo: res.data.showIpo !== false
+                    }));
+                }
+            } catch (error) {
+                console.error('Failed to fetch preferences', error);
+            }
+        };
+
+        fetchPreferences();
+
+        // Listen for updates from settings page (if in same session/tab)
+        const handlePrefUpdate = () => fetchPreferences();
+        window.addEventListener('preferences-updated', handlePrefUpdate);
+
+        return () => window.removeEventListener('preferences-updated', handlePrefUpdate);
+    }, []);
+
     const bistItems = watchlist.filter(item => item.market === 'BIST');
     const usItems = watchlist.filter(item => item.market === 'US');
 
@@ -152,10 +179,12 @@ export default function DashboardPage() {
         <div className="space-y-6">
             <MarketIndices />
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <AgendaWidget />
-                <IpoWidget />
-            </div>
+            {(preferences.showAgenda || preferences.showIpo) && (
+                <div className={`grid grid-cols-1 ${preferences.showAgenda && preferences.showIpo ? 'lg:grid-cols-2' : ''} gap-6`}>
+                    {preferences.showAgenda && <AgendaWidget />}
+                    {preferences.showIpo && <IpoWidget />}
+                </div>
+            )}
 
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h1 className="text-3xl font-bold tracking-tight">Takip Listem</h1>

@@ -129,6 +129,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                             🌓 Tema ve Görünüm
                                         </button>
                                         <Link
+                                            href="/settings/dashboard"
+                                            className="block px-4 py-2 text-sm text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                                        >
+                                            🎨 Dashboard Görünümü
+                                        </Link>
+                                        <Link
                                             href="/settings/notifications"
                                             className="block px-4 py-2 text-sm text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
                                         >
@@ -221,6 +227,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         >
                             🌓 Tema ve Görünüm
                         </button>
+                        <Link href="/settings/dashboard" className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-primary/10 hover:text-foreground">
+                            🎨 Dashboard Görünümü
+                        </Link>
                         <Link href="/settings/notifications" className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-primary/10 hover:text-foreground">
                             🔔 Bildirim Ayarları
                         </Link>

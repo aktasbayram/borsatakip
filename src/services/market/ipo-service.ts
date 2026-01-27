@@ -23,6 +23,8 @@ export interface IpoDetail extends IpoItem {
     pledges: string[]; // Satmama Taahhüdü
     discount: string; // İskonto
     size: string; // Halka Arz Büyüklüğü
+    firstTradingDate: string; // Bist İlk İşlem Tarihi
+    summaryInfo: { title: string, items: string[] }[]; // Generic list of all summary sections
 }
 
 export class IpoService {
@@ -120,36 +122,46 @@ export class IpoService {
                 const leadUnderwriter = extract([
                     /Aracı Kurum\s*:\s*\n?\s*(.*?)(?:\n|$)/i
                 ]);
+                const firstTradingDate = extract([
+                    /Bist İlk İşlem Tarihi\s*:\s*\n?\s*(.*?)(?:\n|$)/i,
+                    /İlk İşlem Tarihi\s*:\s*\n?\s*(.*?)(?:\n|$)/i
+                ]) || 'Tarih Bekleniyor';
 
-                // Lists
-                const extractList = (startMarker: string, endMarker: string) => {
-                    const startIdx = bodyText.indexOf(startMarker);
-                    if (startIdx === -1) return [];
-                    // Look for the next major header or end of section
-                    const followingHeaders = ['Dağıtılacak Pay', 'Halka Açıklık', 'Fiyat İstikrarı', 'Halka Arz Satış', 'Tahsisat Grupları', 'Satmama Taahhüdü'];
-                    let endIdx = -1;
+                // Generic Summary Info Extraction -> Finds all sections in the "Özet Bilgiler" area
+                const summaryInfo: { title: string, items: string[] }[] = [];
+                const summaryListItems = document.querySelectorAll('.sp-arz-extra ul.aex-in li');
 
-                    // Find the earliest occurrence of any following header
-                    for (const header of followingHeaders) {
-                        const idx = bodyText.indexOf(header, startIdx + startMarker.length);
-                        if (idx !== -1 && (endIdx === -1 || idx < endIdx)) {
-                            endIdx = idx;
-                        }
+                summaryListItems.forEach(li => {
+                    const title = li.querySelector('h5')?.innerText?.trim();
+                    if (!title) return;
+
+                    // Handle Table specially (Finansal Tablo)
+                    const table = li.querySelector('table');
+                    if (table) {
+                        const rows = Array.from(table.querySelectorAll('tr'));
+                        const tableData = rows.map(r => r.innerText.replace(/\t/g, ' ').trim()).filter(Boolean);
+                        summaryInfo.push({ title, items: tableData });
+                        return;
                     }
 
-                    if (endIdx === -1) endIdx = startIdx + 500; // Fallback cap
+                    // Handle Paragraphs
+                    const p = li.querySelector('p');
+                    if (p) {
+                        // Split by <br> or newlines
+                        const html = p.innerHTML;
+                        const lines = html.split(/<br\s*\/?>|\n/);
+                        const cleanedLines = lines
+                            .map(l => l.replace(/<[^>]*>/g, '').trim()) // Remove tags (like <small>)
+                            .filter(l => l.length > 2 && !l.startsWith('SPK Bülteni') && !l.startsWith('İzahname')); // Filter junk
 
-                    const section = bodyText.substring(startIdx, endIdx);
-                    return section.split('\n')
-                        .map(l => l.trim())
-                        .filter(l => (l.startsWith('-') || l.startsWith('*') || l.startsWith('•')) && l.length > 2)
-                        .map(l => l.replace(/^[-*•]\s*/, ''));
-                };
+                        // Remove leading dashes
+                        const finalItems = cleanedLines.map(l => l.replace(/^[-•*]\s*/, ''));
 
-                const fundsUse = extractList('Fonun Kullanım Yeri', 'Halka Arz Satış Yöntemi'); // Markers might need tuning based on observation
-                const allocationGroups = extractList('Tahsisat Grupları', 'Dağıtılacak Pay Miktarı');
-                const pledges = extractList('Satmama Taahhüdü', 'Halka Açıklık');
-                const financials = extractList('Finansal Tablo', 'Fiyat İstikrarı');
+                        if (finalItems.length > 0) {
+                            summaryInfo.push({ title, items: finalItems });
+                        }
+                    }
+                });
 
                 const imageUrl = document.querySelector('.slogo')?.getAttribute('src') || document.querySelector('article img')?.getAttribute('src') || '';
 
@@ -186,17 +198,24 @@ export class IpoService {
 
                 return {
                     code, company, date, price, lotCount, market, distributionMethod,
-                    imageUrl, size: calculatedSize, leadUnderwriter,
-                    fundsUse, allocationGroups, pledges, financials
+                    imageUrl, size: calculatedSize, leadUnderwriter, firstTradingDate,
+                    summaryInfo // NEW generic field
                 };
             });
 
             const ipoDetail: IpoDetail = {
                 url,
-                isNew: false, // Contextual
+                isNew: false,
                 ...details,
-                discount: '', // Hard to extract reliably without specific pattern
-                pazar: details.market // Map 'market' to 'pazar' for consistency with IpoDetail
+                discount: '',
+                pazar: details.market,
+                // Map old fields for backward comp or use new generic one
+                fundsUse: details.summaryInfo.find(x => x.title.includes('Fon'))?.items || [],
+                allocationGroups: details.summaryInfo.find(x => x.title.includes('Tahsisat'))?.items || [],
+                pledges: details.summaryInfo.find(x => x.title.includes('Satmama'))?.items || [],
+                financials: details.summaryInfo.find(x => x.title.includes('Finansal'))?.items || [],
+                summaryInfo: details.summaryInfo,
+                firstTradingDate: details.firstTradingDate
             };
 
             this.detailCache.set(slug, { data: ipoDetail, timestamp: Date.now() });
@@ -217,7 +236,7 @@ export class IpoService {
         let browser;
         try {
             browser = await puppeteer.launch({
-                headless: true, // "new" is deprecated, usage is boolean in newer versions or "new" string in older. Using true for safety with latest types.
+                headless: true,
                 args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
             });
             const page = await browser.newPage();
@@ -233,7 +252,7 @@ export class IpoService {
                 return items.slice(0, 10).map(el => {
                     const linkEl = el.querySelector('a');
                     const imgEl = el.querySelector('img');
-                    const codeEl = el.innerText.split('\n').find(l => /^[A-Z]{4,5}$/.test(l)); // naive code finder
+                    const codeEl = el.innerText.split('\n').find(l => /^[A-Z]{4,5}$/.test(l));
                     const isNew = !!el.querySelector('.il-new');
 
                     return {

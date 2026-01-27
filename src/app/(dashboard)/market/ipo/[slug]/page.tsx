@@ -107,92 +107,74 @@ export default async function IpoDetailPage({ params }: PageProps) {
                                     <div className="font-semibold">{detail.distributionMethod}</div>
                                 </div>
                             </div>
+                            <div className="flex items-center gap-3">
+                                <div className="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
+                                    <Calendar className="w-5 h-5 text-red-600 dark:text-red-400" />
+                                </div>
+                                <div>
+                                    <div className="text-xs text-muted-foreground">Bist İlk İşlem Tarihi</div>
+                                    <div className="font-semibold">{detail.firstTradingDate}</div>
+                                </div>
+                            </div>
                         </CardContent>
                     </Card>
                 </div>
 
                 {/* Right Column: Detailed Info Sections */}
                 <div className="lg:col-span-2 space-y-6">
+                    {/* Render all generic summary sections scraped from "Özet Bilgiler" */}
+                    {detail.summaryInfo && detail.summaryInfo.map((section, idx) => {
+                        // Skip table sections specifically
+                        if (section.title === 'Finansal Tablo' && section.items.some(i => i.includes('Hasılat'))) {
+                            return (
+                                <Card key={idx}>
+                                    <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
+                                        <TrendingUpIcon className="w-5 h-5 text-primary" />
+                                        <h3 className="font-bold">{section.title}</h3>
+                                    </div>
+                                    <CardContent className="p-4">
+                                        <ul className="space-y-2">
+                                            {section.items.map((item, i) => (
+                                                <li key={i} className="text-sm border-b border-gray-50 dark:border-gray-800/50 last:border-0 pb-2 last:pb-0">
+                                                    {item}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </CardContent>
+                                </Card>
+                            )
+                        }
 
-                    {/* Fon Kullanım Yeri */}
-                    {detail.fundsUse && detail.fundsUse.length > 0 && (
-                        <Card>
-                            <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
-                                <PieChart className="w-5 h-5 text-primary" />
-                                <h3 className="font-bold">Fonun Kullanım Yeri</h3>
-                            </div>
-                            <CardContent className="p-4">
-                                <ul className="space-y-2">
-                                    {detail.fundsUse.map((item, idx) => (
-                                        <li key={idx} className="flex items-start gap-2 text-sm">
-                                            <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                                            <span>{item}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </CardContent>
-                        </Card>
-                    )}
+                        // Skip 'Halka Arz Büyüklüğü' as it is shown in the left column
+                        if (section.title.includes('Halka Arz Büyüklüğü')) return null;
 
-                    {/* Tahsisat Grupları */}
-                    {detail.allocationGroups && detail.allocationGroups.length > 0 && (
-                        <Card>
-                            <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
-                                <UsersIcon className="w-5 h-5 text-primary" />
-                                <h3 className="font-bold">Tahsisat Grupları</h3>
-                            </div>
-                            <CardContent className="p-4">
-                                <ul className="space-y-2">
-                                    {detail.allocationGroups.map((item, idx) => (
-                                        <li key={idx} className="flex items-start gap-2 text-sm">
-                                            <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
-                                            <span>{item}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </CardContent>
-                        </Card>
-                    )}
+                        // Determine icon based on title keywords
+                        let Icon: React.ElementType = FileText;
+                        if (section.title.includes('Fon')) Icon = PieChart;
+                        else if (section.title.includes('Tahsisat')) Icon = UsersIcon;
+                        else if (section.title.includes('Satmama')) Icon = FileText;
+                        else if (section.title.includes('Fiyat İstikrarı')) Icon = TrendingUpIcon;
+                        else if (section.title.includes('Halka Arz Şekli')) Icon = Info;
 
-                    {/* Satmama Taahhüdü */}
-                    {detail.pledges && detail.pledges.length > 0 && (
-                        <Card>
-                            <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
-                                <FileText className="w-5 h-5 text-primary" />
-                                <h3 className="font-bold">Satmama Taahhüdü</h3>
-                            </div>
-                            <CardContent className="p-4">
-                                <ul className="space-y-2">
-                                    {detail.pledges.map((item, idx) => (
-                                        <li key={idx} className="flex items-start gap-2 text-sm">
-                                            <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />
-                                            <span>{item}</span>
-                                        </li>
-                                    ))}
-                                </ul>
-                            </CardContent>
-                        </Card>
-                    )}
-
-                    {/* Finansal Tablo (Simple List) */}
-                    {detail.financials && detail.financials.length > 0 && (
-                        <Card>
-                            <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
-                                <TrendingUpIcon className="w-5 h-5 text-primary" />
-                                <h3 className="font-bold">Finansal Özet</h3>
-                            </div>
-                            <CardContent className="p-4">
-                                <ul className="space-y-2">
-                                    {detail.financials.map((item, idx) => (
-                                        <li key={idx} className="text-sm border-b border-gray-50 dark:border-gray-800/50 last:border-0 pb-2 last:pb-0">
-                                            {item}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </CardContent>
-                        </Card>
-                    )}
-
+                        return (
+                            <Card key={idx}>
+                                <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
+                                    <Icon className="w-5 h-5 text-primary" />
+                                    <h3 className="font-bold">{section.title}</h3>
+                                </div>
+                                <CardContent className="p-4">
+                                    <ul className="space-y-2">
+                                        {section.items.map((item, i) => (
+                                            <li key={i} className="flex items-start gap-2 text-sm">
+                                                <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                                                <span>{item}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </CardContent>
+                            </Card>
+                        );
+                    })}
                 </div>
             </div>
         </div>

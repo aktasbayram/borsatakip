@@ -42,7 +42,7 @@ export function MarketIndices() {
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
                 {[...Array(5)].map((_, i) => (
                     <Card key={i} className="animate-pulse">
-                        <CardContent className="p-4 h-24"></CardContent>
+                        <CardContent className="p-2.5 h-16"></CardContent>
                     </Card>
                 ))}
             </div>
@@ -59,19 +59,19 @@ export function MarketIndices() {
 
                 return (
                     <Card key={idx.symbol} className="overflow-hidden hover:shadow-md transition-shadow">
-                        <CardContent className="p-3 md:p-4">
-                            <div className="text-xs text-muted-foreground font-medium mb-1 truncate" title={idx.name}>
+                        <CardContent className="p-2.5">
+                            <div className="text-[10px] text-muted-foreground font-medium mb-0.5 truncate" title={idx.name}>
                                 {idx.name}
                             </div>
-                            <div className="text-lg md:text-xl font-bold tracking-tight text-foreground">
+                            <div className="text-base font-bold tracking-tight text-foreground">
                                 {idx.price.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </div>
-                            <div className={`flex items-center text-xs font-semibold mt-1 ${isPositive ? 'text-green-600 dark:text-green-400' :
+                            <div className={`flex items-center text-[10px] font-semibold mt-0.5 ${isPositive ? 'text-green-600 dark:text-green-400' :
                                 isNegative ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground'
                                 }`}>
-                                {isPositive ? <ArrowUpIcon className="w-3 h-3 mr-1" /> :
-                                    isNegative ? <ArrowDownIcon className="w-3 h-3 mr-1" /> :
-                                        <MinusIcon className="w-3 h-3 mr-1" />}
+                                {isPositive ? <ArrowUpIcon className="w-2.5 h-2.5 mr-0.5" /> :
+                                    isNegative ? <ArrowDownIcon className="w-2.5 h-2.5 mr-0.5" /> :
+                                        <MinusIcon className="w-2.5 h-2.5 mr-0.5" />}
 
                                 <span>%{Math.abs(idx.changePercent).toFixed(2)}</span>
                             </div>
