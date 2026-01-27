@@ -1,10 +1,14 @@
 "use client";
 
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { format } from "date-fns";
+import { format, addDays, subDays, isSameDay } from "date-fns";
 import { tr } from "date-fns/locale";
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface AgendaItem {
     id: string;
@@ -16,160 +20,149 @@ interface AgendaItem {
     impact: 'low' | 'medium' | 'high';
 }
 
-const mockAgendaItems: AgendaItem[] = [
-    {
-        id: '1',
-        time: '10:00',
-        countryCode: 'TR',
-        title: 'TÜİK Tüketici Güven Endeksi',
-        expectation: '78.5',
-        impact: 'medium'
-    },
-    {
-        id: '2',
-        time: '14:00',
-        countryCode: 'TR',
-        title: 'TCMB Faiz Kararı',
-        expectation: '%45.00',
-        impact: 'high'
-    },
-    {
-        id: '3',
-        time: '15:30',
-        countryCode: 'US',
-        title: 'ABD Tarım Dışı İstihdam',
-        expectation: '180K',
-        impact: 'high'
-    },
-    {
-        id: '4',
-        time: '16:00',
-        countryCode: 'US',
-        title: 'İşsizlik Oranı',
-        expectation: '3.8%',
-        impact: 'high'
-    },
-    {
-        id: '5',
-        time: '17:00',
-        countryCode: 'US',
-        title: 'ISM İmalat Endeksi',
-        expectation: '49.5',
-        impact: 'medium'
-    },
-    {
-        id: '6',
-        time: '17:30',
-        countryCode: 'US',
-        title: 'Ham Petrol Stokları',
-        expectation: '-2.5M',
-        impact: 'medium'
-    },
-    {
-        id: '7',
-        time: '21:00',
-        countryCode: 'US',
-        title: 'FOMC Toplantı Tutanakları',
-        impact: 'high'
-    }
-];
-
 const FlagIcon = ({ code }: { code: AgendaItem['countryCode'] }) => {
     const flags: Record<string, string> = {
         'TR': '🇹🇷',
         'US': '🇺🇸',
         'EU': '🇪🇺',
         'CA': '🇨🇦',
-        'CN': '🇨🇳'
+        'CN': '🇨🇳',
+        'DE': '🇩🇪',
+        'GB': '🇬🇧',
+        'JP': '🇯🇵'
     };
-    return <span className="text-xl leading-none">{flags[code] || '🌐'}</span>;
+    return <span className="text-lg leading-none select-none" title={code}>{flags[code] || '🌐'}</span>;
 };
 
 export function AgendaWidget() {
-    const today = new Date();
+    const [currentDate, setCurrentDate] = useState(new Date());
     const [items, setItems] = useState<AgendaItem[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchAgenda = async () => {
+            setLoading(true);
             try {
-                const response = await axios.get('/api/agenda');
+                const dateStr = format(currentDate, 'yyyy-MM-dd');
+                const response = await axios.get(`/api/agenda?date=${dateStr}`);
                 setItems(response.data);
             } catch (error) {
                 console.error('Agenda fetch failed', error);
+                setItems([]);
             } finally {
                 setLoading(false);
             }
         };
         fetchAgenda();
-    }, []);
+    }, [currentDate]);
+
+    const handlePrevDay = () => setCurrentDate(prev => subDays(prev, 1));
+    const handleNextDay = () => setCurrentDate(prev => addDays(prev, 1));
+    const isToday = isSameDay(currentDate, new Date());
 
     return (
-        <div className="bg-[#1e1e1e] text-gray-200 rounded-xl overflow-hidden shadow-lg border border-gray-800 h-[320px] flex">
-            {/* Left Box: Date */}
-            <div className="w-24 bg-[#252525] flex flex-col items-center justify-center border-r border-gray-800 p-2 shrink-0">
-                <div className="text-4xl font-bold text-white mb-1">
-                    {format(today, 'dd')}
+        <Card className="h-[280px] flex flex-col shadow-sm border-gray-100 dark:border-gray-800 overflow-hidden">
+            <div className="flex flex-1 overflow-hidden">
+                {/* Left Side: Date Display */}
+                <div className="w-20 bg-gray-50 dark:bg-gray-900/50 border-r border-gray-100 dark:border-gray-800 flex flex-col items-center justify-center p-2 shrink-0">
+                    <span className="text-3xl font-bold text-primary tracking-tighter">
+                        {format(currentDate, 'dd')}
+                    </span>
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-widest mt-0.5">
+                        {format(currentDate, 'MMM', { locale: tr })}
+                    </span>
+                    <span className="text-[10px] font-semibold text-primary/80 mt-2 px-1.5 py-0.5 bg-primary/10 rounded-full">
+                        {isToday ? 'BUGÜN' : format(currentDate, 'ccc', { locale: tr })}
+                    </span>
                 </div>
-                <div className="text-sm font-medium text-gray-400 uppercase tracking-wider">
-                    {format(today, 'MMM', { locale: tr })}
-                </div>
-                <div className="mt-4 text-xs text-center text-gray-500 font-semibold px-2">
-                    AJANDA
-                </div>
-            </div>
 
-            {/* Right Box: Events List */}
-            <div className="flex-1 min-w-0">
-                <div className="h-full flex flex-col">
-                    <div className="px-4 py-3 border-b border-gray-800 flex justify-between items-center bg-[#252525]/50">
-                        <h3 className="font-semibold text-white text-sm">Günün Önemli Olayları</h3>
-                        <div className="flex gap-2 text-xs">
-                            <span className="text-gray-500">&lt;</span>
-                            <span className="text-gray-500">&gt;</span>
+                {/* Right Side: Content */}
+                <div className="flex-1 flex flex-col min-w-0 bg-white dark:bg-gray-950">
+                    <div className="flex items-center justify-between px-4 py-2 border-b border-gray-100 dark:border-gray-800">
+                        <div className="flex items-center gap-2">
+                            <Calendar className="w-3.5 h-3.5 text-primary" />
+                            <h3 className="font-semibold text-xs text-foreground">Ekonomik Takvim</h3>
+                        </div>
+                        <div className="flex items-center gap-0.5">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={handlePrevDay}
+                                title="Önceki Gün"
+                            >
+                                <ChevronLeft className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6"
+                                onClick={handleNextDay}
+                                title="Sonraki Gün"
+                            >
+                                <ChevronRight className="w-3.5 h-3.5" />
+                            </Button>
                         </div>
                     </div>
 
-                    <ScrollArea className="flex-1 p-0">
+                    <ScrollArea className="flex-1">
                         {loading ? (
-                            <div className="flex items-center justify-center h-full text-gray-500">
-                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-500 mr-2"></div>
-                                Yükleniyor...
+                            <div className="flex flex-col items-center justify-center h-full text-muted-foreground py-4">
+                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary mb-2"></div>
+                                <span className="text-[10px]">Yükleniyor...</span>
                             </div>
                         ) : items.length === 0 ? (
-                            <div className="flex items-center justify-center h-full text-gray-500 text-sm">
-                                Bugün için veri bulunamadı.
+                            <div className="flex flex-col items-center justify-center h-full text-muted-foreground py-4 gap-1">
+                                <Calendar className="w-6 h-6 opacity-20" />
+                                <span className="text-xs">Veri bulunamadı.</span>
                             </div>
                         ) : (
-                            <div className="divide-y divide-gray-800">
+                            <div className="divide-y divide-gray-100 dark:divide-gray-800">
                                 {items.map((item) => (
-                                    <div key={item.id} className="flex items-start gap-3 p-4 hover:bg-white/5 transition-colors">
-                                        <div className="text-sm font-mono text-gray-400 pt-0.5 w-12 shrink-0">
-                                            {item.time}
-                                        </div>
-                                        <div className="pt-0.5 shrink-0">
-                                            <FlagIcon code={item.countryCode} />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <div className="text-sm font-medium text-gray-200 truncate">
-                                                {item.title}
+                                    <div key={item.id} className="group flex items-start gap-3 p-3 hover:bg-gray-50/50 dark:hover:bg-gray-900/50 transition-colors">
+
+                                        {/* Time & Flag */}
+                                        <div className="flex flex-col items-center gap-0.5 min-w-[2.5rem] pt-0.5">
+                                            <span className="text-xs font-mono font-medium text-foreground/80">
+                                                {item.time}
+                                            </span>
+                                            <div className="scale-90 origin-top">
+                                                <FlagIcon code={item.countryCode} />
                                             </div>
-                                            <div className="flex gap-3 mt-1">
+                                        </div>
+
+                                        {/* Details */}
+                                        <div className="flex-1 min-w-0 space-y-1">
+                                            <div className="flex items-start justify-between gap-2">
+                                                <p className="text-xs font-medium text-foreground leading-snug group-hover:text-primary transition-colors line-clamp-2">
+                                                    {item.title}
+                                                </p>
+                                                {/* Impact Indicator */}
+                                                {item.impact === 'high' && (
+                                                    <Badge variant="destructive" className="text-[9px] px-1 py-0 h-3.5 shrink-0">
+                                                        !!!
+                                                    </Badge>
+                                                )}
+                                                {item.impact === 'medium' && (
+                                                    <Badge variant="secondary" className="text-[9px] px-1 py-0 h-3.5 shrink-0 bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 hover:bg-orange-100">
+                                                        !!
+                                                    </Badge>
+                                                )}
+                                            </div>
+
+                                            <div className="flex flex-wrap gap-2 text-[10px] text-muted-foreground">
                                                 {item.expectation && (
-                                                    <div className="text-xs text-gray-500 font-medium">
-                                                        Beklenti: <span className="text-gray-400">{item.expectation}</span>
-                                                    </div>
+                                                    <span className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-1 py-0 rounded">
+                                                        Beklenti: <span className="font-semibold text-foreground">{item.expectation}</span>
+                                                    </span>
                                                 )}
                                                 {item.actual && (
-                                                    <div className="text-xs text-green-400 font-medium bg-green-900/20 px-1.5 rounded">
-                                                        Açıklanan: {item.actual}
-                                                    </div>
+                                                    <span className="flex items-center gap-1 bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 px-1 py-0 rounded border border-green-200 dark:border-green-900/50">
+                                                        Açıklanan: <span className="font-semibold">{item.actual}</span>
+                                                    </span>
                                                 )}
                                             </div>
                                         </div>
-                                        <div className={`w-1.5 h-1.5 rounded-full mt-2 shrink-0 ${item.impact === 'high' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' :
-                                            item.impact === 'medium' ? 'bg-orange-500' : 'bg-gray-500'
-                                            }`} />
                                     </div>
                                 ))}
                             </div>
@@ -177,6 +170,6 @@ export function AgendaWidget() {
                     </ScrollArea>
                 </div>
             </div>
-        </div>
+        </Card>
     );
 }
