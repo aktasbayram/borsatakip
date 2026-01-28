@@ -224,4 +224,33 @@ model PaymentTransaction {
   @@index([status])
 }
 
+model BankAccount {
+  id            String   @id @default(cuid())
+  bankName      String
+  accountHolder String
+  iban          String
+  branchCode    String?
+  accountNumber String?
+  logoUrl       String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Package {
+  id          String   @id @default(cuid())
+  name        String   @unique // e.g. "PRO", "BASIC"
+  displayName String   // e.g. "Pro Paket"
+  price       Float
+  credits     Int      // Monthly AI credits
+  maxAlerts   Int      @default(2) // Max concurrent alerts
+  features    String[] // List of features
+  isPopular   Boolean  @default(false)
+  color       String?  // Hex code or tailwind class for badge/border
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+
 

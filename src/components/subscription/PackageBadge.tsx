@@ -30,8 +30,8 @@ export function PackageBadge({ className = '' }: PackageBadgeProps) {
 
     const badges: Record<string, { icon: string; label: string; color: string }> = {
         'FREE': { icon: '⚡', label: "Pro'ya Yükselt", color: 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700' },
-        'BASIC_50': { icon: '📦', label: 'BASIC', color: 'bg-blue-600 hover:bg-blue-700' },
-        'PRO_100': { icon: '👑', label: 'PRO', color: 'bg-purple-600 hover:bg-purple-700' },
+        'BASIC': { icon: '📦', label: 'BASIC', color: 'bg-blue-600 hover:bg-blue-700' },
+        'PRO': { icon: '👑', label: 'PRO', color: 'bg-purple-600 hover:bg-purple-700' },
     };
 
     const badge = badges[tier] || badges['FREE'];

@@ -96,8 +96,8 @@ export default function AdminPaymentsPage() {
                                             </td>
                                             <td className="px-4 py-3">
                                                 <span className={`px-2 py-1 rounded text-xs font-bold ${tx.status === 'APPROVED' ? 'bg-green-100 text-green-800' :
-                                                        tx.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
-                                                            'bg-yellow-100 text-yellow-800'
+                                                    tx.status === 'REJECTED' ? 'bg-red-100 text-red-800' :
+                                                        'bg-yellow-100 text-yellow-800'
                                                     }`}>
                                                     {tx.status === 'APPROVED' ? 'ONAYLANDI' :
                                                         tx.status === 'REJECTED' ? 'REDDEDİLDİ' : 'BEKLİYOR'}
@@ -115,7 +115,7 @@ export default function AdminPaymentsPage() {
                                                         </Button>
                                                         <Button
                                                             size="sm"
-                                                            variant="destructive"
+                                                            variant="danger"
                                                             className="h-8"
                                                             onClick={() => handleAction(tx.id, 'REJECT')}
                                                         >

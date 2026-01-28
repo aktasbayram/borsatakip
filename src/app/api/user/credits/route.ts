@@ -29,6 +29,28 @@ export async function GET(request: Request) {
         const resetDate = user.aiCreditsResetAt ? new Date(user.aiCreditsResetAt) : new Date(0);
         const needsReset = !user.aiCreditsResetAt || now.getMonth() !== resetDate.getMonth() || now.getFullYear() !== resetDate.getFullYear();
 
+        // Fetch package details for limits
+        const pkg = await prisma.package.findUnique({
+            where: { name: user.subscriptionTier }
+        });
+
+        let maxAlerts = 2;
+        if (pkg) {
+            maxAlerts = pkg.maxAlerts;
+        } else {
+            // Fallback
+            const limits: Record<string, number> = { 'FREE': 2, 'BASIC': 5, 'PRO': 10 };
+            maxAlerts = limits[user.subscriptionTier] || 2;
+        }
+
+        const responseData = {
+            credits: user.aiCredits,
+            total: user.aiCreditsTotal,
+            tier: user.subscriptionTier,
+            resetAt: user.aiCreditsResetAt,
+            maxAlerts: maxAlerts
+        };
+
         if (needsReset) {
             // Reset credits to tier total
             const updatedUser = await prisma.user.update({
@@ -38,21 +60,11 @@ export async function GET(request: Request) {
                     aiCreditsResetAt: now,
                 }
             });
-
-            return NextResponse.json({
-                credits: updatedUser.aiCredits,
-                total: updatedUser.aiCreditsTotal,
-                tier: updatedUser.subscriptionTier,
-                resetAt: updatedUser.aiCreditsResetAt,
-            });
+            responseData.credits = updatedUser.aiCredits;
+            responseData.resetAt = updatedUser.aiCreditsResetAt;
         }
 
-        return NextResponse.json({
-            credits: user.aiCredits,
-            total: user.aiCreditsTotal,
-            tier: user.subscriptionTier,
-            resetAt: user.aiCreditsResetAt,
-        });
+        return NextResponse.json(responseData);
     } catch (error) {
         console.error('Credits GET error:', error);
         return NextResponse.json({ error: 'Failed to fetch credits' }, { status: 500 });

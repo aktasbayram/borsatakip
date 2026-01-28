@@ -248,14 +248,14 @@ export function NotificationBell() {
                                             }}
                                         >
                                             <div className="flex justify-between items-start mb-1">
-                                                <span className={`font-semibold ${!n.read ? 'text-white' : 'text-gray-900 dark:text-white'}`}>
+                                                <span className={`font-semibold ${!n.read ? 'text-gray-900 dark:text-gray-100' : 'text-gray-700 dark:text-gray-300'}`}>
                                                     {n.title}
                                                 </span>
-                                                <span className={`text-[10px] whitespace-nowrap ml-2 ${!n.read ? 'text-white/80' : 'text-gray-400'}`}>
+                                                <span className={`text-[10px] whitespace-nowrap ml-2 ${!n.read ? 'text-gray-600 dark:text-gray-400' : 'text-gray-400 dark:text-gray-500'}`}>
                                                     {new Date(n.createdAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
                                                 </span>
                                             </div>
-                                            <p className={`line-clamp-2 ${!n.read ? 'text-white/90' : 'text-gray-600 dark:text-gray-400'}`}>
+                                            <p className={`line-clamp-2 ${!n.read ? 'text-gray-800 dark:text-gray-200' : 'text-gray-600 dark:text-gray-400'}`}>
                                                 {n.message}
                                             </p>
                                         </div>

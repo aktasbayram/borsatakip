@@ -53,6 +53,46 @@ export async function POST(req: Request) {
         const json = await req.json();
         const body = createAlertSchema.parse(json);
 
+        // Check Alert Limits based on Subscription Tier
+        const user = await prisma.user.findUnique({
+            where: { id: session.user.id },
+            select: { subscriptionTier: true }
+        });
+
+        const currentTier = user?.subscriptionTier || 'FREE';
+        let limit = 2; // Default limit
+
+        // Fetch limit from Package definition
+        const pkg = await prisma.package.findUnique({
+            where: { name: currentTier }
+        });
+
+        if (pkg) {
+            limit = pkg.maxAlerts;
+        } else {
+            // Fallback for hardcoded tiers if not in DB
+            const legacyLimits: Record<string, number> = {
+                'FREE': 2,
+                'BASIC': 5,
+                'PRO': 10
+            };
+            limit = legacyLimits[currentTier] || 2;
+        }
+
+        // Count existing alerts
+        const alertCount = await prisma.alert.count({
+            where: { userId: session.user.id }
+        });
+
+        if (alertCount >= limit) {
+            return new NextResponse(
+                JSON.stringify({
+                    message: `Paketinizde maksimum ${limit} alarm oluşturabilirsiniz. Lütfen paketinizi yükseltin.`
+                }),
+                { status: 403, headers: { 'Content-Type': 'application/json' } }
+            );
+        }
+
         const alert = await prisma.alert.create({
             data: {
                 userId: session.user.id,

@@ -55,23 +55,70 @@ export async function PATCH(
         }
 
         const body = await req.json();
-        const { role } = body;
+        const { role, subscriptionTier } = body;
 
-        if (!['USER', 'ADMIN'].includes(role)) {
-            return NextResponse.json(
-                { message: 'Geçersiz rol.' },
-                { status: 400 }
-            );
+        if (role) {
+            // Prevent changing own role
+            if (session.user.id === id) {
+                return NextResponse.json(
+                    { message: 'Kendi rolünüzü değiştiremezsiniz.' },
+                    { status: 400 }
+                );
+            }
+
+            if (!['USER', 'ADMIN'].includes(role)) {
+                return NextResponse.json(
+                    { message: 'Geçersiz rol.' },
+                    { status: 400 }
+                );
+            }
+            await prisma.user.update({
+                where: { id },
+                data: { role }
+            });
+            return NextResponse.json({ message: 'Kullanıcı rolü güncellendi.' });
         }
 
-        await prisma.user.update({
-            where: { id },
-            data: { role }
-        });
+        if (subscriptionTier) {
+            // Validate package existence
+            // Dynamic check against db packages
+            const pkg = await prisma.package.findUnique({
+                where: { name: subscriptionTier }
+            });
 
-        return NextResponse.json({ message: 'Kullanıcı rolü güncellendi.' });
+            // Fallback for hardcoded tiers if db is empty or migration transitional
+            // But prefer strict check if we are fully dynamic now.
+            // Let's allow FREE/BASIC/PRO hardcoded if not found in DB for safety? 
+            // Or just trust DB. Let's trust DB but handle the case.
+
+            let credits = 5;
+            if (pkg) {
+                credits = pkg.credits;
+            } else {
+                // Fallback logic (Optional, currently safer to return error if not found to ensure data integrity)
+                // However, for "FREE", likely no package entry exists unless inserted.
+                if (subscriptionTier === 'FREE') credits = 5;
+                else if (subscriptionTier === 'BASIC') credits = 50;
+                else if (subscriptionTier === 'PRO') credits = 100;
+                else {
+                    return NextResponse.json({ message: 'Paket bulunamadı.' }, { status: 400 });
+                }
+            }
+
+            await prisma.user.update({
+                where: { id },
+                data: {
+                    subscriptionTier,
+                    aiCredits: credits,
+                    aiCreditsTotal: credits
+                }
+            });
+            return NextResponse.json({ message: 'Paket atandı ve krediler güncellendi.' });
+        }
+
+        return NextResponse.json({ message: 'İşlem belirtilmedi.' }, { status: 400 });
     } catch (error) {
-        console.error('Update user role error:', error);
+        console.error('Update user error:', error);
         return NextResponse.json(
             { message: 'Bir hata oluştu.' },
             { status: 500 }

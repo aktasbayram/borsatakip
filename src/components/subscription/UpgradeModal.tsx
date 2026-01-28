@@ -6,9 +6,11 @@ import { Button } from '@/components/ui/button';
 interface UpgradeModalProps {
     open: boolean;
     onClose: () => void;
+    title?: string;
+    description?: string;
 }
 
-export function UpgradeModal({ open, onClose }: UpgradeModalProps) {
+export function UpgradeModal({ open, onClose, title, description }: UpgradeModalProps) {
     const router = useRouter();
 
     if (!open) return null;
@@ -33,12 +35,11 @@ export function UpgradeModal({ open, onClose }: UpgradeModalProps) {
                     </div>
 
                     <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">
-                        AI Krediniz Bitti!
+                        {title || "AI Krediniz Bitti!"}
                     </h3>
 
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
-                        Daha fazla AI analizi yapmak için kredi satın alın.
-                        Aylık 50 veya 100 kredi paketlerinden birini seçebilirsiniz.
+                        {description || "Daha fazla AI analizi yapmak için bir üst pakete geçin. Aylık 50 veya 100 kredili paketlerinden birini seçebilirsiniz."}
                     </p>
 
                     <div className="flex gap-3">
@@ -53,7 +54,7 @@ export function UpgradeModal({ open, onClose }: UpgradeModalProps) {
                             onClick={handleUpgrade}
                             className="flex-1 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white"
                         >
-                            Kredi Satın Al
+                            Paket Yükselt
                         </Button>
                     </div>
                 </div>

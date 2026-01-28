@@ -80,7 +80,7 @@ export class IpoService {
             await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
             const details = await page.evaluate(() => {
-                const getText = (selector: string) => document.querySelector(selector)?.innerText?.trim() || '';
+                const getText = (selector: string) => (document.querySelector(selector) as HTMLElement)?.innerText?.trim() || '';
                 const bodyText = document.body.innerText;
 
                 const extract = (patterns: RegExp[]) => {
@@ -91,7 +91,7 @@ export class IpoService {
                     return '';
                 };
 
-                const company = document.querySelector('h1')?.innerText || '';
+                const company = (document.querySelector('h1') as HTMLElement)?.innerText || '';
                 console.log('Scraping detail for:', company);
 
                 const code = extract([/Bist Kodu\s*:\s*\n?\s*([A-Z]+)/i]) || '';
@@ -250,10 +250,11 @@ export class IpoService {
                 const items = Array.from(document.querySelectorAll('article.index-list'));
                 // Limit to top 10
                 return items.slice(0, 10).map(el => {
-                    const linkEl = el.querySelector('a');
-                    const imgEl = el.querySelector('img');
-                    const codeEl = el.innerText.split('\n').find(l => /^[A-Z]{4,5}$/.test(l));
-                    const isNew = !!el.querySelector('.il-new');
+                    const htmlEl = el as HTMLElement;
+                    const linkEl = htmlEl.querySelector('a') as HTMLAnchorElement;
+                    const imgEl = htmlEl.querySelector('img') as HTMLImageElement;
+                    const codeEl = htmlEl.innerText.split('\n').find((l: string) => /^[A-Z]{4,5}$/.test(l));
+                    const isNew = !!htmlEl.querySelector('.il-new');
 
                     return {
                         url: linkEl?.href || '',

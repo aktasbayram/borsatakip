@@ -19,7 +19,7 @@ export async function PUT(
         const { id: userId } = await params;
 
         // Validate tier
-        const validTiers = ['FREE', 'BASIC_50', 'PRO_100'];
+        const validTiers = ['FREE', 'BASIC', 'PRO'];
         if (!validTiers.includes(tier)) {
             return NextResponse.json({ error: 'Invalid tier' }, { status: 400 });
         }
@@ -27,8 +27,8 @@ export async function PUT(
         // Determine credits based on tier
         const creditsMap: Record<string, number> = {
             'FREE': 5,
-            'BASIC_50': 50,
-            'PRO_100': 100,
+            'BASIC': 50,
+            'PRO': 100,
         };
 
         const newCreditsTotal = creditsMap[tier];

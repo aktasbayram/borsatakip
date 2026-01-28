@@ -7,9 +7,13 @@ import Link from "next/link";
 
 export default async function UsersPage() {
     const session = await auth();
-    const users = await prisma.user.findMany({
-        orderBy: { createdAt: 'desc' }
-    });
+    const [users, packages] = await Promise.all([
+        prisma.user.findMany({ orderBy: { createdAt: 'desc' } }),
+        prisma.package.findMany({
+            where: { isActive: true },
+            select: { name: true, displayName: true }
+        })
+    ]);
 
     return (
         <div className="space-y-6">
@@ -27,6 +31,7 @@ export default async function UsersPage() {
                             <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-800 dark:text-gray-400">
                                 <tr>
                                     <th className="px-6 py-3">İsim / Email</th>
+                                    <th className="px-6 py-3">Paket</th>
                                     <th className="px-6 py-3">Rol</th>
                                     <th className="px-6 py-3">Kayıt Tarihi</th>
                                     <th className="px-6 py-3">İşlemler</th>
@@ -44,6 +49,14 @@ export default async function UsersPage() {
                                             </a>
                                         </td>
                                         <td className="px-6 py-4">
+                                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${user.subscriptionTier === 'PRO' ? 'bg-purple-100 text-purple-800' :
+                                                user.subscriptionTier === 'BASIC' ? 'bg-blue-100 text-blue-800' :
+                                                    'bg-gray-100 text-gray-800'
+                                                }`}>
+                                                {user.subscriptionTier || 'FREE'}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4">
                                             <span className={`px-2 py-1 rounded-full text-xs font-semibold ${user.role === 'ADMIN'
                                                 ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
                                                 : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
@@ -55,9 +68,13 @@ export default async function UsersPage() {
                                             {new Date(user.createdAt).toLocaleDateString('tr-TR')}
                                         </td>
                                         <td className="px-6 py-4">
-                                            {session?.user?.id !== user.id && (
-                                                <UserActions userId={user.id} currentRole={user.role} />
-                                            )}
+                                            <UserActions
+                                                userId={user.id}
+                                                currentRole={user.role}
+                                                currentPackage={user.subscriptionTier || 'FREE'}
+                                                packages={packages}
+                                                isCurrentUser={session?.user?.id === user.id}
+                                            />
                                         </td>
                                     </tr>
                                 ))}

@@ -50,8 +50,8 @@ export default function AdminPackagesPage() {
     const getTierBadge = (tier: string) => {
         const badges: Record<string, { label: string; color: string }> = {
             'FREE': { label: 'FREE', color: 'bg-gray-500' },
-            'BASIC_50': { label: 'BASIC', color: 'bg-blue-500' },
-            'PRO_100': { label: 'PRO', color: 'bg-purple-500' },
+            'BASIC': { label: 'BASIC', color: 'bg-blue-500' },
+            'PRO': { label: 'PRO', color: 'bg-purple-500' },
         };
         const badge = badges[tier] || badges['FREE'];
         return (
@@ -103,8 +103,8 @@ export default function AdminPackagesPage() {
                                                 className="border rounded px-2 py-1 text-sm dark:bg-gray-800 dark:border-gray-700"
                                             >
                                                 <option value="FREE">FREE (5)</option>
-                                                <option value="BASIC_50">BASIC (50)</option>
-                                                <option value="PRO_100">PRO (100)</option>
+                                                <option value="BASIC">BASIC (50)</option>
+                                                <option value="PRO">PRO (100)</option>
                                             </select>
                                         </td>
                                     </tr>

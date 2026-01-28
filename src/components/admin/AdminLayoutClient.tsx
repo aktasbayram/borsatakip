@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -8,21 +8,48 @@ import { usePathname } from "next/navigation";
 
 export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [pendingCount, setPendingCount] = useState(0);
     const pathname = usePathname();
 
-    const NavLink = ({ href, children, icon }: { href: string; children: React.ReactNode; icon: React.ReactNode }) => {
+    useEffect(() => {
+        const fetchPendingCount = async () => {
+            try {
+                const res = await fetch('/api/admin/payments');
+                if (res.ok) {
+                    const data = await res.json();
+                    const pending = data.filter((t: any) => t.status === 'PENDING').length;
+                    setPendingCount(pending);
+                }
+            } catch (error) {
+                console.error('Failed to fetch pending payments count', error);
+            }
+        };
+
+        fetchPendingCount();
+        const interval = setInterval(fetchPendingCount, 30000); // Poll every 30s
+        return () => clearInterval(interval);
+    }, []);
+
+    const NavLink = ({ href, children, icon, badge }: { href: string; children: React.ReactNode; icon: React.ReactNode; badge?: number }) => {
         const isActive = pathname === href;
         return (
             <Link
                 href={href}
                 onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-300 ${isActive
+                className={`flex items-center justify-between px-4 py-3 text-sm font-medium rounded-lg transition-colors duration-300 ${isActive
                     ? 'bg-primary/10 text-primary'
                     : 'text-muted-foreground hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-50'
                     }`}
             >
-                {icon}
-                {children}
+                <div className="flex items-center gap-3">
+                    {icon}
+                    {children}
+                </div>
+                {badge !== undefined && badge > 0 && (
+                    <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                        {badge}
+                    </span>
+                )}
             </Link>
         );
     };
@@ -101,7 +128,7 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
                         Kullanıcılar
                     </NavLink>
                     <NavLink
-                        href="/admin/packages"
+                        href="/admin/settings/packages"
                         icon={
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -119,6 +146,27 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
                         }
                     >
                         Bildirimler
+                    </NavLink>
+                    <NavLink
+                        href="/admin/payments"
+                        badge={pendingCount}
+                        icon={
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                            </svg>
+                        }
+                    >
+                        Ödemeler
+                    </NavLink>
+                    <NavLink
+                        href="/admin/settings/banks"
+                        icon={
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                            </svg>
+                        }
+                    >
+                        Banka Hesapları
                     </NavLink>
                     <NavLink
                         href="/admin/settings"

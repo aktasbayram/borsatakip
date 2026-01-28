@@ -11,19 +11,29 @@ import { useRouter } from "next/navigation";
 import { useSnackbar } from "notistack";
 import { Alert } from "@prisma/client";
 
+import { UpgradeModal } from "@/components/subscription/UpgradeModal";
+
 export default function AlertsPage() {
     const [alerts, setAlerts] = useState<Alert[]>([]);
     const [loading, setLoading] = useState(true);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+    const [maxAlerts, setMaxAlerts] = useState(2);
     const router = useRouter();
     const { enqueueSnackbar } = useSnackbar();
 
-    const [permission, setPermission] = useState("granted"); // Default to granted to avoid flash
+    const [permission, setPermission] = useState("granted");
 
     useEffect(() => {
         if (typeof window !== "undefined" && "Notification" in window) {
             setPermission(Notification.permission);
         }
+
+        // Fetch user limits
+        axios.get("/api/user/credits").then(res => {
+            if (res.data.maxAlerts) setMaxAlerts(res.data.maxAlerts);
+        }).catch(err => console.error("Limit fetch error", err));
+
     }, []);
 
     const requestPermission = () => {
@@ -47,6 +57,14 @@ export default function AlertsPage() {
     useEffect(() => {
         fetchAlerts();
     }, []);
+
+    const handleCreateClick = () => {
+        if (alerts.length >= maxAlerts) {
+            setShowUpgradeModal(true);
+            return;
+        }
+        setIsCreateOpen(true);
+    };
 
     const handleDelete = async (id: string) => {
         if (!confirm("Bu alarmı silmek istediğinize emin misiniz?")) return;
@@ -88,7 +106,7 @@ export default function AlertsPage() {
                         Takip ettiğiniz hisseler belirlediğiniz fiyat seviyelerine geldiğinde bildirim alın.
                     </p>
                 </div>
-                <Button onClick={() => setIsCreateOpen(true)} className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Button onClick={handleCreateClick} className="bg-blue-600 hover:bg-blue-700 text-white">
                     + Yeni Alarm
                 </Button>
             </div>
@@ -165,7 +183,7 @@ export default function AlertsPage() {
                         <p className="text-gray-500 max-w-sm mt-2 mb-6">
                             Piyasa hareketlerini kaçırmamak için ilk fiyat alarmınızı oluşturun.
                         </p>
-                        <Button onClick={() => setIsCreateOpen(true)} variant="outline">
+                        <Button onClick={handleCreateClick} variant="outline">
                             Alarm Oluştur
                         </Button>
                     </Card>
@@ -256,6 +274,13 @@ export default function AlertsPage() {
                     setIsCreateOpen(false);
                     fetchAlerts(); // Refresh list on close if needed
                 }}
+            />
+
+            <UpgradeModal
+                open={showUpgradeModal}
+                onClose={() => setShowUpgradeModal(false)}
+                title="Alarm Hakkınız Doldu!"
+                description={`Mevcut paketinizle en fazla ${maxAlerts} adet aktif alarm oluşturabilirsiniz. Daha fazla alarm için paketinizi yükseltin.`}
             />
         </div >
     );
