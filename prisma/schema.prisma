@@ -29,6 +29,7 @@ model User {
   indices              UserIndex[]
   watchlists           Watchlist[]
   notifications        Notification[]
+  payments             PaymentTransaction[]
   preferences          Json?                 @default("{}") // Stores UI preferences like widget visibility
 }
 
@@ -206,6 +207,21 @@ model SystemSetting {
   category    String   @default("GENERAL") // AI, MARKET, SYSTEM, NOTIFICATION
   isSecret    Boolean  @default(false)     // specific keys should be masked in UI
   updatedAt   DateTime @updatedAt
+}
+
+model PaymentTransaction {
+  id          String    @id @default(cuid())
+  userId      String
+  package     String    // 'BASIC', 'PRO'
+  amount      Float
+  senderName  String
+  status      String    @default("PENDING") // 'PENDING', 'APPROVED', 'REJECTED'
+  createdAt   DateTime  @default(now())
+  processedAt DateTime?
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
 }
 
 
