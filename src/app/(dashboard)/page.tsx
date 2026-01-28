@@ -1,5 +1,7 @@
 'use client';
 
+
+
 import { useState, useEffect } from 'react';
 import { SymbolSearch } from '@/components/features/SymbolSearch';
 import { Card } from '@/components/ui/card';
@@ -178,6 +180,7 @@ export default function DashboardPage() {
 
     return (
         <div className="space-y-6">
+
             {preferences.showIndices && <MarketIndices />}
 
             {(preferences.showAgenda || preferences.showIpo) && (
