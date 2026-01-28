@@ -9,9 +9,10 @@ import { Trash2, GripVertical } from 'lucide-react';
 interface SortableItemProps {
     item: any;
     onRemove: (id: string, e: any) => void;
+    disabled?: boolean;
 }
 
-export function SortableWatchlistItem({ item, onRemove }: SortableItemProps) {
+export function SortableWatchlistItem({ item, onRemove, disabled }: SortableItemProps) {
     const {
         attributes,
         listeners,
@@ -19,7 +20,7 @@ export function SortableWatchlistItem({ item, onRemove }: SortableItemProps) {
         transform,
         transition,
         isDragging
-    } = useSortable({ id: item.id });
+    } = useSortable({ id: item.id, disabled });
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -33,14 +34,16 @@ export function SortableWatchlistItem({ item, onRemove }: SortableItemProps) {
         <div ref={setNodeRef} style={style} {...attributes} className="h-full touch-none select-none">
             <Card className={`relative hover:bg-gray-50 dark:hover:bg-gray-800 transition-all h-full group flex flex-col ${isDragging ? 'ring-2 ring-blue-500 shadow-xl' : ''}`}>
 
-                {/* Drag Handle */}
-                <div
-                    {...listeners}
-                    className="absolute top-1.5 right-1.5 p-1.5 cursor-grab active:cursor-grabbing z-20 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors opacity-0 group-hover:opacity-100"
-                    title="Sürükle"
-                >
-                    <GripVertical size={16} />
-                </div>
+                {/* Drag Handle - Only show if not disabled */}
+                {!disabled && (
+                    <div
+                        {...listeners}
+                        className="absolute top-1.5 right-1.5 p-1.5 cursor-grab active:cursor-grabbing z-20 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors opacity-0 group-hover:opacity-100"
+                        title="Sürükle"
+                    >
+                        <GripVertical size={16} />
+                    </div>
+                )}
 
                 <Link href={`/symbol/${item.market}/${item.symbol}`} className="block h-full flex-1" draggable={false}>
                     <CardHeader className="pb-8 pt-4 px-3">
@@ -69,15 +72,17 @@ export function SortableWatchlistItem({ item, onRemove }: SortableItemProps) {
                     </CardHeader>
                 </Link>
 
-                {/* Delete Button */}
-                <button
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onClick={(e) => onRemove(item.id, e)}
-                    className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-all z-20"
-                    title="Listeden Çıkar"
-                >
-                    <Trash2 size={14} />
-                </button>
+                {/* Delete Button - Only show if not disabled */}
+                {!disabled && (
+                    <button
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={(e) => onRemove(item.id, e)}
+                        className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full transition-all z-20"
+                        title="Listeden Çıkar"
+                    >
+                        <Trash2 size={14} />
+                    </button>
+                )}
             </Card>
         </div>
     );

@@ -57,6 +57,9 @@ export default async function AdminPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="text-3xl font-bold">{stats.totalWatchlists}</div>
+                        <Link href="/admin/watchlist" className="text-xs text-amber-100/80 hover:text-white underline mt-2 inline-block">
+                            Varsayılan Listeyi Yönet &rarr;
+                        </Link>
                     </CardContent>
                 </Card>
             </div>

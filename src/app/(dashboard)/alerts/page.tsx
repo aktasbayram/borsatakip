@@ -10,31 +10,56 @@ import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useSnackbar } from "notistack";
 import { Alert } from "@prisma/client";
+import { useSession } from "next-auth/react";
+import { AuthModal } from "@/components/auth/AuthModal";
 
 import { UpgradeModal } from "@/components/subscription/UpgradeModal";
 
+const MOCK_ALERTS: Partial<Alert>[] = [
+    { id: 'mock-1', symbol: 'THYAO', market: 'BIST', type: 'PRICE_ABOVE', target: 320.50, status: 'ACTIVE', createdAt: new Date() },
+    { id: 'mock-2', symbol: 'GARAN', market: 'BIST', type: 'PRICE_BELOW', target: 68.00, status: 'ACTIVE', createdAt: new Date() },
+    { id: 'mock-3', symbol: 'AAPL', market: 'US', type: 'PRICE_ABOVE', target: 185.00, status: 'ACTIVE', createdAt: new Date() },
+];
+
 export default function AlertsPage() {
-    const [alerts, setAlerts] = useState<Alert[]>([]);
+    const [alerts, setAlerts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [maxAlerts, setMaxAlerts] = useState(2);
     const router = useRouter();
     const { enqueueSnackbar } = useSnackbar();
+    const { status } = useSession();
+
+    // Auth Modal State
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    const [authView, setAuthView] = useState<'LOGIN' | 'REGISTER'>('REGISTER');
 
     const [permission, setPermission] = useState("granted");
+
+    // Remove direct redirect on unauthenticated
+    // useEffect(() => {
+    //     if (status === 'unauthenticated') {
+    //         router.push('/login');
+    //     }
+    // }, [status, router]);
+
+    // if (status === 'loading') return <div className="p-6">Yükleniyor...</div>;
+    // if (status === 'unauthenticated') return null;
 
     useEffect(() => {
         if (typeof window !== "undefined" && "Notification" in window) {
             setPermission(Notification.permission);
         }
 
-        // Fetch user limits
-        axios.get("/api/user/credits").then(res => {
-            if (res.data.maxAlerts) setMaxAlerts(res.data.maxAlerts);
-        }).catch(err => console.error("Limit fetch error", err));
+        if (status === 'authenticated') {
+            // Fetch user limits only if authenticated
+            axios.get("/api/user/credits").then(res => {
+                if (res.data.maxAlerts) setMaxAlerts(res.data.maxAlerts);
+            }).catch(err => console.error("Limit fetch error", err));
+        }
 
-    }, []);
+    }, [status]);
 
     const requestPermission = () => {
         Notification.requestPermission().then((perm) => {
@@ -43,6 +68,15 @@ export default function AlertsPage() {
     };
 
     const fetchAlerts = async () => {
+        if (status === 'loading') return;
+
+        if (status === 'unauthenticated') {
+            // Show mock alerts for guests
+            setAlerts(MOCK_ALERTS);
+            setLoading(false);
+            return;
+        }
+
         try {
             const response = await axios.get("/api/alerts");
             setAlerts(response.data);
@@ -56,9 +90,19 @@ export default function AlertsPage() {
 
     useEffect(() => {
         fetchAlerts();
-    }, []);
+    }, [status]); // Re-fetch when status changes
+
+    const handleGuestAction = (action: 'CREATE' | 'EDIT' | 'DELETE' | 'TOGGLE') => {
+        setAuthView('REGISTER');
+        setIsAuthModalOpen(true);
+    };
 
     const handleCreateClick = () => {
+        if (status !== 'authenticated') {
+            handleGuestAction('CREATE');
+            return;
+        }
+
         if (alerts.length >= maxAlerts) {
             setShowUpgradeModal(true);
             return;
@@ -67,6 +111,11 @@ export default function AlertsPage() {
     };
 
     const handleDelete = async (id: string) => {
+        if (status !== 'authenticated') {
+            handleGuestAction('DELETE');
+            return;
+        }
+
         if (!confirm("Bu alarmı silmek istediğinize emin misiniz?")) return;
 
         try {
@@ -81,6 +130,11 @@ export default function AlertsPage() {
     };
 
     const handleToggleStatus = async (id: string, currentStatus: string) => {
+        if (status !== 'authenticated') {
+            handleGuestAction('TOGGLE');
+            return;
+        }
+
         const newStatus = currentStatus === "ACTIVE" ? "DISABLED" : "ACTIVE";
 
         // Optimistic update
@@ -97,22 +151,60 @@ export default function AlertsPage() {
         }
     };
 
+    if (status === 'loading') {
+        return <div className="p-6 text-center text-gray-500">Yükleniyor...</div>;
+    }
+
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center sm:flex-row flex-col sm:gap-0 gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Fiyat Alarmları</h1>
                     <p className="text-sm text-gray-500 mt-1">
-                        Takip ettiğiniz hisseler belirlediğiniz fiyat seviyelerine geldiğinde bildirim alın.
+                        Takip ettiğiniz hisseler belirlediğiniz fiyat seviyelerine geldiğinde <b>Tarayıcı</b> ve <b>Telegram</b> üzerinden anında bildirim alın.
                     </p>
                 </div>
-                <Button onClick={handleCreateClick} className="bg-blue-600 hover:bg-blue-700 text-white">
+                <Button onClick={handleCreateClick} className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto">
                     + Yeni Alarm
                 </Button>
             </div>
 
-            {/* Browser Permission Warning */}
-            {permission === "default" && (
+            {/* Guest Banner */}
+            {status !== 'authenticated' && (
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-800 rounded-lg p-6 text-center">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                        Piyasayı 7/24 Takip Edin
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-300 mb-4 max-w-2xl mx-auto text-sm">
+                        Kendi alarmlarınızı oluşturarak hisse senetleri hedeflediğiniz fiyata geldiğinde anında haberdar olabilirsiniz.
+                        Size özel bildirimler ve Telegram entegrasyonu için hemen ücretsiz hesabınızı oluşturun.
+                    </p>
+                    <div className="flex justify-center gap-3">
+                        <Button
+                            onClick={() => {
+                                setAuthView('REGISTER');
+                                setIsAuthModalOpen(true);
+                            }}
+                            variant="primary"
+                            className="bg-blue-600 hover:bg-blue-700"
+                        >
+                            Hemen Başla
+                        </Button>
+                        <Button
+                            onClick={() => {
+                                setAuthView('LOGIN');
+                                setIsAuthModalOpen(true);
+                            }}
+                            variant="outline"
+                        >
+                            Giriş Yap
+                        </Button>
+                    </div>
+                </div>
+            )}
+
+            {/* Browser Permission Warning - Only show if authenticated or if user is interested */}
+            {status === 'authenticated' && permission === "default" && (
                 <div className="bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 p-4 rounded-lg flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <span className="text-2xl">🔔</span>
@@ -131,7 +223,7 @@ export default function AlertsPage() {
                 </div>
             )}
 
-            {permission === "denied" && (
+            {status === 'authenticated' && permission === "denied" && (
                 <div className="bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 p-4 rounded-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div className="flex items-start gap-3">
                         <span className="text-2xl mt-1">🚫</span>
@@ -190,19 +282,22 @@ export default function AlertsPage() {
                 ) : (
                     <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                         {alerts.map((alert) => (
-                            <Card key={alert.id} className="p-4 hover:shadow-md transition-shadow relative group">
+                            <Card key={alert.id} className={`p-4 hover:shadow-md transition-shadow relative group ${status !== 'authenticated' ? 'opacity-75' : ''}`}>
                                 <div className="flex justify-between items-start mb-2">
                                     <div>
                                         <div className="flex items-center gap-2">
                                             <span className="font-bold text-lg text-gray-900 dark:text-white capitalize">
                                                 {alert.symbol}
                                             </span>
-                                            <span className="text-xs px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 font-medium">
+                                            <span className={`text-xs px-2 py-0.5 rounded font-medium ${alert.market === 'BIST'
+                                                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                                                    : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
+                                                }`}>
                                                 {alert.market}
                                             </span>
                                         </div>
                                         <p className="text-xs text-gray-500 mt-1">
-                                            {new Date(alert.createdAt).toLocaleDateString("tr-TR")} tarihinde oluşturuldu
+                                            {formatDate(alert.createdAt)} tarihinde oluşturuldu
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-3">
@@ -260,8 +355,6 @@ export default function AlertsPage() {
                                         </span>
                                     </div>
                                 )}
-
-
                             </Card>
                         ))}
                     </div>
@@ -282,7 +375,19 @@ export default function AlertsPage() {
                 title="Alarm Hakkınız Doldu!"
                 description={`Mevcut paketinizle en fazla ${maxAlerts} adet aktif alarm oluşturabilirsiniz. Daha fazla alarm için paketinizi yükseltin.`}
             />
+
+            <AuthModal
+                isOpen={isAuthModalOpen}
+                onClose={() => setIsAuthModalOpen(false)}
+                initialView={authView}
+            />
         </div >
     );
+}
+
+// Helper to avoid hydration mismatch on dates
+function formatDate(date: Date | string) {
+    if (!date) return "";
+    return new Date(date).toLocaleDateString("tr-TR");
 }
 

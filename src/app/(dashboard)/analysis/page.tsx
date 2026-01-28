@@ -3,12 +3,25 @@
 import AiAnalysisFeed from '@/components/AiAnalysisFeed';
 import { SentimentGauge } from '@/components/analysis/SentimentGauge';
 import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 export default function AnalysisPage() {
     const [analyzing, setAnalyzing] = useState(false);
     const [analyses, setAnalyses] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [averageSentiment, setAverageSentiment] = useState(0);
+    const { status } = useSession();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (status === 'unauthenticated') {
+            router.push('/login');
+        }
+    }, [status, router]);
+
+    if (status === 'loading') return <div className="p-6">Yükleniyor...</div>;
+    if (status === 'unauthenticated') return null;
 
     // Fetch data
     const fetchData = async () => {

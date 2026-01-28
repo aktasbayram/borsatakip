@@ -6,14 +6,28 @@ import { Input } from '@/components/ui/input';
 import { CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useSnackbar } from 'notistack';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Copy, Check } from 'lucide-react';
 
 import { useSession } from "next-auth/react";
 
 export default function AccountSettingsPage() {
     const { enqueueSnackbar } = useSnackbar();
-    const { update } = useSession(); // Add this
+    const { data: session, status, update } = useSession();
+    const router = useRouter();
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (status === 'unauthenticated') {
+            router.push('/login');
+        }
+    }, [status, router]);
+
+    if (status === 'loading') {
+        return <div className="flex h-screen items-center justify-center">Yükleniyor...</div>;
+    }
+
+    if (status === 'unauthenticated') return null;
 
     // Profile State
     const [profile, setProfile] = useState({

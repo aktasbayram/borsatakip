@@ -12,6 +12,7 @@ import { Footer } from '@/components/layout/Footer';
 import { useEffect, useState } from 'react';
 import { Chatbot } from '@/components/ai/Chatbot';
 import { NotificationBell } from '@/components/layout/NotificationBell';
+import { AuthModal } from '@/components/auth/AuthModal';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const { data: session, status } = useSession();
@@ -20,12 +21,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     const { getContainerClass, getContentClass } = useLayoutWidth();
     const [themeDialogOpen, setThemeDialogOpen] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [authModalOpen, setAuthModalOpen] = useState(false);
+    const [authView, setAuthView] = useState<'LOGIN' | 'REGISTER'>('LOGIN');
 
-    useEffect(() => {
-        if (status === 'unauthenticated') {
-            router.push('/login');
-        }
-    }, [status, router]);
+    const openLogin = () => {
+        setAuthView('LOGIN');
+        setAuthModalOpen(true);
+    };
+
+    const openRegister = () => {
+        setAuthView('REGISTER');
+        setAuthModalOpen(true);
+    };
+
+    // Authentication check removed for public access
+    // useEffect(() => {
+    //     if (status === 'unauthenticated') {
+    //         router.push('/login');
+    //     }
+    // }, [status, router]);
 
     // Close mobile menu on path change
     useEffect(() => {
@@ -36,14 +50,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         return <div className="flex h-screen items-center justify-center">Yükleniyor...</div>;
     }
 
-    if (!session) return null; // Will redirect
+    // if (!session) return null; // Removed for public access
 
-    const navItems = [
+    const navItems = session ? [
         { name: 'Takip Listesi', href: '/' },
         { name: 'Portföy', href: '/portfolio' },
         { name: 'Analizler', href: '/analysis' },
         { name: 'Haberler', href: '/news' },
         { name: 'Alarmlar', href: '/alerts' },
+    ] : [
+        { name: 'Piyasalar', href: '/' },
+        { name: 'Portföy', href: '/portfolio' },
+        { name: 'Alarmlar', href: '/alerts' },
+        { name: 'Haberler', href: '/news' },
     ];
 
     return (
@@ -95,81 +114,94 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <Link href="/upgrade">
-                                <PackageBadge />
-                            </Link>
-                            <NotificationBell />
-                            <ThemeToggle />
-                            {/* Settings Dropdown - Hidden on very small screens if crowded, or keep it */}
-                            <div className="relative group hidden sm:block">
-                                <button className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
-                                    Ayarlar
-                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                    </svg>
-                                </button>
-                                <div className="absolute right-0 mt-2 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                                    <div className="bg-card rounded-lg shadow-lg border border-border py-2">
-                                        <Link
-                                            href="/settings/indices"
-                                            className="block px-4 py-2 text-sm text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-                                        >
-                                            📊 Endeks Yönetimi
-                                        </Link>
-                                        <Link
-                                            href="/settings/account"
-                                            className="block px-4 py-2 text-sm text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-                                        >
-                                            🔐 Hesap Ayarları
-                                        </Link>
-                                        <button
-                                            onClick={() => setThemeDialogOpen(true)}
-                                            className="w-full text-left block px-4 py-2 text-sm text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-                                        >
-                                            🌓 Tema ve Görünüm
+                            {session ? (
+                                <>
+                                    <Link href="/upgrade">
+                                        <PackageBadge />
+                                    </Link>
+                                    <NotificationBell />
+                                    <ThemeToggle />
+                                    {/* Settings Dropdown - Hidden on very small screens if crowded, or keep it */}
+                                    <div className="relative group hidden sm:block">
+                                        <button className="px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1">
+                                            Ayarlar
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                            </svg>
                                         </button>
-                                        <Link
-                                            href="/settings/dashboard"
-                                            className="block px-4 py-2 text-sm text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-                                        >
-                                            🎨 Dashboard Görünümü
-                                        </Link>
-                                        <Link
-                                            href="/settings/notifications"
-                                            className="block px-4 py-2 text-sm text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-                                        >
-                                            🔔 Bildirim Ayarları
-                                        </Link>
-                                        {session.user?.role === 'ADMIN' && (
-                                            <>
-                                                <div className="border-t border-border my-1"></div>
+                                        <div className="absolute right-0 mt-2 w-56 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                                            <div className="bg-card rounded-lg shadow-lg border border-border py-2">
                                                 <Link
-                                                    href="/admin"
-                                                    className="block px-4 py-2 text-sm font-semibold text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
+                                                    href="/settings/indices"
+                                                    className="block px-4 py-2 text-sm text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
                                                 >
-                                                    ⚡ Admin Panel
+                                                    📊 Endeks Yönetimi
                                                 </Link>
-                                            </>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
+                                                <Link
+                                                    href="/settings/account"
+                                                    className="block px-4 py-2 text-sm text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                                                >
+                                                    🔐 Hesap Ayarları
+                                                </Link>
+                                                <button
+                                                    onClick={() => setThemeDialogOpen(true)}
+                                                    className="w-full text-left block px-4 py-2 text-sm text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                                                >
+                                                    🌓 Tema ve Görünüm
+                                                </button>
+                                                <Link
+                                                    href="/settings/dashboard"
+                                                    className="block px-4 py-2 text-sm text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                                                >
+                                                    🎨 Dashboard Görünümü
+                                                </Link>
+                                                <Link
+                                                    href="/settings/notifications"
+                                                    className="block px-4 py-2 text-sm text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
+                                                >
+                                                    🔔 Bildirim Ayarları
+                                                </Link>
+                                                {session.user?.role === 'ADMIN' && (
+                                                    <>
+                                                        <div className="border-t border-border my-1"></div>
 
-                            <Link
-                                href="/settings/account"
-                                className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-md hover:bg-accent transition-colors group"
-                                title="Hesap Ayarları"
-                            >
-                                <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
-                                    {(session.user?.name || session.user?.email || 'U').charAt(0).toUpperCase()}
-                                </div>
-                                <span className="text-sm text-muted-foreground font-medium group-hover:text-primary transition-colors">
-                                    {session.user?.name || session.user?.email}
-                                </span>
-                            </Link>
-                            <Button variant="ghost" size="sm" onClick={() => signOut({ redirect: false }).then(() => router.push('/login'))}>
-                                Çıkış
-                            </Button>
+                                                        <Link
+                                                            href="/admin"
+                                                            className="block px-4 py-2 text-sm font-semibold text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
+                                                        >
+                                                            ⚡ Admin Panel
+                                                        </Link>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <Link
+                                        href="/settings/account"
+                                        className="hidden sm:flex items-center gap-2 px-2 py-1 rounded-md hover:bg-accent transition-colors group"
+                                        title="Hesap Ayarları"
+                                    >
+                                        <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-sm">
+                                            {(session.user?.name || session.user?.email || 'U').charAt(0).toUpperCase()}
+                                        </div>
+                                        <span className="text-sm text-muted-foreground font-medium group-hover:text-primary transition-colors">
+                                            {session.user?.name || session.user?.email}
+                                        </span>
+                                    </Link>
+                                    <Button variant="ghost" size="sm" onClick={() => signOut({ redirect: false }).then(() => router.push('/'))}>
+                                        Çıkış
+                                    </Button>
+                                </>
+                            ) : (
+                                <>
+                                    <ThemeToggle />
+                                    <div className="flex items-center gap-2 ml-2">
+                                        <Button variant="ghost" size="sm" onClick={openLogin}>Giriş Yap</Button>
+                                        <Button size="sm" onClick={openRegister}>Kayıt Ol</Button>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -210,45 +242,80 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 </Link>
                             );
                         })}
-                        <div className="border-t border-border my-2"></div>
-                        <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Ayarlar</div>
-                        <Link href="/settings/indices" className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-primary/10 hover:text-foreground">
-                            📊 Endeks Yönetimi
-                        </Link>
-                        <Link href="/settings/account" className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-primary/10 hover:text-foreground">
-                            🔐 Hesap Ayarları
-                        </Link>
-                        <button
-                            onClick={() => {
-                                setThemeDialogOpen(true);
-                                setMobileMenuOpen(false);
-                            }}
-                            className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-primary/10 hover:text-foreground"
-                        >
-                            🌓 Tema ve Görünüm
-                        </button>
-                        <Link href="/settings/dashboard" className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-primary/10 hover:text-foreground">
-                            🎨 Dashboard Görünümü
-                        </Link>
-                        <Link href="/settings/notifications" className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-primary/10 hover:text-foreground">
-                            🔔 Bildirim Ayarları
-                        </Link>
-                        <div className="border-t border-border my-2"></div>
-                        <Link href="/upgrade" className="block px-3 py-2 rounded-md text-base font-medium bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-700 hover:to-indigo-700">
-                            ⚡ Pro'ya Yükselt
-                        </Link>
-                        {session.user?.role === 'ADMIN' && (
-                            <Link href="/admin" className="block px-3 py-2 rounded-md text-base font-medium text-purple-600 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-900/20">
-                                ⚡ Admin Panel
-                            </Link>
+                        {session ? (
+                            <>
+                                <div className="border-t border-border my-2"></div>
+                                <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Ayarlar</div>
+                                <Link href="/settings/indices" className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-primary/10 hover:text-foreground">
+                                    📊 Endeks Yönetimi
+                                </Link>
+                                <Link href="/settings/account" className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-primary/10 hover:text-foreground">
+                                    🔐 Hesap Ayarları
+                                </Link>
+                                <button
+                                    onClick={() => {
+                                        setThemeDialogOpen(true);
+                                        setMobileMenuOpen(false);
+                                    }}
+                                    className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-primary/10 hover:text-foreground"
+                                >
+                                    🌓 Tema ve Görünüm
+                                </button>
+                                <Link href="/settings/dashboard" className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-primary/10 hover:text-foreground">
+                                    🎨 Dashboard Görünümü
+                                </Link>
+                                <Link href="/settings/notifications" className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-primary/10 hover:text-foreground">
+                                    🔔 Bildirim Ayarları
+                                </Link>
+                                <div className="border-t border-border my-2"></div>
+                                <Link href="/upgrade" className="block px-3 py-2 rounded-md text-base font-medium bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-700 hover:to-indigo-700">
+                                    ⚡ Pro'ya Yükselt
+                                </Link>
+                                {session.user?.role === 'ADMIN' && (
+                                    <Link href="/admin" className="block px-3 py-2 rounded-md text-base font-medium text-purple-600 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-900/20">
+                                        ⚡ Admin Panel
+                                    </Link>
+                                )}
+                                <div className="border-t border-border my-2"></div>
+                                <button
+                                    onClick={() => signOut({ redirect: false }).then(() => router.push('/'))}
+                                    className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
+                                >
+                                    Çıkış Yap
+                                </button>
+                            </>
+                        ) : (
+                            <>
+                                <div className="border-t border-border my-2"></div>
+                                <button
+                                    onClick={() => {
+                                        setThemeDialogOpen(true);
+                                        setMobileMenuOpen(false);
+                                    }}
+                                    className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-primary/10 hover:text-foreground"
+                                >
+                                    🌓 Tema ve Görünüm
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        openLogin();
+                                        setMobileMenuOpen(false);
+                                    }}
+                                    className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-primary hover:bg-primary/10"
+                                >
+                                    Giriş Yap
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        openRegister();
+                                        setMobileMenuOpen(false);
+                                    }}
+                                    className="w-full text-left block px-3 py-2 rounded-md text-base font-medium bg-primary text-primary-foreground hover:bg-primary/90"
+                                >
+                                    Kayıt Ol
+                                </button>
+                            </>
                         )}
-                        <div className="border-t border-border my-2"></div>
-                        <button
-                            onClick={() => signOut({ redirect: false }).then(() => router.push('/login'))}
-                            className="w-full text-left block px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20"
-                        >
-                            Çıkış Yap
-                        </button>
                     </div>
                 </div>
             </div>
@@ -260,6 +327,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Footer />
 
             <ThemeSettingsDialog open={themeDialogOpen} onClose={() => setThemeDialogOpen(false)} />
+            <AuthModal
+                isOpen={authModalOpen}
+                onClose={() => setAuthModalOpen(false)}
+                initialView={authView}
+            />
             <Chatbot />
         </div >
     );

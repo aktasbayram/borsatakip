@@ -34,7 +34,13 @@ export function SymbolSearch({ onSelect }: SymbolSearchProps) {
             setLoading(true);
             try {
                 const res = await axios.get(`/api/market/search?q=${query}&market=${market}`);
-                setResults(res.data);
+                // Deduplicate results based on symbol
+                const uniqueResults = res.data.filter((item: SearchResult, index: number, self: SearchResult[]) =>
+                    index === self.findIndex((t) => (
+                        t.symbol === item.symbol && t.market === item.market
+                    ))
+                );
+                setResults(uniqueResults);
             } catch (error) {
                 console.error(error);
             } finally {

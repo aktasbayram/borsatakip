@@ -10,18 +10,22 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useSnackbar } from 'notistack';
 import { Input } from '@/components/ui/input';
+import { useSession } from 'next-auth/react';
 
 import { CreateAlertDialog } from '@/components/alerts/CreateAlertDialog';
 import { TechnicalAnalysis } from '@/components/features/TechnicalAnalysis';
 import { AIAnalysisModal } from '@/components/ai/AIAnalysisModal';
 import { CreditBadge } from '@/components/subscription/CreditBadge';
 import { UpgradeModal } from '@/components/subscription/UpgradeModal';
+import { AuthModal } from '@/components/auth/AuthModal';
+import { FeaturePromoModal } from '@/components/marketing/FeaturePromoModal';
 
 export default function SymbolPage() {
     const params = useParams();
     const symbol = params.symbol as string;
     const market = params.market as 'BIST' | 'US';
     const { enqueueSnackbar } = useSnackbar();
+    const { data: session, status } = useSession();
 
     const [quote, setQuote] = useState<any>(null);
     const [candles, setCandles] = useState<any[]>([]);
@@ -51,6 +55,25 @@ export default function SymbolPage() {
     const [alertTarget, setAlertTarget] = useState(0);
     const [isAlertOpen, setIsAlertOpen] = useState(false);
 
+    // Auth Modal State
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+    const [authView, setAuthView] = useState<'LOGIN' | 'REGISTER'>('REGISTER');
+
+    // Promo Modal State
+    const [isPromoOpen, setIsPromoOpen] = useState(false);
+    const [promoFeature, setPromoFeature] = useState<'AI_ANALYSIS' | 'ALERTS'>('AI_ANALYSIS');
+
+    const handleGuestAction = (action: 'TRADE' | 'AI' | 'ALERT') => {
+        if (action === 'AI' || action === 'ALERT') {
+            setPromoFeature(action === 'AI' ? 'AI_ANALYSIS' : 'ALERTS');
+            setIsPromoOpen(true);
+        } else {
+            // For Trade, direct to auth since the blurred card explains it
+            setAuthView('REGISTER');
+            setIsAuthModalOpen(true);
+        }
+    };
+
     useEffect(() => {
         if (quote) {
             if (price === 0) setPrice(quote.price);
@@ -62,6 +85,8 @@ export default function SymbolPage() {
     // Fetch portfolios
     useEffect(() => {
         const loadPortfolios = async () => {
+            if (status !== 'authenticated') return;
+
             try {
                 const res = await axios.get('/api/portfolio');
                 if (res.data.length > 0) {
@@ -83,7 +108,7 @@ export default function SymbolPage() {
             }
         };
         loadPortfolios();
-    }, []);
+    }, [status]);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -139,6 +164,11 @@ export default function SymbolPage() {
     }, [symbol, market, range, interval]);
 
     const handleAIAnalysisClick = async () => {
+        if (status !== 'authenticated') {
+            handleGuestAction('AI');
+            return;
+        }
+
         try {
             // Deduct credit first
             const creditRes = await axios.post('/api/user/credits');
@@ -155,6 +185,11 @@ export default function SymbolPage() {
     };
 
     const handleTransaction = async () => {
+        if (status !== 'authenticated') {
+            handleGuestAction('TRADE');
+            return;
+        }
+
         try {
             await axios.post('/api/portfolio', {
                 portfolioId: selectedPortfolioId,
@@ -176,7 +211,11 @@ export default function SymbolPage() {
         }
     };
 
+
+
+    // ... (rest of useEffects) ...
     const handleCreateAlert = async () => {
+        // If this is called, user is authenticated (checked in handleAlertClick or UI)
         try {
             await axios.post('/api/alerts', {
                 symbol,
@@ -189,24 +228,28 @@ export default function SymbolPage() {
             enqueueSnackbar('Hata oluştu', { variant: 'error' });
         }
     };
-
-    // ... (rest of useEffects) ...
-
     // Check limits
     const [maxAlerts, setMaxAlerts] = useState<number | null>(null);
     const [activeAlertsCount, setActiveAlertsCount] = useState<number | null>(null);
     const [upgradeModalProps, setUpgradeModalProps] = useState({ title: '', description: '' });
 
     useEffect(() => {
-        axios.get('/api/user/credits').then(res => {
-            if (res.data) {
-                setMaxAlerts(res.data.maxAlerts);
-                setActiveAlertsCount(res.data.activeAlertsCount);
-            }
-        }).catch(err => console.error(err));
-    }, []);
+        if (status === 'authenticated') {
+            axios.get('/api/user/credits').then(res => {
+                if (res.data) {
+                    setMaxAlerts(res.data.maxAlerts);
+                    setActiveAlertsCount(res.data.activeAlertsCount);
+                }
+            }).catch(err => console.error(err));
+        }
+    }, [status]);
 
     const handleAlertClick = () => {
+        if (status !== 'authenticated') {
+            handleGuestAction('ALERT');
+            return;
+        }
+
         if (maxAlerts !== null && activeAlertsCount !== null && activeAlertsCount >= maxAlerts) {
             setUpgradeModalProps({
                 title: 'Alarm Hakkınız Doldu!',
@@ -218,13 +261,15 @@ export default function SymbolPage() {
         setIsAlertOpen(true);
     };
 
+
     // ... (rest of code)
 
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    {/* ... header ... */}
+                    <h1 className="text-2xl font-bold">{symbol}</h1>
+                    <p className="text-sm text-muted-foreground">{quote?.name || '...'}</p>
                 </div>
                 {quote && (
                     <div className="flex items-center gap-4">
@@ -249,6 +294,7 @@ export default function SymbolPage() {
                             </svg>
                             Alarm Kur
                         </Button>
+
                         {/* Mobile Buttons */}
                         <div className="flex md:hidden gap-2">
                             {/* ... AI Button ... */}
@@ -269,6 +315,7 @@ export default function SymbolPage() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                                 </svg>
                             </Button>
+
                         </div>
 
                         {/* ... Price display ... */}
@@ -314,6 +361,8 @@ export default function SymbolPage() {
                 defaultSymbol={symbol}
                 defaultMarket={market}
             />
+
+
 
             <div className="h-[600px] w-full bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden relative p-4">
                 <div className="flex justify-between items-center mb-2 px-1 gap-2 overflow-x-auto">
@@ -369,9 +418,28 @@ export default function SymbolPage() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card>
+                <Card className="relative overflow-hidden">
                     <CardHeader><CardTitle>Hızlı İşlem (Sanal Portföy)</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
+                        {status !== 'authenticated' && (
+                            <div className="absolute inset-0 bg-white/60 dark:bg-gray-950/60 backdrop-blur-[2px] z-10 flex flex-col items-center justify-center text-center p-6">
+                                <div className="bg-white dark:bg-gray-900 p-6 rounded-xl shadow-2xl border border-gray-100 dark:border-gray-800 max-w-sm w-full">
+                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                                        Demo Hesap ile Başlayın
+                                    </h3>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                                        Hesabınıza tanımlanan <span className="font-bold text-green-600 dark:text-green-400">100.000 TL</span> veya <span className="font-bold text-green-600 dark:text-green-400">$10.000</span> sanal bakiye ile risk almadan stratejilerinizi test edin.
+                                    </p>
+                                    <Button
+                                        onClick={() => handleGuestAction('TRADE')}
+                                        className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                                    >
+                                        Hemen Başla
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+
                         {portfolios.length > 0 && (
                             <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
                                 <label className="block text-sm font-bold text-blue-800 dark:text-blue-300 mb-1 flex items-center gap-2">
@@ -463,20 +531,9 @@ export default function SymbolPage() {
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader><CardTitle>Fiyat Alarmı Kur</CardTitle></CardHeader>
-                    <CardContent className="space-y-4">
-                        <Input
-                            label="Hedef Fiyat"
-                            type="number"
-                            value={alertTarget}
-                            onChange={e => setAlertTarget(Number(e.target.value))}
-                        />
-                        <Button variant="secondary" className="w-full" onClick={handleCreateAlert}>Alarm Ekle</Button>
-                    </CardContent>
-                </Card>
 
-                <div className="mt-4">
+
+                <div>
                     <TechnicalAnalysis candles={candles} />
                 </div>
             </div>
@@ -594,6 +651,22 @@ export default function SymbolPage() {
                     document.body
                 )
             }
+
+            <AuthModal
+                isOpen={isAuthModalOpen}
+                onClose={() => setIsAuthModalOpen(false)}
+                initialView={authView}
+            />
+
+            <FeaturePromoModal
+                isOpen={isPromoOpen}
+                onClose={() => setIsPromoOpen(false)}
+                onAction={() => {
+                    setAuthView('REGISTER');
+                    setIsAuthModalOpen(true);
+                }}
+                feature={promoFeature}
+            />
         </div >
     );
 }
