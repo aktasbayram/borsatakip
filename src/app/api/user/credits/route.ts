@@ -42,13 +42,21 @@ export async function GET(request: Request) {
             const limits: Record<string, number> = { 'FREE': 2, 'BASIC': 5, 'PRO': 10 };
             maxAlerts = limits[user.subscriptionTier] || 2;
         }
+        // Count active alerts
+        const activeAlertsCount = await prisma.alert.count({
+            where: {
+                userId: session.user.id,
+                status: 'ACTIVE'
+            }
+        });
 
         const responseData = {
             credits: user.aiCredits,
             total: user.aiCreditsTotal,
             tier: user.subscriptionTier,
             resetAt: user.aiCreditsResetAt,
-            maxAlerts: maxAlerts
+            maxAlerts: maxAlerts,
+            activeAlertsCount: activeAlertsCount
         };
 
         if (needsReset) {

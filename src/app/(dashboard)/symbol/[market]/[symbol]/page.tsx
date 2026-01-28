@@ -192,12 +192,39 @@ export default function SymbolPage() {
 
     // ... (rest of useEffects) ...
 
+    // Check limits
+    const [maxAlerts, setMaxAlerts] = useState<number | null>(null);
+    const [activeAlertsCount, setActiveAlertsCount] = useState<number | null>(null);
+    const [upgradeModalProps, setUpgradeModalProps] = useState({ title: '', description: '' });
+
+    useEffect(() => {
+        axios.get('/api/user/credits').then(res => {
+            if (res.data) {
+                setMaxAlerts(res.data.maxAlerts);
+                setActiveAlertsCount(res.data.activeAlertsCount);
+            }
+        }).catch(err => console.error(err));
+    }, []);
+
+    const handleAlertClick = () => {
+        if (maxAlerts !== null && activeAlertsCount !== null && activeAlertsCount >= maxAlerts) {
+            setUpgradeModalProps({
+                title: 'Alarm Hakkınız Doldu!',
+                description: `Mevcut paketinizle en fazla ${maxAlerts} adet aktif alarm oluşturabilirsiniz. Daha fazla alarm için paketinizi yükseltin.`
+            });
+            setIsUpgradeModalOpen(true);
+            return;
+        }
+        setIsAlertOpen(true);
+    };
+
+    // ... (rest of code)
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h1 className="text-3xl font-bold">{symbol}</h1>
-                    <span className="text-sm text-gray-500">{market}</span>
+                    {/* ... header ... */}
                 </div>
                 {quote && (
                     <div className="flex items-center gap-4">
@@ -214,7 +241,7 @@ export default function SymbolPage() {
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => setIsAlertOpen(true)}
+                            onClick={handleAlertClick}
                             className="hidden md:flex gap-2"
                         >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -224,10 +251,11 @@ export default function SymbolPage() {
                         </Button>
                         {/* Mobile Buttons */}
                         <div className="flex md:hidden gap-2">
+                            {/* ... AI Button ... */}
                             <Button
                                 variant="primary"
                                 size="icon"
-                                onClick={() => setIsAIModalOpen(true)}
+                                onClick={handleAIAnalysisClick} // Fixed from setting modal directly to check credits
                                 className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white border-0"
                             >
                                 <span>✨</span>
@@ -235,7 +263,7 @@ export default function SymbolPage() {
                             <Button
                                 variant="outline"
                                 size="icon"
-                                onClick={() => setIsAlertOpen(true)}
+                                onClick={handleAlertClick}
                             >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -243,6 +271,7 @@ export default function SymbolPage() {
                             </Button>
                         </div>
 
+                        {/* ... Price display ... */}
                         <div className="text-right">
                             <div className="text-3xl font-bold">{quote.price.toFixed(2)}</div>
                             <div className={quote.change >= 0 ? 'text-green-600' : 'text-red-600'}>
@@ -253,6 +282,7 @@ export default function SymbolPage() {
                 )}
             </div>
 
+            {/* ... AI Modal ... */}
             <AIAnalysisModal
                 open={isAIModalOpen}
                 onClose={() => setIsAIModalOpen(false)}
@@ -263,14 +293,19 @@ export default function SymbolPage() {
                     market,
                     price: quote?.price,
                     change: quote?.changePercent,
-                    candles: candles.slice(-30), // Son 30 mum
-                    news: kapNews.slice(0, 3) // Son 3 haber
+                    candles: candles.slice(-30),
+                    news: kapNews.slice(0, 3)
                 }}
             />
 
             <UpgradeModal
                 open={isUpgradeModalOpen}
-                onClose={() => setIsUpgradeModalOpen(false)}
+                onClose={() => {
+                    setIsUpgradeModalOpen(false);
+                    setUpgradeModalProps({ title: '', description: '' }); // Reset
+                }}
+                title={upgradeModalProps.title}
+                description={upgradeModalProps.description}
             />
 
             <CreateAlertDialog
