@@ -195,6 +195,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 </>
                             ) : (
                                 <>
+                                    <NotificationBell />
                                     <ThemeToggle />
                                     <div className="flex items-center gap-2 ml-2">
                                         <Button variant="ghost" size="sm" onClick={openLogin}>Giriş Yap</Button>
