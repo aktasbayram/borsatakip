@@ -19,6 +19,7 @@ interface IpoItem {
     url: string;
     imageUrl: string;
     distributionMethod: string;
+    statusText?: string;
     isNew?: boolean;
 }
 
@@ -30,7 +31,7 @@ export function IpoWidget() {
         const fetchIpos = async () => {
             try {
                 const response = await axios.get('/api/market/ipos');
-                setIpos(response.data);
+                setIpos(response.data.slice(0, 5));
             } catch (error) {
                 console.error('Failed to fetch IPOs', error);
             } finally {
@@ -80,15 +81,21 @@ export function IpoWidget() {
                                             {/* Header */}
                                             <div className="flex items-start justify-between gap-2">
                                                 <div>
-                                                    <div className="flex items-center gap-1.5">
+                                                    <div className="flex flex-wrap items-center gap-1.5">
                                                         <Link
                                                             href={`/market/ipo/${ipo.url.split('/').filter(Boolean).pop()}`}
                                                             className="hover:underline decoration-primary underline-offset-4"
                                                         >
                                                             <h4 className="font-bold text-xs tracking-tight line-clamp-1">{ipo.company}</h4>
                                                         </Link>
+                                                        {ipo.statusText && (
+                                                            <Badge className="h-3.5 px-1 text-[9px] bg-blue-600 text-white border-0 shadow-sm animate-pulse flex items-center whitespace-nowrap">
+                                                                <span className="w-1 h-1 bg-white rounded-full mr-1 animate-ping"></span>
+                                                                {ipo.statusText.toUpperCase()}
+                                                            </Badge>
+                                                        )}
                                                         {ipo.isNew && (
-                                                            <Badge className="h-3.5 px-1 text-[9px] bg-green-500 hover:bg-green-600">YENİ</Badge>
+                                                            <Badge className="h-3.5 px-1 text-[9px] bg-green-500 hover:bg-green-600 whitespace-nowrap">YENİ</Badge>
                                                         )}
                                                     </div>
                                                     <div className="flex items-center gap-1.5 mt-0.5">

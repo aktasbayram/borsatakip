@@ -2,8 +2,24 @@
 
 import { useTheme } from "next-themes";
 import { useLayoutWidth } from "@/hooks/useLayoutWidth";
+import { useDashboardPreferences } from "@/hooks/useDashboardPreferences";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { Switch } from "@/components/ui/switch";
+
+interface ThemeSettingsDialogProps {
+    open: boolean;
+    onClose: () => void;
+}
+
+function PreferencesToggle({ label, checked, onChange }: { label: string, checked: boolean, onChange: (v: boolean) => void }) {
+    return (
+        <div className="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
+            <Switch checked={checked} onCheckedChange={onChange} />
+        </div>
+    );
+}
 
 interface ThemeSettingsDialogProps {
     open: boolean;
@@ -13,6 +29,7 @@ interface ThemeSettingsDialogProps {
 export function ThemeSettingsDialog({ open, onClose }: ThemeSettingsDialogProps) {
     const { theme, setTheme } = useTheme();
     const { layoutWidth, setLayoutWidth } = useLayoutWidth();
+    const { preferences, updatePreference } = useDashboardPreferences();
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -175,7 +192,6 @@ export function ThemeSettingsDialog({ open, onClose }: ThemeSettingsDialogProps)
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Layout Genişliği</h3>
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                         {/* Compact Width */}
-                        {/* Compact Width */}
                         <div
                             className={`cursor-pointer group flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all ${layoutWidth === 'compact'
                                 ? 'border-blue-500 bg-blue-50/50 dark:bg-blue-900/20 shadow-md'
@@ -183,7 +199,6 @@ export function ThemeSettingsDialog({ open, onClose }: ThemeSettingsDialogProps)
                                 }`}
                             onClick={() => {
                                 setLayoutWidth('compact');
-                                setTimeout(() => window.location.reload(), 100);
                             }}
                         >
                             <div className="w-full aspect-video rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-2 flex items-center justify-center pointer-events-none">
@@ -205,7 +220,6 @@ export function ThemeSettingsDialog({ open, onClose }: ThemeSettingsDialogProps)
                                 }`}
                             onClick={() => {
                                 setLayoutWidth('wide');
-                                setTimeout(() => window.location.reload(), 100);
                             }}
                         >
                             <div className="w-full aspect-video rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-2 flex items-center justify-center pointer-events-none">
@@ -227,7 +241,6 @@ export function ThemeSettingsDialog({ open, onClose }: ThemeSettingsDialogProps)
                                 }`}
                             onClick={() => {
                                 setLayoutWidth('auto');
-                                setTimeout(() => window.location.reload(), 100);
                             }}
                         >
                             <div className="w-full aspect-video rounded-lg bg-gray-100 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 p-2 flex items-center justify-center pointer-events-none">
@@ -244,6 +257,29 @@ export function ThemeSettingsDialog({ open, onClose }: ThemeSettingsDialogProps)
                                 <span className="text-xs text-gray-500 dark:text-gray-500">Tam Ekran</span>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                {/* Dashboard Widgets Section */}
+                <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-800">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Dashboard Bileşenleri</h3>
+
+                    <div className="space-y-3">
+                        <PreferencesToggle
+                            label="Piyasa Endeksleri (BIST, Altın, Döviz)"
+                            checked={preferences.showIndices}
+                            onChange={(checked) => updatePreference('showIndices', checked)}
+                        />
+                        <PreferencesToggle
+                            label="Halka Arzlar (Yaklaşan Arzlar)"
+                            checked={preferences.showIpo}
+                            onChange={(checked) => updatePreference('showIpo', checked)}
+                        />
+                        <PreferencesToggle
+                            label="Finansal Takvim & Ajanda"
+                            checked={preferences.showAgenda}
+                            onChange={(checked) => updatePreference('showAgenda', checked)}
+                        />
                     </div>
                 </div>
 

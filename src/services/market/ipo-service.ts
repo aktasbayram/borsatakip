@@ -12,6 +12,8 @@ export interface IpoItem {
     imageUrl: string;
     distributionMethod: string; // "Eşit Dağıtım" etc.
     isNew?: boolean;
+    statusText?: string;
+    status?: 'New' | 'Active' | 'Draft';
 }
 
 export interface IpoDetail extends IpoItem {
@@ -35,26 +37,16 @@ export class IpoService {
 
     /**
      * Main entry point to get IPOs.
-     * Uses in-memory cache or handles re-fetching.
+     * Uses Next.js persistent cache (unstable_cache) to store data across restarts.
      */
     static async getActiveIpos(): Promise<IpoItem[]> {
-        // Check cache first
-        if (this.cache && (Date.now() - this.cache.timestamp < this.CACHE_DURATION * 1000)) {
-            return this.cache.data;
-        }
+        const getCached = unstable_cache(
+            async () => this.scrapeIpos(),
+            ['active-ipos-list-reliable-v7'], // Versioned key to invalidate old cache
+            { revalidate: 7200, tags: ['ipos'] } // Cache for 2 hours
+        );
 
-        try {
-            const data = await this.scrapeIpos();
-            if (data.length > 0) {
-                this.cache = { data, timestamp: Date.now() };
-            }
-            return data;
-        } catch (error) {
-            console.error('Failed to scrape IPOs:', error);
-            // Return cached data if available even if expired, as fallback
-            if (this.cache) return this.cache.data;
-            return [];
-        }
+        return getCached();
     }
 
     /**
@@ -232,7 +224,7 @@ export class IpoService {
     /**
      * Scrapes halkarz.com for the latest IPOs
      */
-    private static async scrapeIpos(): Promise<IpoItem[]> {
+    public static async scrapeIpos(): Promise<IpoItem[]> {
         let browser;
         try {
             browser = await puppeteer.launch({
@@ -245,34 +237,85 @@ export class IpoService {
             // 1. Get the list of recent IPOs
             await page.goto('https://halkarz.com/', { waitUntil: 'domcontentloaded', timeout: 30000 });
 
-            // Extract basic list info
+            // Removed "Load More" logic as per user request to ensure reliable first-page data.
+            // We will just scrape the initially visible items.
+
+            // Extract basic list info with MORE details to avoid visiting every page
             const basicList = await page.evaluate(() => {
+                // Find the "Talep Toplama" header to see if it exists on page
+                // This is based on user feedback that "Talep Toplama / Yeni Basvurular" is a header
+                const talepHeader = Array.from(document.querySelectorAll('h1, h2, h3, .content-header')).find(h => h.textContent && h.textContent.match(/Talep\s*Topl/i));
+                const hasTalepHeader = !!talepHeader;
+
                 const items = Array.from(document.querySelectorAll('article.index-list'));
-                // Limit to top 10
-                return items.slice(0, 10).map(el => {
+                // Increase limit to 100 to capture everything
+                return items.slice(0, 100).map(el => {
                     const htmlEl = el as HTMLElement;
                     const linkEl = htmlEl.querySelector('a') as HTMLAnchorElement;
                     const imgEl = htmlEl.querySelector('img') as HTMLImageElement;
-                    const codeEl = htmlEl.innerText.split('\n').find((l: string) => /^[A-Z]{4,5}$/.test(l));
+
+                    const text = htmlEl.innerText;
+                    const codeEl = text.split('\n').find((l: string) => /^[A-Z]{4,5}$/.test(l.trim()));
                     const isNew = !!htmlEl.querySelector('.il-new');
+
+                    let statusText = '';
+
+                    // Logic based on user request: 
+                    // "Eger cektigimiz sitede talep toplaniyor yaziyorsa bizde de yazsin"
+                    // Strategy:
+                    // 1. Check if the specific text is in the card
+                    // 2. Check if the page has a "Talep Toplama" header AND the item is marked as New (which implies it's under that header)
+
+                    if (text.match(/Talep\s*Topl/i)) {
+                        statusText = 'TALEP TOPLANIYOR';
+                    } else if (isNew && hasTalepHeader) {
+                        statusText = 'TALEP TOPLANIYOR';
+                    }
+
+                    const isHazirlaniyor =
+                        text.toLowerCase().includes('hazırla') ||
+                        text.toLowerCase().includes('taslak');
 
                     return {
                         url: linkEl?.href || '',
                         imageUrl: imgEl?.src || '',
                         code: codeEl || '',
-                        isNew
+                        company: htmlEl.querySelector('h3')?.innerText?.trim() || '',
+                        isNew,
+                        statusText,
+                        isHazirlaniyor,
+                        listText: text
                     };
                 });
             });
 
-            // 2. Fetch details for each item in parallel
+            // 2. Fetch details - BUT SKIP DRAFTS to save time/resources
             const detailedIpos: IpoItem[] = [];
 
-            // We use a new page/tab for each detail to speed up? Or reuse page?
-            // Reusing page is safer for resource usage.
             for (const item of basicList) {
                 if (!item.url) continue;
 
+                // Optimization: If it's explicitly "Hazırlanıyor" (Draft), we skip the detail page
+                // because typical draft pages have little info, and we can just show "Taslak" status.
+                if (item.isHazirlaniyor) {
+                    detailedIpos.push({
+                        code: item.code || 'TASLAK',
+                        company: item.company,
+                        url: item.url,
+                        imageUrl: item.imageUrl,
+                        date: 'Hazırlanıyor...',
+                        price: 'Belirlenmedi',
+                        lotCount: '-',
+                        market: 'Yıldız/Ana Pazar',
+                        distributionMethod: '-',
+                        isNew: false,
+                        statusText: item.statusText,
+                        status: 'Draft' // Safe fallback
+                    });
+                    continue;
+                }
+
+                // For Non-Drafts (Active/New), we still fetch details for accuracy
                 const slug = item.url.split('/').filter(Boolean).pop() || '';
                 const cachedDetail = this.detailCache.get(slug);
                 if (cachedDetail && (Date.now() - cachedDetail.timestamp < this.CACHE_DURATION * 1000)) {
@@ -281,12 +324,11 @@ export class IpoService {
                 }
 
                 try {
+                    // Reuse page context if possible would be better, but loop is fine for < 20 items
                     await page.goto(item.url, { waitUntil: 'domcontentloaded', timeout: 20000 });
 
                     const details = await page.evaluate(() => {
                         const bodyText = document.body.innerText;
-
-                        // Helper to extract value by label regex
                         const extract = (pattern: RegExp) => {
                             const match = bodyText.match(pattern);
                             return match && match[1] ? match[1].trim() : '';
@@ -305,17 +347,30 @@ export class IpoService {
 
                     detailedIpos.push({
                         ...item,
-                        code: details.code || item.code, // Fallback to list code
-                        company: details.company,
+                        code: details.code || item.code,
+                        company: details.company || item.company,
                         date: details.date,
                         price: details.price,
                         lotCount: details.lotCount,
                         market: details.market,
-                        distributionMethod: details.distributionMethod
+                        distributionMethod: details.distributionMethod,
+                        statusText: item.statusText,
+                        status: (details.date.toLowerCase().includes('hazırla') || details.price.includes('?')) ? 'Draft' : (item.isNew ? 'New' : 'Active')
                     });
 
                 } catch (err) {
                     console.warn(`Failed to scrape details for ${item.url}:`, err);
+                    // Fallback to basic info if detail scrape fails
+                    detailedIpos.push({
+                        ...item,
+                        date: '-',
+                        price: '-',
+                        lotCount: '-',
+                        market: '-',
+                        distributionMethod: '-',
+                        statusText: item.statusText,
+                        status: 'Draft' // Default to Draft if we can't scrape details (likely obscure draft page)
+                    });
                 }
             }
 
@@ -324,7 +379,9 @@ export class IpoService {
 
         } catch (error) {
             if (browser) await browser.close();
-            throw error;
+            console.error('Scrape failed:', error);
+            // Return empty list rather than throwing to prevent site crash
+            return [];
         }
     }
 }

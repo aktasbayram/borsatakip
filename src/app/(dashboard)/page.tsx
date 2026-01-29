@@ -38,6 +38,7 @@ import {
     rectSortingStrategy
 } from '@dnd-kit/sortable';
 import { SortableWatchlistItem } from '@/components/dashboard/SortableWatchlistItem';
+import { useDashboardPreferences } from '@/hooks/useDashboardPreferences';
 
 interface WatchlistItem {
     id: string;
@@ -179,38 +180,7 @@ export default function DashboardPage() {
         }
     };
 
-    const [preferences, setPreferences] = useState({ showAgenda: true, showIpo: true, showIndices: true });
-
-    useEffect(() => {
-        const fetchPreferences = async () => {
-            try {
-                const res = await axios.get('/api/user/preferences');
-                if (res.data) {
-                    // Start true by default if keys are missing, but respect false if set
-                    setPreferences(prev => ({
-                        showAgenda: res.data.showAgenda !== false,
-                        showIpo: res.data.showIpo !== false,
-                        showIndices: res.data.showIndices !== false
-                    }));
-                }
-            } catch (error: any) {
-                console.error('Failed to fetch preferences', error);
-                if (error.response && error.response.status === 401) {
-                    signOut();
-                }
-            }
-        };
-
-        if (status === 'authenticated') {
-            fetchPreferences();
-        }
-
-        // Listen for updates from settings page (if in same session/tab)
-        const handlePrefUpdate = () => fetchPreferences();
-        window.addEventListener('preferences-updated', handlePrefUpdate);
-
-        return () => window.removeEventListener('preferences-updated', handlePrefUpdate);
-    }, [status]);
+    const { preferences, loading: prefsLoading } = useDashboardPreferences();
 
     const bistItems = watchlist.filter(item => item.market === 'BIST');
     const usItems = watchlist.filter(item => item.market === 'US');

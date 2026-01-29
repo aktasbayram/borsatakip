@@ -53,11 +53,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     // if (!session) return null; // Removed for public access
 
     const navItems = session ? [
-        { name: 'Takip Listesi', href: '/' },
         { name: 'Portföy', href: '/portfolio' },
+        { name: 'Alarmlar', href: '/alerts' },
         { name: 'Analizler', href: '/analysis' },
         { name: 'Haberler', href: '/news' },
-        { name: 'Alarmlar', href: '/alerts' },
     ] : [
         { name: 'Piyasalar', href: '/' },
         { name: 'Portföy', href: '/portfolio' },
@@ -120,6 +119,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                         <PackageBadge />
                                     </Link>
                                     <NotificationBell />
+                                    <button
+                                        onClick={() => setThemeDialogOpen(true)}
+                                        className="p-2 ml-1 rounded-md text-muted-foreground hover:text-primary hover:bg-accent transition-colors hidden sm:block"
+                                        title="Görünüm ve Ayarlar"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                    </button>
                                     <ThemeToggle />
                                     {/* Settings Dropdown - Hidden on very small screens if crowded, or keep it */}
                                     <div className="relative group hidden sm:block">
@@ -143,18 +152,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                                 >
                                                     🔐 Hesap Ayarları
                                                 </Link>
-                                                <button
-                                                    onClick={() => setThemeDialogOpen(true)}
-                                                    className="w-full text-left block px-4 py-2 text-sm text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-                                                >
-                                                    🌓 Tema ve Görünüm
-                                                </button>
-                                                <Link
-                                                    href="/settings/dashboard"
-                                                    className="block px-4 py-2 text-sm text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
-                                                >
-                                                    🎨 Dashboard Görünümü
-                                                </Link>
+
+
                                                 <Link
                                                     href="/settings/notifications"
                                                     className="block px-4 py-2 text-sm text-foreground hover:bg-primary/10 hover:text-primary transition-colors"
@@ -196,6 +195,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             ) : (
                                 <>
                                     <NotificationBell />
+                                    <button
+                                        onClick={() => setThemeDialogOpen(true)}
+                                        className="p-2 ml-1 rounded-md text-muted-foreground hover:text-primary hover:bg-accent transition-colors hidden sm:block"
+                                        title="Görünüm ve Ayarlar"
+                                    >
+                                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        </svg>
+                                    </button>
                                     <ThemeToggle />
                                     <div className="flex items-center gap-2 ml-2">
                                         <Button variant="ghost" size="sm" onClick={openLogin}>Giriş Yap</Button>
@@ -207,6 +216,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                     </div>
                 </div>
             </nav >
+
+            {/* Secondary Navigation (Ticker / Submenu) */}
+            <div className="bg-card/50 border-b border-border/50 backdrop-blur-sm sticky top-16 z-30 transition-colors duration-300">
+                <div className={`mx-auto ${getContainerClass()} px-4 sm:px-6 lg:px-8`}>
+                    <div className="flex items-center h-9 overflow-x-auto no-scrollbar gap-6">
+                        <Link
+                            href="/market/ipo"
+                            className="text-[11px] font-thin tracking-wide text-foreground/80 hover:text-primary transition-colors whitespace-nowrap flex items-center gap-1.5 uppercase"
+                        >
+                            <span className="w-1 h-1 rounded-full bg-green-500 animate-pulse"></span>
+                            Halka Arz
+                        </Link>
+                        {/* More items can be added here */}
+                    </div>
+                </div>
+            </div>
 
             {/* Mobile Menu Overlay */}
             {mobileMenuOpen && (
@@ -262,9 +287,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 >
                                     🌓 Tema ve Görünüm
                                 </button>
-                                <Link href="/settings/dashboard" className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-primary/10 hover:text-foreground">
-                                    🎨 Dashboard Görünümü
-                                </Link>
+
                                 <Link href="/settings/notifications" className="block px-3 py-2 rounded-md text-base font-medium text-muted-foreground hover:bg-primary/10 hover:text-foreground">
                                     🔔 Bildirim Ayarları
                                 </Link>

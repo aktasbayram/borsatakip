@@ -17,11 +17,22 @@ export function useLayoutWidth() {
         if (stored === 'compact' || stored === 'wide' || stored === 'auto') {
             setLayoutWidthState(stored);
         }
+
+        const handleUpdate = () => {
+            const stored = localStorage.getItem(LAYOUT_WIDTH_KEY) as LayoutWidth | null;
+            if (stored === 'compact' || stored === 'wide' || stored === 'auto') {
+                setLayoutWidthState(stored);
+            }
+        };
+
+        window.addEventListener('layout-width-updated', handleUpdate);
+        return () => window.removeEventListener('layout-width-updated', handleUpdate);
     }, []);
 
     const setLayoutWidth = (width: LayoutWidth) => {
         setLayoutWidthState(width);
         localStorage.setItem(LAYOUT_WIDTH_KEY, width);
+        window.dispatchEvent(new Event('layout-width-updated'));
     };
 
     const getContainerClass = () => {
