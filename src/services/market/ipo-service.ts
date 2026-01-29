@@ -157,6 +157,66 @@ export class IpoService {
             return cached.data;
         }
 
+        // 1. Check Database FIRST (Priority: Manual Data)
+        try {
+            // @ts-ignore
+            const manualIpo = await db.ipo.findFirst({
+                where: {
+                    OR: [
+                        { code: { equals: slug, mode: 'insensitive' } },
+                        { url: { contains: slug } }, // Still check URL just in case
+                        // Also try exact match on company name slug if strictly needed, but code is robust
+                    ]
+                }
+            });
+
+            if (manualIpo) {
+                // If found in DB, construct detail purely from DB data.
+                // Do NOT scrape external site.
+
+                const summaryInfo = (manualIpo.summaryInfo as any[]) || [];
+
+                const ipoDetail: IpoDetail = {
+                    code: manualIpo.code,
+                    company: manualIpo.company,
+                    date: manualIpo.date || '-',
+                    price: manualIpo.price || '-',
+                    lotCount: manualIpo.lotCount || '-',
+                    market: manualIpo.market || '-',
+                    distributionMethod: manualIpo.distributionMethod || '-',
+                    url: manualIpo.url || '', // Internal usage mainly
+                    imageUrl: manualIpo.imageUrl || '',
+                    size: '-', // Could store in summaryInfo or calculate?
+                    leadUnderwriter: '-', // Could store in summaryInfo?
+                    statusText: manualIpo.statusText || undefined,
+                    isNew: manualIpo.isNew,
+
+                    // Populate detail fields from summaryInfo JSON
+                    // Or defaults if empty
+                    summaryInfo: summaryInfo,
+
+                    // Mapped fields for compatibility
+                    fundsUse: summaryInfo.find(x => x.title.includes('Fon'))?.items || [],
+                    allocationGroups: summaryInfo.find(x => x.title.includes('Tahsisat'))?.items || [],
+                    pledges: summaryInfo.find(x => x.title.includes('Satmama'))?.items || [],
+                    financials: summaryInfo.find(x => x.title.includes('Finansal'))?.items || [],
+
+                    discount: '',
+                    pazar: manualIpo.market || '-',
+                    firstTradingDate: '-' // Could be added to schema later
+                };
+
+                this.detailCache.set(slug, { data: ipoDetail, timestamp: Date.now() });
+                return ipoDetail;
+            }
+
+        } catch (error) {
+            console.error('DB Lookup failed in getIpoDetail:', error);
+            // Fallthrough to scraping if DB fails? 
+            // Better to proceed to scraping only if NOT found.
+        }
+
+        // 2. Fallback to Scraping (Only if not in DB)
         let browser;
         try {
             browser = await puppeteer.launch({

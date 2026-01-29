@@ -35,9 +35,28 @@ export function IpoForm({ initialData }: IpoFormProps) {
         lotCount: initialData?.lotCount || "",
         market: initialData?.market || "",
         distributionMethod: initialData?.distributionMethod || "",
-        url: initialData?.url || "",
+        // url: initialData?.url || "", // Removed per user request
         imageUrl: initialData?.imageUrl || "",
     });
+
+    // Detailed text fields (will be packed into summaryInfo JSON)
+    const [details, setDetails] = useState({
+        fundsUse: initialData?.summaryInfo?.find((x: any) => x.title.includes("Fon") || x.title.includes("Kullanım Yeri"))?.items?.join("\n") || "",
+        allocation: initialData?.summaryInfo?.find((x: any) => x.title.includes("Tahsisat"))?.items?.join("\n") || "",
+        pledges: initialData?.summaryInfo?.find((x: any) => x.title.includes("Satmama"))?.items?.join("\n") || "",
+        // New Fields
+        ipoShape: initialData?.summaryInfo?.find((x: any) => x.title.includes("Şekli"))?.items?.join("\n") || "",
+        saleMethod: initialData?.summaryInfo?.find((x: any) => x.title.includes("Satış Yöntemi"))?.items?.join("\n") || "", // Distinct from 'Dağıtım' if needed
+        possibleLots: initialData?.summaryInfo?.find((x: any) => x.title.includes("Dağıtılacak Pay") || x.title.includes("Olası"))?.items?.join("\n") || "",
+        financials: initialData?.summaryInfo?.find((x: any) => x.title.includes("Finansal"))?.items?.join("\n") || "",
+        priceStability: initialData?.summaryInfo?.find((x: any) => x.title.includes("Fiyat İstikrarı"))?.items?.join("\n") || "",
+        publicRatio: initialData?.summaryInfo?.find((x: any) => x.title.includes("Halka Açıklık"))?.items?.join("\n") || "",
+        discount: initialData?.summaryInfo?.find((x: any) => x.title.includes("İskonto"))?.items?.join("\n") || "",
+    });
+
+    const handleDetailChange = (field: string, value: string) => {
+        setDetails((prev) => ({ ...prev, [field]: value }));
+    };
 
     const handleChange = (field: string, value: any) => {
         setFormData((prev) => ({ ...prev, [field]: value }));
@@ -47,11 +66,28 @@ export function IpoForm({ initialData }: IpoFormProps) {
         e.preventDefault();
         setLoading(true);
 
+        // Construct summaryInfo JSON from text fields
+        const summaryInfo = [];
+        if (details.fundsUse) summaryInfo.push({ title: "Fonun Kullanım Yeri", items: details.fundsUse.split("\n").filter(Boolean) });
+        if (details.allocation) summaryInfo.push({ title: "Tahsisat Grupları", items: details.allocation.split("\n").filter(Boolean) });
+        if (details.pledges) summaryInfo.push({ title: "Satmama Taahhüdü", items: details.pledges.split("\n").filter(Boolean) });
+
+        // New Fields Packaging
+        if (details.ipoShape) summaryInfo.push({ title: "Halka Arz Şekli", items: details.ipoShape.split("\n").filter(Boolean) });
+        if (details.saleMethod) summaryInfo.push({ title: "Halka Arz Satış Yöntemi", items: details.saleMethod.split("\n").filter(Boolean) });
+        if (details.financials) summaryInfo.push({ title: "Finansal Tablo", items: details.financials.split("\n").filter(Boolean) });
+        if (details.priceStability) summaryInfo.push({ title: "Fiyat İstikrarı", items: details.priceStability.split("\n").filter(Boolean) });
+        if (details.possibleLots) summaryInfo.push({ title: "Dağıtılacak Pay Miktarı (Olası)", items: details.possibleLots.split("\n").filter(Boolean) });
+        if (details.publicRatio) summaryInfo.push({ title: "Halka Açıklık", items: details.publicRatio.split("\n").filter(Boolean) });
+        if (details.discount) summaryInfo.push({ title: "Halka Arz İskontosu", items: details.discount.split("\n").filter(Boolean) });
+
+        const payload = { ...formData, summaryInfo };
+
         try {
             if (initialData) {
-                await axios.put(`/api/admin/ipos/${initialData.id}`, formData);
+                await axios.put(`/api/admin/ipos/${initialData.id}`, payload);
             } else {
-                await axios.post("/api/admin/ipos", formData);
+                await axios.post("/api/admin/ipos", payload);
             }
             router.push("/admin/ipos");
             router.refresh();
@@ -166,14 +202,109 @@ export function IpoForm({ initialData }: IpoFormProps) {
             </Card>
 
             <Card>
-                <CardContent className="pt-6 space-y-4">
+                <CardContent className="pt-6 space-y-6">
+                    <h3 className="text-lg font-semibold border-b pb-2">Ek Detaylar (İsteğe Bağlı)</h3>
+                    <p className="text-sm text-muted-foreground">Her satır bir madde olarak görünecektir.</p>
+
                     <div className="space-y-2">
-                        <Label>Detay URL (Opsiyonel)</Label>
-                        <Input value={formData.url} onChange={(e) => handleChange("url", e.target.value)} placeholder="https://halkarz.com/..." />
-                        <p className="text-[10px] text-muted-foreground">Detaylar çekilemezse yönlendirilecek link.</p>
+                        <Label>Halka Arz Şekli</Label>
+                        <textarea
+                            className="flex min-h-[60px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                            value={details.ipoShape}
+                            onChange={(e) => handleDetailChange("ipoShape", e.target.value)}
+                            placeholder="Sermaye Artırımı: ...&#10;Ortak Satışı: ..."
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label>Satış Yöntemi (Opsiyonel)</Label>
+                            <Input
+                                value={details.saleMethod}
+                                onChange={(e) => handleDetailChange("saleMethod", e.target.value)}
+                                placeholder="Borsa'da Satış - Sabit Fiyat..."
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Fiyat İstikrarı</Label>
+                            <Input
+                                value={details.priceStability}
+                                onChange={(e) => handleDetailChange("priceStability", e.target.value)}
+                                placeholder="30 gün süreyle planlanmaktadır..."
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Fonun Kullanım Yeri</Label>
+                        <textarea
+                            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            value={details.fundsUse}
+                            onChange={(e) => handleDetailChange("fundsUse", e.target.value)}
+                            placeholder="%60 İşletme Sermayesi&#10;%40 Yatırım"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Dağıtılacak Pay Miktarı (Olası)</Label>
+                        <textarea
+                            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            value={details.possibleLots}
+                            onChange={(e) => handleDetailChange("possibleLots", e.target.value)}
+                            placeholder="2.1 Milyon Katılım ~ 24 Lot&#10;2.5 Milyon Katılım ~ 20 Lot"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Tahsisat Grupları</Label>
+                        <textarea
+                            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            value={details.allocation}
+                            onChange={(e) => handleDetailChange("allocation", e.target.value)}
+                            placeholder="%70 Yurt İçi Bireysel&#10;%30 Yurt İçi Kurumsal"
+                        />
                     </div>
                     <div className="space-y-2">
-                        <Label>Logo URL (Opsiyonel)</Label>
+                        <Label>Satmama Taahhüdü</Label>
+                        <textarea
+                            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                            value={details.pledges}
+                            onChange={(e) => handleDetailChange("pledges", e.target.value)}
+                            placeholder="1 Yıl İhraççı&#10;1 Yıl Ortaklar"
+                        />
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Finansal Tablo (Her satır bir veri)</Label>
+                        <textarea
+                            className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 font-mono"
+                            value={details.financials}
+                            onChange={(e) => handleDetailChange("financials", e.target.value)}
+                            placeholder="2024/9 Hasılat: 5.4 Milyar TL&#10;2023 Hasılat: 4.2 Milyar TL"
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                            <Label>Halka Açıklık</Label>
+                            <Input
+                                value={details.publicRatio}
+                                onChange={(e) => handleDetailChange("publicRatio", e.target.value)}
+                                placeholder="%20.5"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Halka Arz İskontosu</Label>
+                            <Input
+                                value={details.discount}
+                                onChange={(e) => handleDetailChange("discount", e.target.value)}
+                                placeholder="%25"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label>Logo URL</Label>
                         <Input value={formData.imageUrl} onChange={(e) => handleChange("imageUrl", e.target.value)} placeholder="https://..." />
                     </div>
                 </CardContent>

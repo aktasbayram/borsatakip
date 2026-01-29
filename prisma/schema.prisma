@@ -284,6 +284,9 @@ model Ipo {
 
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+
+  // Detailed Info (formerly scraped)
+  summaryInfo        Json?    // Detailed sections like Funds Use, Allocations, etc.
 }
 
 
