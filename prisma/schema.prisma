@@ -275,6 +275,7 @@ model Ipo {
   imageUrl           String?
   distributionMethod String?  // e.g. "Eşit Dağıtım"
   leadUnderwriter    String?  // Aracı Kurum
+  firstTradingDate   String?  // Bist İlk İşlem Tarihi
   tags               String[] // For "New", "Talep Toplanıyor" etc.
   status             String   @default("DRAFT") // DRAFT, NEW, ACTIVE
   isNew              Boolean  @default(false)

@@ -35,6 +35,8 @@ export function IpoForm({ initialData }: IpoFormProps) {
         lotCount: initialData?.lotCount || "",
         market: initialData?.market || "",
         distributionMethod: initialData?.distributionMethod || "",
+        leadUnderwriter: initialData?.leadUnderwriter || "",
+        firstTradingDate: initialData?.firstTradingDate || "",
         // url: initialData?.url || "", // Removed per user request
         imageUrl: initialData?.imageUrl || "",
     });
@@ -196,6 +198,14 @@ export function IpoForm({ initialData }: IpoFormProps) {
                         <div className="space-y-2">
                             <Label>Dağıtım Yöntemi</Label>
                             <Input value={formData.distributionMethod} onChange={(e) => handleChange("distributionMethod", e.target.value)} placeholder="Eşit Dağıtım" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Aracı Kurum</Label>
+                            <Input value={formData.leadUnderwriter} onChange={(e) => handleChange("leadUnderwriter", e.target.value)} placeholder="Gedik Yatırım" />
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Bist İlk İşlem Tarihi</Label>
+                            <Input value={formData.firstTradingDate} onChange={(e) => handleChange("firstTradingDate", e.target.value)} placeholder="3 Şubat 2026" />
                         </div>
                     </div>
                 </CardContent>

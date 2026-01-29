@@ -127,7 +127,7 @@ export default function IpoPage() {
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {newIpos.map((ipo, index) => (
-                                    <Link key={index} href={`/market/ipo/${ipo.url.split('/').filter(Boolean).pop()}`} className="group block h-full">
+                                    <Link key={index} href={`/market/ipo/${ipo.code}`} className="group block h-full">
                                         <Card className="flex flex-col h-full overflow-hidden hover:shadow-lg hover:border-primary/50 transition-all duration-300 bg-gradient-to-br from-card to-secondary/10">
                                             <div className="h-1.5 w-full bg-primary/20 group-hover:bg-primary transition-colors"></div>
                                             <CardContent className="flex-1 p-5 space-y-4">
@@ -228,7 +228,7 @@ function IpoTable({ ipos, isDraft = false }: { ipos: IpoItem[], isDraft?: boolea
                     {ipos.map((ipo, index) => (
                         <TableRow key={index} className="group cursor-pointer hover:bg-muted/30">
                             <TableCell className="font-medium">
-                                <Link href={`/market/ipo/${ipo.url.split('/').filter(Boolean).pop()}`} className="flex items-center gap-3">
+                                <Link href={`/market/ipo/${ipo.code}`} className="flex items-center gap-3">
                                     <div className="w-9 h-9 rounded-md bg-white p-0.5 border border-border/60 shrink-0 overflow-hidden flex items-center justify-center">
                                         {ipo.imageUrl ? (
                                             <img src={ipo.imageUrl} alt={ipo.company} className="w-full h-full object-contain" />
@@ -277,7 +277,7 @@ function IpoTable({ ipos, isDraft = false }: { ipos: IpoItem[], isDraft?: boolea
                                 <div className="flex items-center justify-end gap-2">
                                     {ipo.isNew && !isDraft && <Badge variant="secondary" className="hidden md:inline-flex text-[10px] h-5 px-1.5 bg-green-500/10 text-green-600">YENİ</Badge>}
                                     <Button asChild variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                        <Link href={`/market/ipo/${ipo.url.split('/').filter(Boolean).pop()}`}>
+                                        <Link href={`/market/ipo/${ipo.code}`}>
                                             <Info className="w-4 h-4 text-muted-foreground group-hover:text-primary" />
                                         </Link>
                                     </Button>

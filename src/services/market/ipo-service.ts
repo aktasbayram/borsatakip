@@ -151,11 +151,8 @@ export class IpoService {
      * Get details for a specific IPO by slug
      */
     static async getIpoDetail(slug: string): Promise<IpoDetail | null> {
-        // Check cache
-        const cached = this.detailCache.get(slug);
-        if (cached && (Date.now() - cached.timestamp < this.CACHE_DURATION * 1000)) {
-            return cached.data;
-        }
+        // Removed in-memory cache - rely on Next.js cache tags instead
+        // This ensures updates are reflected immediately after revalidateTag('ipos')
 
         // 1. Check Database FIRST (Priority: Manual Data)
         try {
@@ -176,6 +173,39 @@ export class IpoService {
 
                 const summaryInfo = (manualIpo.summaryInfo as any[]) || [];
 
+                // Calculate size from price and lotCount
+                const calculateSize = () => {
+                    try {
+                        const priceStr = manualIpo.price || '';
+                        const lotStr = manualIpo.lotCount || '';
+
+                        // Parse price: "21,50 TL" → 21.50
+                        const priceMatch = priceStr.match(/[\d,]+/);
+                        if (!priceMatch) return '-';
+                        const price = parseFloat(priceMatch[0].replace(',', '.'));
+
+                        // Parse lot: "54.700.000 Lot" → 54700000
+                        const lotMatch = lotStr.match(/[\d.]+/);
+                        if (!lotMatch) return '-';
+                        const lot = parseInt(lotMatch[0].replace(/\./g, ''));
+
+                        if (isNaN(price) || isNaN(lot) || price === 0 || lot === 0) return '-';
+
+                        const total = price * lot;
+
+                        // Format as Turkish currency
+                        if (total >= 1_000_000_000) {
+                            return (total / 1_000_000_000).toFixed(1).replace('.', ',') + ' Milyar TL';
+                        }
+                        if (total >= 1_000_000) {
+                            return (total / 1_000_000).toFixed(1).replace('.', ',') + ' Milyon TL';
+                        }
+                        return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(total);
+                    } catch (e) {
+                        return '-';
+                    }
+                };
+
                 const ipoDetail: IpoDetail = {
                     code: manualIpo.code,
                     company: manualIpo.company,
@@ -186,8 +216,8 @@ export class IpoService {
                     distributionMethod: manualIpo.distributionMethod || '-',
                     url: manualIpo.url || '', // Internal usage mainly
                     imageUrl: manualIpo.imageUrl || '',
-                    size: '-', // Could store in summaryInfo or calculate?
-                    leadUnderwriter: '-', // Could store in summaryInfo?
+                    size: calculateSize(),
+                    leadUnderwriter: manualIpo.leadUnderwriter || '-',
                     statusText: manualIpo.statusText || undefined,
                     isNew: manualIpo.isNew,
 
@@ -203,7 +233,7 @@ export class IpoService {
 
                     discount: '',
                     pazar: manualIpo.market || '-',
-                    firstTradingDate: '-' // Could be added to schema later
+                    firstTradingDate: manualIpo.firstTradingDate || '-'
                 };
 
                 this.detailCache.set(slug, { data: ipoDetail, timestamp: Date.now() });
