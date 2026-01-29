@@ -114,6 +114,14 @@ export class IpoService {
 
                 // Add remaining (purely new) Manual items
                 manualMap.forEach((manual: any) => {
+                    // Generate a mock URL if missing so links work
+                    const slug = manual.company.toLowerCase()
+                        .replace(/ğ/g, 'g').replace(/ü/g, 'u').replace(/ş/g, 's').replace(/ı/g, 'i').replace(/ö/g, 'o').replace(/ç/g, 'c')
+                        .replace(/[^a-z0-9]/g, '-')
+                        .replace(/-+/g, '-').replace(/^-|-$/g, '');
+
+                    const finalUrl = manual.url || `https://halkarz.com/${slug}`;
+
                     combined.push({
                         code: manual.code,
                         company: manual.company,
@@ -121,7 +129,7 @@ export class IpoService {
                         price: manual.price || '-',
                         lotCount: manual.lotCount || '-',
                         market: manual.market || '-',
-                        url: manual.url || '',
+                        url: finalUrl,
                         imageUrl: manual.imageUrl || '',
                         distributionMethod: manual.distributionMethod || '-',
                         isNew: manual.isNew,
@@ -132,7 +140,7 @@ export class IpoService {
 
                 return combined;
             },
-            ['active-ipos-list-reliable-v10'], // Versioned key
+            ['active-ipos-list-reliable-v11'], // Cache key updated
             { revalidate: 7200, tags: ['ipos'] } // Cache for 2 hours
         );
 
@@ -285,12 +293,61 @@ export class IpoService {
                 };
             });
 
+            // --- MANUAL OVERRIDE LOGIC ---
+            // If the scraping failed or returned partial data, OR if we have a manual override in DB, apply it.
+            // We search for a manual IPO where code matches scraped code OR url matches current slug context
+            let manualOverride = null;
+            try {
+                // Try to find by URL code segment (slug) if scraping yielded no code
+                // Or by the scraped code if available
+                const scrapedCode = details.code;
+
+                if (scrapedCode) {
+                    // @ts-ignore
+                    manualOverride = await db.ipo.findFirst({
+                        where: { code: { equals: scrapedCode, mode: 'insensitive' } }
+                    });
+                }
+
+                // If not found by code (or no code scraped), try by URL matching slug
+                if (!manualOverride) {
+                    // @ts-ignore
+                    manualOverride = await db.ipo.findFirst({
+                        where: { url: { contains: slug } }
+                    });
+                }
+
+                // FALLBACK: If still not found, try to match by converting slug to fuzzy company name
+                // e.g. 'deneme-as' -> matches 'Deneme A.Ş.' roughly? OR assume slug is unique enough?
+                // Let's try matching code as the slug itself (user might look for /market/ipo/DENEME)
+                if (!manualOverride) {
+                    // @ts-ignore
+                    manualOverride = await db.ipo.findFirst({
+                        where: { code: { equals: slug, mode: 'insensitive' } }
+                    });
+                }
+            } catch (e) {
+                console.error("Manual override lookup failed:", e);
+            }
+
             const ipoDetail: IpoDetail = {
                 url,
                 isNew: false,
                 ...details,
+                // Override with manual data if exists
+                ...(manualOverride ? {
+                    code: manualOverride.code || details.code,
+                    company: manualOverride.company || details.company,
+                    date: manualOverride.date || details.date,
+                    price: manualOverride.price || details.price,
+                    lotCount: manualOverride.lotCount || details.lotCount,
+                    market: manualOverride.market || details.market,
+                    distributionMethod: manualOverride.distributionMethod || details.distributionMethod,
+                    imageUrl: manualOverride.imageUrl || details.imageUrl,
+                    // If manual status text is present, could override? Not in IpoDetail interface currently but useful.
+                } : {}),
                 discount: '',
-                pazar: details.market,
+                pazar: manualOverride?.market || details.market,
                 // Map old fields for backward comp or use new generic one
                 fundsUse: details.summaryInfo.find(x => x.title.includes('Fon'))?.items || [],
                 allocationGroups: details.summaryInfo.find(x => x.title.includes('Tahsisat'))?.items || [],

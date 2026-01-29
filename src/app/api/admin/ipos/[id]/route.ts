@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { revalidatePath, revalidateTag } from 'next/cache';
 
 // GET /api/admin/ipos/[id] - Get a single manual IPO
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -58,6 +59,12 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
             }
         });
 
+        // Invalidate cache
+        // @ts-ignore
+        revalidateTag('ipos');
+        revalidatePath('/market/ipo');
+        revalidatePath('/admin/ipos');
+
         return NextResponse.json(ipo);
     } catch (error) {
         console.error('Failed to update manual IPO:', error);
@@ -84,6 +91,12 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
         await db.ipo.delete({
             where: { id }
         });
+
+        // Invalidate cache
+        // @ts-ignore
+        revalidateTag('ipos');
+        revalidatePath('/market/ipo');
+        revalidatePath('/admin/ipos');
 
         return new NextResponse(null, { status: 204 });
     } catch (error) {

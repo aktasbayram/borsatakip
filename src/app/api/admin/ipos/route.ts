@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { auth } from '@/lib/auth';
+import { revalidatePath, revalidateTag } from 'next/cache';
 
 // GET /api/admin/ipos - List all manual IPOs
 export async function GET(req: Request) {
@@ -10,6 +11,7 @@ export async function GET(req: Request) {
             return new NextResponse('Unauthorized', { status: 401 });
         }
 
+        // @ts-ignore
         const ipos = await db.ipo.findMany({
             orderBy: { createdAt: 'desc' }
         });
@@ -41,6 +43,7 @@ export async function POST(req: Request) {
             return new NextResponse('Missing required fields', { status: 400 });
         }
 
+        // @ts-ignore
         const existingIpo = await db.ipo.findUnique({
             where: { code }
         });
@@ -49,6 +52,7 @@ export async function POST(req: Request) {
             return new NextResponse('IPO with this code already exists', { status: 409 });
         }
 
+        // @ts-ignore
         const ipo = await db.ipo.create({
             data: {
                 code,
@@ -59,6 +63,12 @@ export async function POST(req: Request) {
                 ...rest
             }
         });
+
+        // Invalidate cache
+        // @ts-ignore
+        revalidateTag('ipos');
+        revalidatePath('/market/ipo');
+        revalidatePath('/admin/ipos');
 
         return NextResponse.json(ipo);
     } catch (error) {
