@@ -27,6 +27,8 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
     try {
         const session = await auth();
+        console.log('API POST Session:', session?.user?.email, 'Role:', session?.user?.role);
+
         if (!session?.user || session.user.role !== 'ADMIN') {
             return new NextResponse('Unauthorized', { status: 401 });
         }

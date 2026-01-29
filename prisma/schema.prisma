@@ -279,6 +279,7 @@ model Ipo {
   tags               String[] // For "New", "Talep Toplanıyor" etc.
   status             String   @default("DRAFT") // DRAFT, NEW, ACTIVE
   isNew              Boolean  @default(false)
+  showOnHomepage     Boolean  @default(false)  // Anasayfa widget'ında göster
   
   // Custom Status Text (Override)
   statusText         String?

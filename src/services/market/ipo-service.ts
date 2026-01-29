@@ -15,6 +15,7 @@ export interface IpoItem {
     isNew?: boolean;
     statusText?: string;
     status?: 'New' | 'Active' | 'Draft';
+    showOnHomepage?: boolean;
 }
 
 export interface IpoDetail extends IpoItem {
@@ -101,7 +102,8 @@ export class IpoService {
                             distributionMethod: manual.distributionMethod || scraped.distributionMethod,
                             isNew: manual.isNew,
                             statusText: manual.statusText || undefined,
-                            status: normalizeStatus(manual.status)
+                            status: normalizeStatus(manual.status),
+                            showOnHomepage: manual.showOnHomepage
                         });
 
                         // Remove from map so we don't add it again later
@@ -122,7 +124,7 @@ export class IpoService {
 
                     const finalUrl = manual.url || `https://halkarz.com/${slug}`;
 
-                    combined.push({
+                    const item = {
                         code: manual.code,
                         company: manual.company,
                         date: manual.date || '-',
@@ -134,13 +136,28 @@ export class IpoService {
                         distributionMethod: manual.distributionMethod || '-',
                         isNew: manual.isNew,
                         statusText: manual.statusText || undefined,
-                        status: normalizeStatus(manual.status)
-                    });
+                        status: normalizeStatus(manual.status),
+                        showOnHomepage: manual.showOnHomepage
+                    };
+
+                    // Prioritize manual items that should show on homepage by putting them at the start
+                    if (item.showOnHomepage) {
+                        combined.unshift(item);
+                    } else {
+                        combined.push(item);
+                    }
+                });
+
+                // Also sort the entire list to ensure homepage items are ALWAYS first regardless of how they were added
+                combined.sort((a, b) => {
+                    const aShow = a.showOnHomepage ? 1 : 0;
+                    const bShow = b.showOnHomepage ? 1 : 0;
+                    return bShow - aShow;
                 });
 
                 return combined;
             },
-            ['active-ipos-list-reliable-v11'], // Cache key updated
+            ['active-ipos-list-reliable-final'], // Stable final key
             { revalidate: 7200, tags: ['ipos'] } // Cache for 2 hours
         );
 

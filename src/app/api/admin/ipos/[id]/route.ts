@@ -33,6 +33,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
         const session = await auth();
+        console.log('API PUT Session:', session?.user?.email, 'Role:', session?.user?.role);
+
         if (!session?.user || session.user.role !== 'ADMIN') {
             return new NextResponse('Unauthorized', { status: 401 });
         }

@@ -39,6 +39,7 @@ export function IpoForm({ initialData }: IpoFormProps) {
         firstTradingDate: initialData?.firstTradingDate || "",
         // url: initialData?.url || "", // Removed per user request
         imageUrl: initialData?.imageUrl || "",
+        showOnHomepage: initialData?.showOnHomepage || false,
     });
 
     // Detailed text fields (will be packed into summaryInfo JSON)
@@ -159,6 +160,18 @@ export function IpoForm({ initialData }: IpoFormProps) {
                             <Switch
                                 checked={formData.isNew}
                                 onCheckedChange={(val) => handleChange("isNew", val)}
+                                className="ml-auto"
+                            />
+                        </div>
+
+                        <div className="flex items-center gap-4 border p-3 rounded-lg">
+                            <div className="space-y-0.5">
+                                <Label className="text-base">Anasayfa Widget'ı</Label>
+                                <p className="text-xs text-muted-foreground">İşaretlendiyse anasayfada gösterilir</p>
+                            </div>
+                            <Switch
+                                checked={formData.showOnHomepage}
+                                onCheckedChange={(val) => handleChange("showOnHomepage", val)}
                                 className="ml-auto"
                             />
                         </div>

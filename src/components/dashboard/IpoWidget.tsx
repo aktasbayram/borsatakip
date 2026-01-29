@@ -21,6 +21,7 @@ interface IpoItem {
     distributionMethod: string;
     statusText?: string;
     isNew?: boolean;
+    showOnHomepage?: boolean;
 }
 
 export function IpoWidget() {
@@ -31,7 +32,12 @@ export function IpoWidget() {
         const fetchIpos = async () => {
             try {
                 const response = await axios.get('/api/market/ipos');
-                setIpos(response.data.slice(0, 5));
+                // Filter: show all scraped IPOs (they don't have showOnHomepage flag) 
+                // OR manual IPOs that have showOnHomepage set to true
+                const visibleIpos = response.data.filter((ipo: any) =>
+                    ipo.showOnHomepage === true || ipo.showOnHomepage === undefined
+                );
+                setIpos(visibleIpos.slice(0, 5));
             } catch (error) {
                 console.error('Failed to fetch IPOs', error);
             } finally {
@@ -83,7 +89,7 @@ export function IpoWidget() {
                                                 <div>
                                                     <div className="flex flex-wrap items-center gap-1.5">
                                                         <Link
-                                                            href={`/market/ipo/${ipo.url.split('/').filter(Boolean).pop()}`}
+                                                            href={`/market/ipo/${ipo.code}`}
                                                             className="hover:underline decoration-primary underline-offset-4"
                                                         >
                                                             <h4 className="font-bold text-xs tracking-tight line-clamp-1">{ipo.company}</h4>
