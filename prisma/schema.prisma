@@ -263,5 +263,28 @@ model ContactMessage {
   updatedAt DateTime @updatedAt
 }
 
+model Ipo {
+  id                 String   @id @default(cuid())
+  code               String   @unique
+  company            String
+  date               String?  // e.g. "28-29-30 Ocak 2026"
+  price              String?  // e.g. "21,50 TL"
+  lotCount           String?  // e.g. "54,700,000 Lot"
+  market             String?  // e.g. "Ana Pazar"
+  url                String?
+  imageUrl           String?
+  distributionMethod String?  // e.g. "Eşit Dağıtım"
+  leadUnderwriter    String?  // Aracı Kurum
+  tags               String[] // For "New", "Talep Toplanıyor" etc.
+  status             String   @default("DRAFT") // DRAFT, NEW, ACTIVE
+  isNew              Boolean  @default(false)
+  
+  // Custom Status Text (Override)
+  statusText         String?
+
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
 
 

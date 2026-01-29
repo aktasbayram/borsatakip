@@ -1,5 +1,6 @@
 import puppeteer from 'puppeteer';
 import { unstable_cache } from 'next/cache';
+import { db } from '@/lib/db';
 
 export interface IpoItem {
     code: string;
@@ -35,14 +36,103 @@ export class IpoService {
     private static cache: { data: IpoItem[], timestamp: number } | null = null;
     private static detailCache: Map<string, { data: IpoDetail, timestamp: number }> = new Map();
 
+
+
     /**
      * Main entry point to get IPOs.
      * Uses Next.js persistent cache (unstable_cache) to store data across restarts.
      */
     static async getActiveIpos(): Promise<IpoItem[]> {
         const getCached = unstable_cache(
-            async () => this.scrapeIpos(),
-            ['active-ipos-list-reliable-v7'], // Versioned key to invalidate old cache
+            async () => {
+                // 1. Fetch Scraped Data
+                const scrapedIpos = await this.scrapeIpos();
+
+                // 2. Fetch Manual Data from DB
+                let manualIpos: any[] = [];
+                try {
+                    // @ts-ignore - Prisma client might be out of sync
+                    if (db.ipo) {
+                        // @ts-ignore
+                        manualIpos = await db.ipo.findMany();
+                    }
+                } catch (error) {
+                    console.warn('Failed to fetch manual IPOs, relying on scraped data:', error);
+                }
+
+                // 3. Merge Strategies
+                // We must be careful not to drop scraped items that might share a code (like 'TASLAK') 
+                // or have no code.
+
+                // Create a map of Manual items for quick lookup by Code
+                const manualMap = new Map<string, any>();
+                manualIpos.forEach((m: any) => {
+                    if (m.code) manualMap.set(m.code.toUpperCase(), m);
+                });
+
+                const combined: IpoItem[] = [];
+
+                // Helper to normalize status
+                const normalizeStatus = (status: string): any => {
+                    if (status === 'NEW') return 'New';
+                    if (status === 'ACTIVE') return 'Active';
+                    if (status === 'DRAFT') return 'Draft';
+                    return status;
+                };
+
+                // Iterate Scraped Items
+                scrapedIpos.forEach(scraped => {
+                    const code = scraped.code ? scraped.code.toUpperCase() : '';
+
+                    if (code && manualMap.has(code)) {
+                        // Found a manual override for this code
+                        const manual = manualMap.get(code);
+
+                        // Merge: Manual takes precedence, fall back to scraped data for blanks
+                        combined.push({
+                            code: manual.code,
+                            company: manual.company,
+                            date: manual.date || scraped.date,
+                            price: manual.price || scraped.price,
+                            lotCount: manual.lotCount || scraped.lotCount,
+                            market: manual.market || scraped.market,
+                            url: manual.url || scraped.url,
+                            imageUrl: manual.imageUrl || scraped.imageUrl,
+                            distributionMethod: manual.distributionMethod || scraped.distributionMethod,
+                            isNew: manual.isNew,
+                            statusText: manual.statusText || undefined,
+                            status: normalizeStatus(manual.status)
+                        });
+
+                        // Remove from map so we don't add it again later
+                        manualMap.delete(code);
+                    } else {
+                        // No manual override, keep scraped item as is
+                        combined.push(scraped);
+                    }
+                });
+
+                // Add remaining (purely new) Manual items
+                manualMap.forEach((manual: any) => {
+                    combined.push({
+                        code: manual.code,
+                        company: manual.company,
+                        date: manual.date || '-',
+                        price: manual.price || '-',
+                        lotCount: manual.lotCount || '-',
+                        market: manual.market || '-',
+                        url: manual.url || '',
+                        imageUrl: manual.imageUrl || '',
+                        distributionMethod: manual.distributionMethod || '-',
+                        isNew: manual.isNew,
+                        statusText: manual.statusText || undefined,
+                        status: normalizeStatus(manual.status)
+                    });
+                });
+
+                return combined;
+            },
+            ['active-ipos-list-reliable-v10'], // Versioned key
             { revalidate: 7200, tags: ['ipos'] } // Cache for 2 hours
         );
 

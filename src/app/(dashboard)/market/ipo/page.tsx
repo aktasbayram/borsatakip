@@ -42,7 +42,13 @@ export default function IpoPage() {
         const fetchIpos = async () => {
             try {
                 const response = await fetch('/api/market/ipos');
-                const data = await response.json();
+                let data = await response.json();
+
+                if (!Array.isArray(data)) {
+                    console.error('API returned non-array data:', data);
+                    data = [];
+                }
+
                 setIpos(data);
             } catch (error) {
                 console.error('Failed to fetch IPOs:', error);
