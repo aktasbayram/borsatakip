@@ -40,6 +40,7 @@ export function IpoForm({ initialData }: IpoFormProps) {
         // url: initialData?.url || "", // Removed per user request
         imageUrl: initialData?.imageUrl || "",
         showOnHomepage: initialData?.showOnHomepage || false,
+        isLocked: initialData?.isLocked || false,
     });
 
     // Detailed text fields (will be packed into summaryInfo JSON)
@@ -172,6 +173,20 @@ export function IpoForm({ initialData }: IpoFormProps) {
                             <Switch
                                 checked={formData.showOnHomepage}
                                 onCheckedChange={(val) => handleChange("showOnHomepage", val)}
+                                className="ml-auto"
+                            />
+                        </div>
+
+                        <div className="flex items-center gap-4 border p-3 rounded-lg">
+                            <div className="space-y-0.5">
+                                <Label className="text-base font-semibold text-blue-600 flex items-center gap-1">
+                                    Kilitle (Manuel Kontrol)
+                                </Label>
+                                <p className="text-xs text-muted-foreground font-medium">Bu halka arzı kilitlerseniz, "Verileri Senkronize Et" dediğinizde bot bu kaydı güncellemez. Manuel yaptığınız tüm değişiklikler korunur.</p>
+                            </div>
+                            <Switch
+                                checked={formData.isLocked}
+                                onCheckedChange={(val) => handleChange("isLocked", val)}
                                 className="ml-auto"
                             />
                         </div>

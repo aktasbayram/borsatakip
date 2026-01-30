@@ -11,9 +11,10 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Lock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DeleteIpoButton } from "./delete-ipo-button";
+import { SyncIposButton } from "./sync-ipos-button";
 
 export default async function AdminIposPage() {
     let ipos: any[] = [];
@@ -38,12 +39,17 @@ export default async function AdminIposPage() {
                         Manuel halka arz ekleyin veya düzenleyin.
                     </p>
                 </div>
-                <Link href="/admin/ipos/new">
-                    <Button>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Yeni Halka Arz
-                    </Button>
-                </Link>
+                <div>
+                    <div className="flex gap-2">
+                        <SyncIposButton />
+                        <Link href="/admin/ipos/new">
+                            <Button>
+                                <Plus className="w-4 h-4 mr-2" />
+                                Yeni Halka Arz
+                            </Button>
+                        </Link>
+                    </div>
+                </div>
             </div>
 
             <div className="border rounded-lg">
@@ -68,7 +74,12 @@ export default async function AdminIposPage() {
                             ipos.map((ipo: any) => (
                                 <TableRow key={ipo.id}>
                                     <TableCell className="font-medium">{ipo.code}</TableCell>
-                                    <TableCell>{ipo.company}</TableCell>
+                                    <TableCell>
+                                        <div className="flex items-center gap-2">
+                                            {ipo.company}
+                                            {ipo.isLocked && <Lock className="w-3 h-3 text-blue-500" />}
+                                        </div>
+                                    </TableCell>
                                     <TableCell>
                                         <div className="flex gap-2">
                                             <Badge variant={ipo.status === 'ACTIVE' ? 'default' : ipo.status === 'NEW' ? 'default' : 'secondary'}>

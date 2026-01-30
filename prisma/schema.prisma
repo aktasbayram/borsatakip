@@ -280,6 +280,7 @@ model Ipo {
   status             String   @default("DRAFT") // DRAFT, NEW, ACTIVE
   isNew              Boolean  @default(false)
   showOnHomepage     Boolean  @default(false)  // Anasayfa widget'ında göster
+  isLocked           Boolean  @default(false)  // Manuel değişiklikleri korumak için kilitle
   
   // Custom Status Text (Override)
   statusText         String?
