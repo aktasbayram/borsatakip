@@ -17,6 +17,7 @@ export interface IpoItem {
     status: 'New' | 'Active' | 'Draft';
     showOnHomepage?: boolean;
     isLocked?: boolean;
+    sortOrder?: number;
 }
 
 export interface IpoDetail extends IpoItem {
@@ -50,7 +51,11 @@ export class IpoService {
             const scrapedList = await this.scrapeIposListOnly();
             logs.push(`Found ${scrapedList.length} unique items across all pages.`);
 
-            for (const item of scrapedList) {
+            // Reverse the list so the newest items (at the top of the site) are processed last.
+            // This ensures they have the latest createdAt timestamp in the DB.
+            const reversedList = [...scrapedList].reverse();
+
+            for (const item of reversedList) {
                 try {
                     // Try to generate a valid code if missing
                     let code = item.code;
@@ -184,21 +189,41 @@ export class IpoService {
                         status: (ipo.status === 'DRAFT' || (isDraftDate && !ipo.isLocked)) ? 'Draft' :
                             (ipo.status === 'ACTIVE' ? 'Active' : 'New'),
                         showOnHomepage: ipo.showOnHomepage,
-                        isLocked: ipo.isLocked
+                        isLocked: ipo.isLocked,
+                        sortOrder: ipo.sortOrder || 0
                     };
                 });
 
-                // Sort: Homepage items first, then by status
+                // Sort: Homepage items first, then by status, then by intelligence
                 mapped.sort((a, b) => {
+                    // 1. Pinned to homepage
                     const aShow = a.showOnHomepage ? 1 : 0;
                     const bShow = b.showOnHomepage ? 1 : 0;
                     if (aShow !== bShow) return bShow - aShow;
 
-                    const isTalepA = a.statusText === 'TALEP TOPLANIYOR' || a.status === 'Active';
-                    const isTalepB = b.statusText === 'TALEP TOPLANIYOR' || b.status === 'Active';
+                    // 2. Manual Sort Order (Higher numbers first)
+                    if ((a.sortOrder || 0) !== (b.sortOrder || 0)) {
+                        return (b.sortOrder || 0) - (a.sortOrder || 0);
+                    }
+
+                    // 3. Currently active / collecting bids
+                    const isTalepA = a.statusText?.includes('TALEP') || a.status === 'Active';
+                    const isTalepB = b.statusText?.includes('TALEP') || b.status === 'Active';
                     if (isTalepA !== isTalepB) return isTalepB ? 1 : -1;
 
-                    return (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0);
+                    // 3. New tag
+                    if (a.isNew !== b.isNew) return b.isNew ? 1 : -1;
+
+                    // 4. Year aware sort
+                    const getYear = (d: string) => {
+                        const match = String(d).match(/20\d{2}/);
+                        return match ? parseInt(match[0]) : 0;
+                    };
+                    const yearA = getYear(a.date || '');
+                    const yearB = getYear(b.date || '');
+                    if (yearA !== yearB) return yearB - yearA;
+
+                    return 0; // Default same
                 });
 
                 return mapped;
@@ -257,6 +282,25 @@ export class IpoService {
             firstTradingDate: ipo.firstTradingDate || '-',
             summaryInfo: (ipo.summaryInfo as any) || []
         };
+
+        // Calculate size automatically if not present
+        const currentSize = (detail.summaryInfo as any[])?.find((x: any) => x.title?.includes("Halka Arz Büyüklüğü"))?.items?.[0];
+        if (!currentSize || currentSize === '-' || currentSize === '') {
+            try {
+                const cleanPrice = (ipo.price || '').replace(/[^\d,]/g, '').replace(',', '.');
+                const cleanLots = (ipo.lotCount || '').replace(/[^\d]/g, '');
+                const p = parseFloat(cleanPrice);
+                const l = parseFloat(cleanLots);
+                if (!isNaN(p) && !isNaN(l) && l > 0) {
+                    const total = p * l;
+                    if (total >= 1000000000) detail.size = (total / 1000000000).toLocaleString('tr-TR', { maximumFractionDigits: 2 }) + ' Milyar TL';
+                    else if (total >= 1000000) detail.size = (total / 1000000).toLocaleString('tr-TR', { maximumFractionDigits: 2 }) + ' Milyon TL';
+                    else detail.size = total.toLocaleString('tr-TR') + ' TL';
+                }
+            } catch (e) { }
+        } else {
+            detail.size = currentSize;
+        }
 
         return detail;
     }

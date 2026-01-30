@@ -281,6 +281,7 @@ model Ipo {
   isNew              Boolean  @default(false)
   showOnHomepage     Boolean  @default(false)  // Anasayfa widget'ında göster
   isLocked           Boolean  @default(false)  // Manuel değişiklikleri korumak için kilitle
+  sortOrder          Int      @default(0)      // Manuel sıralama (Yüksek numara üstte)
   
   // Custom Status Text (Override)
   statusText         String?

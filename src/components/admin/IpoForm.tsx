@@ -41,6 +41,7 @@ export function IpoForm({ initialData }: IpoFormProps) {
         imageUrl: initialData?.imageUrl || "",
         showOnHomepage: initialData?.showOnHomepage || false,
         isLocked: initialData?.isLocked || false,
+        sortOrder: initialData?.sortOrder || 0,
     });
 
     // Detailed text fields (will be packed into summaryInfo JSON)
@@ -166,14 +167,20 @@ export function IpoForm({ initialData }: IpoFormProps) {
                         </div>
 
                         <div className="flex items-center gap-4 border p-3 rounded-lg">
-                            <div className="space-y-0.5">
-                                <Label className="text-base">Anasayfa Widget'ı</Label>
-                                <p className="text-xs text-muted-foreground">İşaretlendiyse anasayfada gösterilir</p>
+                            <div className="space-y-0.5 flex-1">
+                                <Label className="text-base">Anasayfa Sıralama (Sort Order)</Label>
+                                <p className="text-xs text-muted-foreground">Yüksek rakamlar daha üstte görünür.</p>
+                                <Input
+                                    type="number"
+                                    value={formData.sortOrder}
+                                    onChange={(e) => handleChange("sortOrder", parseInt(e.target.value) || 0)}
+                                    className="mt-2"
+                                />
                             </div>
                             <Switch
                                 checked={formData.showOnHomepage}
                                 onCheckedChange={(val) => handleChange("showOnHomepage", val)}
-                                className="ml-auto"
+                                title="Anasayfada Göster"
                             />
                         </div>
 

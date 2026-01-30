@@ -8,6 +8,7 @@ import { Loader2, Calendar, Building2, Ticket, TrendingUp, Info, Search, ListFil
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import {
     Table,
     TableBody,
@@ -37,6 +38,9 @@ export default function IpoPage() {
     const [ipos, setIpos] = useState<IpoItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [approvedPage, setApprovedPage] = useState(1);
+    const [draftPage, setDraftPage] = useState(1);
+    const itemsPerPage = 15;
 
     useEffect(() => {
         const fetchIpos = async () => {
@@ -73,6 +77,16 @@ export default function IpoPage() {
     // Filter "New" items for the Featured Cards
     const newIpos = approvedIpos.filter(x => x.isNew);
 
+    // Paginated results
+    const paginatedApproved = approvedIpos.slice((approvedPage - 1) * itemsPerPage, approvedPage * itemsPerPage);
+    const paginatedDrafts = draftIpos.slice((draftPage - 1) * itemsPerPage, draftPage * itemsPerPage);
+
+    const handleSearchChange = (val: string) => {
+        setSearchTerm(val);
+        setApprovedPage(1);
+        setDraftPage(1);
+    };
+
     if (loading) {
         return (
             <div className="flex h-[50vh] items-center justify-center">
@@ -97,7 +111,7 @@ export default function IpoPage() {
                         placeholder="Şirket veya Kod ara..."
                         className="pl-9 bg-muted/40 border-muted-foreground/20 focus:bg-background transition-colors"
                         value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onChange={(e) => handleSearchChange(e.target.value)}
                     />
                 </div>
             </div>
@@ -184,7 +198,13 @@ export default function IpoPage() {
                             <ListFilter className="w-5 h-5 text-muted-foreground" />
                             Tüm Liste
                         </h2>}
-                        <IpoTable ipos={approvedIpos} />
+                        <IpoTable
+                            ipos={paginatedApproved}
+                            totalItems={approvedIpos.length}
+                            currentPage={approvedPage}
+                            onPageChange={setApprovedPage}
+                            itemsPerPage={itemsPerPage}
+                        />
                     </div>
                 </TabsContent>
 
@@ -193,15 +213,38 @@ export default function IpoPage() {
                         <Info className="w-4 h-4 shrink-0" />
                         <p>Bu listedeki şirketler SPK onay aşamasındadır. Tarih ve fiyat bilgileri kesinleşmemiştir.</p>
                     </div>
-                    <IpoTable ipos={draftIpos} isDraft />
+                    <IpoTable
+                        ipos={paginatedDrafts}
+                        isDraft
+                        totalItems={draftIpos.length}
+                        currentPage={draftPage}
+                        onPageChange={setDraftPage}
+                        itemsPerPage={itemsPerPage}
+                    />
                 </TabsContent>
             </Tabs>
         </div>
     );
 }
 
-function IpoTable({ ipos, isDraft = false }: { ipos: IpoItem[], isDraft?: boolean }) {
-    if (ipos.length === 0) {
+function IpoTable({
+    ipos,
+    isDraft = false,
+    totalItems,
+    currentPage,
+    onPageChange,
+    itemsPerPage
+}: {
+    ipos: IpoItem[],
+    isDraft?: boolean,
+    totalItems: number,
+    currentPage: number,
+    onPageChange: (page: number) => void,
+    itemsPerPage: number
+}) {
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+    if (totalItems === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-16 text-muted-foreground bg-card rounded-xl border border-border">
                 <Building2 className="w-12 h-12 mb-4 opacity-20" />
@@ -287,6 +330,59 @@ function IpoTable({ ipos, isDraft = false }: { ipos: IpoItem[], isDraft?: boolea
                     ))}
                 </TableBody>
             </Table>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4 px-4 py-6 border-t border-border/50">
+                    <div className="text-sm text-muted-foreground order-2 md:order-1">
+                        Toplam <span className="font-semibold text-foreground">{totalItems}</span> kayıttan
+                        <span className="font-semibold text-foreground ml-1">{(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, totalItems)}</span> arası gösteriliyor.
+                    </div>
+                    <div className="flex items-center gap-2 order-1 md:order-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-9 px-4 rounded-lg border-border/60 hover:bg-muted font-medium transition-all"
+                            onClick={() => onPageChange(Math.max(1, currentPage - 1))}
+                            disabled={currentPage === 1}
+                        >
+                            <ChevronLeft className="h-4 w-4 mr-1.5" />
+                            Önceki
+                        </Button>
+                        <div className="hidden sm:flex items-center gap-1.5">
+                            {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
+                                // Show first, last, and pages around current
+                                if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
+                                    return (
+                                        <Button
+                                            key={page}
+                                            variant={currentPage === page ? "primary" : "outline"}
+                                            size="sm"
+                                            className={`h-9 w-9 rounded-lg font-semibold transition-all ${currentPage === page ? 'shadow-md shadow-primary/20' : 'border-border/60 hover:bg-muted'}`}
+                                            onClick={() => onPageChange(page)}
+                                        >
+                                            {page}
+                                        </Button>
+                                    );
+                                } else if (page === currentPage - 2 || page === currentPage + 2) {
+                                    return <span key={page} className="px-1 text-muted-foreground">...</span>;
+                                }
+                                return null;
+                            })}
+                        </div>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-9 px-4 rounded-lg border-border/60 hover:bg-muted font-medium transition-all"
+                            onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+                            disabled={currentPage === totalPages}
+                        >
+                            Sonraki
+                            <ChevronRight className="h-4 w-4 ml-1.5" />
+                        </Button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
