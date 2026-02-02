@@ -48,95 +48,109 @@ export class IpoService {
 
             // 1. Scrape the list (homepage + taslak category + approved category)
             logs.push('Scraping IPO lists (Homepage + Drafts + Approved)...');
-            const scrapedList = await this.scrapeIposListOnly();
-            logs.push(`Found ${scrapedList.length} unique items across all pages.`);
 
-            // Reverse the list so the newest items (at the top of the site) are processed last.
-            // This ensures they have the latest createdAt timestamp in the DB.
-            const reversedList = [...scrapedList].reverse();
+            // Launch browser once for the entire session
+            const browser = await puppeteer.launch({
+                headless: true,
+                args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--no-first-run', '--no-zygote']
+            });
 
-            for (const item of reversedList) {
-                try {
-                    // Try to generate a valid code if missing
-                    let code = item.code;
-                    if (!code) {
-                        const slug = item.url.split('/').filter(Boolean).pop();
-                        if (slug) code = slug.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 10);
-                        else code = 'UNKNOWN-' + Date.now();
-                    }
+            let scrapedList: any[] = [];
+            try {
+                scrapedList = await this.scrapeIposListOnly(browser);
+                logs.push(`Found ${scrapedList.length} unique items across all pages.`);
 
-                    const existing = await db.ipo.findFirst({
-                        where: {
-                            OR: [
-                                { code: code },
-                                { url: item.url }
-                            ]
+                // Reverse the list so the newest items (at the top of the site) are processed last.
+                // This ensures they have the latest createdAt timestamp in the DB.
+                const reversedList = [...scrapedList].reverse();
+
+                for (const item of reversedList) {
+                    try {
+                        // Try to generate a valid code if missing
+                        let code = item.code;
+                        if (!code) {
+                            const slug = item.url.split('/').filter(Boolean).pop();
+                            if (slug) code = slug.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 10);
+                            else code = 'UNKNOWN-' + Date.now();
                         }
-                    });
 
-                    // Skip if locked (prevent overwrite of manual changes)
-                    if (existing?.isLocked) {
-                        logs.push(`Skipping ${item.company} (Locked)`);
-                        continue;
-                    }
-
-                    // Scrape details if new or incomplete
-                    // We used to skip drafts, but users want content for drafts too
-                    const isDraft = item.isHazirlaniyor;
-                    const shouldScrapeDetails = (!existing || !existing.summaryInfo || (existing.summaryInfo as any[]).length === 0 || item.isNew || item.statusText?.includes('Talep'));
-
-                    let details: Partial<IpoDetail> = {};
-                    if (shouldScrapeDetails) {
-                        logs.push(`Scraping details for ${item.company}...`);
-                        const detailData = await this.scrapeIpoDetailForSync(item.url);
-                        if (detailData) {
-                            details = detailData;
-                        } else {
-                            logs.push(`Warning: Could not scrape details for ${item.company}`);
-                        }
-                    }
-
-                    // Prepare DB payload
-                    const payload = {
-                        code: code,
-                        company: item.company,
-                        url: item.url,
-                        imageUrl: item.imageUrl,
-                        date: details.date || item.dateRaw || existing?.date || '-',
-                        price: details.price || existing?.price,
-                        lotCount: details.lotCount || existing?.lotCount,
-                        market: details.market || existing?.market,
-                        distributionMethod: details.distributionMethod || existing?.distributionMethod,
-                        leadUnderwriter: details.leadUnderwriter || existing?.leadUnderwriter,
-                        firstTradingDate: details.firstTradingDate || existing?.firstTradingDate,
-                        statusText: item.statusText || existing?.statusText,
-                        // Map status: Taslak -> DRAFT, Talep -> ACTIVE, New -> NEW
-                        status: isDraft ? 'DRAFT' : (item.statusText?.includes('Talep') ? 'ACTIVE' : 'NEW'),
-                        isNew: item.isNew,
-                        summaryInfo: details.summaryInfo ? (details.summaryInfo as any) : existing?.summaryInfo,
-                    };
-
-                    if (existing) {
-                        await db.ipo.update({
-                            where: { id: existing.id },
-                            data: payload
-                        });
-                        updated++;
-                    } else {
-                        await db.ipo.create({
-                            data: {
-                                ...payload,
-                                showOnHomepage: false
+                        const existing = await db.ipo.findFirst({
+                            where: {
+                                OR: [
+                                    { code: code },
+                                    { url: item.url }
+                                ]
                             }
                         });
-                        added++;
-                    }
 
-                } catch (itemError: any) {
-                    console.error(`Error syncing item ${item.company}:`, itemError);
-                    errors++;
-                    logs.push(`Error syncing ${item.company}: ${itemError.message}`);
+                        // Skip if locked (prevent overwrite of manual changes)
+                        if (existing?.isLocked) {
+                            logs.push(`Skipping ${item.company} (Locked)`);
+                            continue;
+                        }
+
+                        // Scrape details if new or incomplete
+                        // We used to skip drafts, but users want content for drafts too
+                        const isDraft = item.isHazirlaniyor;
+                        const shouldScrapeDetails = (!existing || !existing.summaryInfo || (existing.summaryInfo as any[]).length === 0 || item.isNew || item.statusText?.includes('Talep'));
+
+                        let details: Partial<IpoDetail> = {};
+                        if (shouldScrapeDetails) {
+                            logs.push(`Scraping details for ${item.company}...`);
+                            // Pass the existing browser instance
+                            const detailData = await this.scrapeIpoDetailForSync(item.url, browser);
+                            if (detailData) {
+                                details = detailData;
+                            } else {
+                                logs.push(`Warning: Could not scrape details for ${item.company}`);
+                            }
+                        }
+
+                        // Prepare DB payload
+                        const payload = {
+                            code: code,
+                            company: item.company,
+                            url: item.url,
+                            imageUrl: item.imageUrl,
+                            date: details.date || item.dateRaw || existing?.date || '-',
+                            price: details.price || existing?.price,
+                            lotCount: details.lotCount || existing?.lotCount,
+                            market: details.market || existing?.market,
+                            distributionMethod: details.distributionMethod || existing?.distributionMethod,
+                            leadUnderwriter: details.leadUnderwriter || existing?.leadUnderwriter,
+                            firstTradingDate: details.firstTradingDate || existing?.firstTradingDate,
+                            statusText: item.statusText || '', // Overwrite to allow clearing
+                            // Map status: Taslak -> DRAFT, Talep -> ACTIVE, New -> NEW
+                            status: isDraft ? 'DRAFT' : (item.statusText?.includes('Talep') ? 'ACTIVE' : 'NEW'),
+                            isNew: item.isNew,
+                            summaryInfo: details.summaryInfo ? (details.summaryInfo as any) : existing?.summaryInfo,
+                        };
+
+                        if (existing) {
+                            await db.ipo.update({
+                                where: { id: existing.id },
+                                data: payload
+                            });
+                            updated++;
+                        } else {
+                            await db.ipo.create({
+                                data: {
+                                    ...payload,
+                                    showOnHomepage: false
+                                }
+                            });
+                            added++;
+                        }
+
+                    } catch (itemError: any) {
+                        console.error(`Error syncing item ${item.company}:`, itemError);
+                        errors++;
+                        logs.push(`Error syncing ${item.company}: ${itemError.message}`);
+                    }
                 }
+            } finally {
+                // Ensure browser is closed at the end
+                if (browser) await browser.close();
             }
 
             this.forceRevalidate();
@@ -315,16 +329,24 @@ export class IpoService {
     /*                               Scraper Helpers                              */
     /* -------------------------------------------------------------------------- */
 
-    private static async scrapeIposListOnly(): Promise<any[]> {
+    private static async scrapeIposListOnly(existingBrowser?: any): Promise<any[]> {
         let browser;
+        let shouldCloseBrowser = false;
+
         try {
-            browser = await puppeteer.launch({
-                headless: true,
-                args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--no-first-run', '--no-zygote']
-            });
+            if (existingBrowser) {
+                browser = existingBrowser;
+            } else {
+                browser = await puppeteer.launch({
+                    headless: true,
+                    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--no-first-run', '--no-zygote']
+                });
+                shouldCloseBrowser = true;
+            }
+
             const page = await browser.newPage();
             await page.setRequestInterception(true);
-            page.on('request', (req) => {
+            page.on('request', (req: any) => {
                 if (['image', 'stylesheet', 'font'].includes(req.resourceType())) req.abort().catch(() => { });
                 else req.continue().catch(() => { });
             });
@@ -337,9 +359,6 @@ export class IpoService {
             // Helper for extraction
             const extractItems = async () => {
                 return await page.evaluate(() => {
-                    const talepHeader = Array.from(document.querySelectorAll('h1, h2, h3, .content-header')).find(h => h.textContent && h.textContent.match(/Talep\s*Topl/i));
-                    const hasTalepHeader = !!talepHeader;
-
                     return Array.from(document.querySelectorAll('article.index-list')).map(el => {
                         const htmlEl = el as HTMLElement;
                         const linkEl = htmlEl.querySelector('a') as HTMLAnchorElement;
@@ -355,8 +374,9 @@ export class IpoService {
                         const isNew = !!htmlEl.querySelector('.il-new');
 
                         let statusText = '';
-                        if (text.match(/Talep\s*Topl/i)) statusText = 'TALEP TOPLANIYOR';
-                        else if (isNew && hasTalepHeader) statusText = 'TALEP TOPLANIYOR';
+                        // Fix for Akhan Un: Check specific item for Talep Toplanıyor text/badge
+                        // STRICTER REGEX: Ensure we match exact phrase and avoid "Talep Toplama Bitti" false positives
+                        if (text.match(/Talep\s*Toplanıyor/i)) statusText = 'TALEP TOPLANIYOR';
 
                         const draftRegex = /haz[ıi]rla|taslak|bekle/i;
                         const isHazirlaniyor = draftRegex.test(timeText) || draftRegex.test(headerText) || draftRegex.test(text) || timeText.includes('Hazırlanıyor');
@@ -382,7 +402,7 @@ export class IpoService {
                 if (!urlsSeen.has(item.url)) { allItems.push(item); urlsSeen.add(item.url); }
             }
 
-            // 2. Drafts (k/taslak) - 8 pages
+            // 2. Drafts (k/taslak) - Restore full pagination with optimized browser
             for (let p = 1; p <= 8; p++) {
                 const url = p === 1 ? 'https://halkarz.com/k/taslak/' : `https://halkarz.com/k/taslak/page/${p}/`;
                 try {
@@ -395,7 +415,7 @@ export class IpoService {
                 } catch (e) { break; }
             }
 
-            // 3. Approved (k/halka-arz) - 10 pages
+            // 3. Approved (k/halka-arz) - Restore full pagination with optimized browser
             for (let p = 1; p <= 10; p++) {
                 const url = p === 1 ? 'https://halkarz.com/k/halka-arz/' : `https://halkarz.com/k/halka-arz/page/${p}/`;
                 try {
@@ -408,22 +428,31 @@ export class IpoService {
                 } catch (e) { break; }
             }
 
+            await page.close(); // Close the page we opened
             return allItems;
         } finally {
-            if (browser) await browser.close();
+            if (shouldCloseBrowser && browser) await browser.close();
         }
     }
 
-    private static async scrapeIpoDetailForSync(url: string): Promise<IpoDetail | null> {
+    private static async scrapeIpoDetailForSync(url: string, existingBrowser?: any): Promise<IpoDetail | null> {
         let browser;
+        let shouldCloseBrowser = false;
+
         try {
-            browser = await puppeteer.launch({
-                headless: true,
-                args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--no-first-run', '--no-zygote']
-            });
+            if (existingBrowser) {
+                browser = existingBrowser;
+            } else {
+                browser = await puppeteer.launch({
+                    headless: true,
+                    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--no-first-run', '--no-zygote']
+                });
+                shouldCloseBrowser = true;
+            }
+
             const page = await browser.newPage();
             await page.setRequestInterception(true);
-            page.on('request', (req) => {
+            page.on('request', (req: any) => {
                 if (['image', 'stylesheet', 'font'].includes(req.resourceType())) req.abort().catch(() => { });
                 else req.continue().catch(() => { });
             });
@@ -466,7 +495,8 @@ export class IpoService {
                 });
                 return { company, date, price, lotCount, distributionMethod, market, code, leadUnderwriter, firstTradingDate, summaryInfo } as any;
             });
+            await page.close(); // Close page after use
             return details;
-        } catch (e) { return null; } finally { if (browser) await browser.close(); }
+        } catch (e) { return null; } finally { if (shouldCloseBrowser && browser) await browser.close(); }
     }
 }

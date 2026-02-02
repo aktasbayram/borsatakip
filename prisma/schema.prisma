@@ -14,26 +14,24 @@ model User {
   password             String?
   name                 String?
   image                String?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
   balanceTRY           Float                 @default(100000)
   balanceUSD           Float                 @default(10000)
   aiCredits            Int                   @default(5)
-  aiCreditsTotal       Int                   @default(5)
   aiCreditsResetAt     DateTime              @default(now())
+  aiCreditsTotal       Int                   @default(5)
   subscriptionTier     String                @default("FREE")
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
+  preferences          Json?                 @default("{}")
   alerts               Alert[]
   globalAlerts         GlobalMarketAlert[]
+  notifications        Notification[]
   notificationSettings NotificationSettings?
+  payments             PaymentTransaction[]
   portfolios           Portfolio[]
   indices              UserIndex[]
   watchlists           Watchlist[]
-  notifications        Notification[]
-  payments             PaymentTransaction[]
-  preferences          Json?                 @default("{}") // Stores UI preferences like widget visibility
 }
-
-// ... (other models) ...
 
 model Portfolio {
   id        String   @id @default(cuid())
@@ -51,33 +49,30 @@ model NotificationSettings {
   telegramChatId   String?
   telegramEnabled  Boolean  @default(false)
   emailEnabled     Boolean  @default(false)
-  siteEnabled      Boolean  @default(true)
-  
-  // SMTP Settings
-  smtpHost         String?
-  smtpPort         Int?
-  smtpUser         String?
-  smtpPassword     String?
-  smtpSecure       Boolean  @default(true) // true for 465, false for 587 (usually) with StartTLS
-  
   verificationCode String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
+  smtpHost         String?
+  smtpPassword     String?
+  smtpPort         Int?
+  smtpSecure       Boolean  @default(true)
+  smtpUser         String?
+  siteEnabled      Boolean  @default(true)
   user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Notification {
-  id        String   @id @default(cuid())
-  userId    String
-  title     String
-  message   String
-  link      String?
-  type      String   @default("INFO") // INFO, SUCCESS, WARNING, ERROR
-  sendInApp Boolean  @default(true)
-  sendBrowser Boolean @default(false)
-  read      Boolean  @default(false)
-  createdAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id          String   @id @default(cuid())
+  userId      String
+  title       String
+  message     String
+  type        String   @default("INFO")
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  link        String?
+  sendBrowser Boolean  @default(false)
+  sendInApp   Boolean  @default(true)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, read])
 }
@@ -127,14 +122,12 @@ model WatchlistItem {
   watchlistId String
   symbol      String
   market      String
-  order       Int       @default(0)
   createdAt   DateTime  @default(now())
+  order       Int       @default(0)
   watchlist   Watchlist @relation(fields: [watchlistId], references: [id], onDelete: Cascade)
 
   @@unique([watchlistId, symbol, market])
 }
-
-
 
 model Trade {
   id          String    @id @default(cuid())
@@ -151,21 +144,21 @@ model Trade {
 }
 
 model Alert {
-  id        String     @id @default(cuid())
-  userId    String
-  symbol    String
-  market    String
-  type      String
-  target    Float
-  status    String
-  triggerLimit    Int      @default(1)
-  currentTriggers Int      @default(0)
+  id              String     @id @default(cuid())
+  userId          String
+  symbol          String
+  market          String
+  type            String
+  target          Float
+  status          String
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  cooldown        Int        @default(60)
+  currentTriggers Int        @default(0)
   lastTriggeredAt DateTime?
-  cooldown        Int      @default(60) // Seconds
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  logs      AlertLog[]
+  triggerLimit    Int        @default(1)
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  logs            AlertLog[]
 
   @@index([symbol, market, status])
 }
@@ -204,18 +197,18 @@ model SystemSetting {
   key         String   @id
   value       String
   description String?
-  category    String   @default("GENERAL") // AI, MARKET, SYSTEM, NOTIFICATION
-  isSecret    Boolean  @default(false)     // specific keys should be masked in UI
+  category    String   @default("GENERAL")
+  isSecret    Boolean  @default(false)
   updatedAt   DateTime @updatedAt
 }
 
 model PaymentTransaction {
   id          String    @id @default(cuid())
   userId      String
-  package     String    // 'BASIC', 'PRO'
+  package     String
   amount      Float
   senderName  String
-  status      String    @default("PENDING") // 'PENDING', 'APPROVED', 'REJECTED'
+  status      String    @default("PENDING")
   createdAt   DateTime  @default(now())
   processedAt DateTime?
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -239,17 +232,17 @@ model BankAccount {
 
 model Package {
   id          String   @id @default(cuid())
-  name        String   @unique // e.g. "PRO", "BASIC"
-  displayName String   // e.g. "Pro Paket"
+  name        String   @unique
+  displayName String
   price       Float
-  credits     Int      // Monthly AI credits
-  maxAlerts   Int      @default(2) // Max concurrent alerts
-  features    String[] // List of features
+  credits     Int
+  features    String[]
   isPopular   Boolean  @default(false)
-  color       String?  // Hex code or tailwind class for badge/border
+  color       String?
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  maxAlerts   Int      @default(2)
 }
 
 model ContactMessage {
@@ -258,7 +251,7 @@ model ContactMessage {
   email     String
   subject   String
   message   String
-  status    String   @default("UNREAD") // UNREAD, READ, REPLIED
+  status    String   @default("UNREAD")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -267,31 +260,23 @@ model Ipo {
   id                 String   @id @default(cuid())
   code               String   @unique
   company            String
-  date               String?  // e.g. "28-29-30 Ocak 2026"
-  price              String?  // e.g. "21,50 TL"
-  lotCount           String?  // e.g. "54,700,000 Lot"
-  market             String?  // e.g. "Ana Pazar"
+  date               String?
+  price              String?
+  lotCount           String?
+  market             String?
   url                String?
   imageUrl           String?
-  distributionMethod String?  // e.g. "Eşit Dağıtım"
-  leadUnderwriter    String?  // Aracı Kurum
-  firstTradingDate   String?  // Bist İlk İşlem Tarihi
-  tags               String[] // For "New", "Talep Toplanıyor" etc.
-  status             String   @default("DRAFT") // DRAFT, NEW, ACTIVE
+  distributionMethod String?
+  leadUnderwriter    String?
+  tags               String[]
+  status             String   @default("DRAFT")
   isNew              Boolean  @default(false)
-  showOnHomepage     Boolean  @default(false)  // Anasayfa widget'ında göster
-  isLocked           Boolean  @default(false)  // Manuel değişiklikleri korumak için kilitle
-  sortOrder          Int      @default(0)      // Manuel sıralama (Yüksek numara üstte)
-  
-  // Custom Status Text (Override)
   statusText         String?
-
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
-
-  // Detailed Info (formerly scraped)
-  summaryInfo        Json?    // Detailed sections like Funds Use, Allocations, etc.
+  summaryInfo        Json?
+  firstTradingDate   String?
+  showOnHomepage     Boolean  @default(false)
+  isLocked           Boolean  @default(false)
+  sortOrder          Int      @default(0)
 }
-
-
-
