@@ -5,32 +5,15 @@ import { CreateAlertDialog } from "@/components/alerts/CreateAlertDialog";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { formatCurrency, cn } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useSnackbar } from "notistack";
 import { Alert } from "@prisma/client";
 import { useSession } from "next-auth/react";
 import { AuthModal } from "@/components/auth/AuthModal";
+
 import { UpgradeModal } from "@/components/subscription/UpgradeModal";
-import { Badge } from "@/components/ui/badge";
-import {
-    Bell,
-    Zap,
-    Target,
-    TrendingUp,
-    Trash2,
-    ArrowUpRight,
-    ArrowDownRight,
-    Info,
-    AlertTriangle,
-    CheckCircle2,
-    Plus,
-    Activity,
-    Shield,
-    History,
-    Clock
-} from "lucide-react";
 
 const MOCK_ALERTS: Partial<Alert>[] = [
     { id: 'mock-1', symbol: 'THYAO', market: 'BIST', type: 'PRICE_ABOVE', target: 320.50, status: 'ACTIVE', createdAt: new Date() },
@@ -54,12 +37,23 @@ export default function AlertsPage() {
 
     const [permission, setPermission] = useState("granted");
 
+    // Remove direct redirect on unauthenticated
+    // useEffect(() => {
+    //     if (status === 'unauthenticated') {
+    //         router.push('/login');
+    //     }
+    // }, [status, router]);
+
+    // if (status === 'loading') return <div className="p-6">Yükleniyor...</div>;
+    // if (status === 'unauthenticated') return null;
+
     useEffect(() => {
         if (typeof window !== "undefined" && "Notification" in window) {
             setPermission(Notification.permission);
         }
 
         if (status === 'authenticated') {
+            // Fetch user limits only if authenticated
             axios.get("/api/user/credits").then(res => {
                 if (res.data.maxAlerts) setMaxAlerts(res.data.maxAlerts);
             }).catch(err => console.error("Limit fetch error", err));
@@ -77,6 +71,7 @@ export default function AlertsPage() {
         if (status === 'loading') return;
 
         if (status === 'unauthenticated') {
+            // Show mock alerts for guests
             setAlerts(MOCK_ALERTS);
             setLoading(false);
             return;
@@ -95,9 +90,9 @@ export default function AlertsPage() {
 
     useEffect(() => {
         fetchAlerts();
-    }, [status]);
+    }, [status]); // Re-fetch when status changes
 
-    const handleGuestAction = (action: string) => {
+    const handleGuestAction = (action: 'CREATE' | 'EDIT' | 'DELETE' | 'TOGGLE') => {
         setAuthView('REGISTER');
         setIsAuthModalOpen(true);
     };
@@ -141,112 +136,66 @@ export default function AlertsPage() {
         }
 
         const newStatus = currentStatus === "ACTIVE" ? "DISABLED" : "ACTIVE";
+
+        // Optimistic update
         setAlerts(alerts.map(a => a.id === id ? { ...a, status: newStatus } : a));
 
         try {
             await axios.patch(`/api/alerts/${id}`, { status: newStatus });
             enqueueSnackbar(newStatus === "ACTIVE" ? "Alarm aktifleştirildi" : "Alarm pasifleştirildi", { variant: "success" });
         } catch (error) {
+            // Revert on error
             setAlerts(alerts.map(a => a.id === id ? { ...a, status: currentStatus } : a));
             console.error(error);
             enqueueSnackbar("Durum güncellenemedi", { variant: "error" });
         }
     };
 
-    const activeCount = alerts.filter(a => a.status === 'ACTIVE').length;
-    const triggeredTotal = alerts.reduce((acc, a) => acc + (a._count?.logs || 0), 0);
-
     if (status === 'loading') {
-        return (
-            <div className="min-h-[400px] flex flex-col items-center justify-center space-y-4">
-                <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
-                <p className="text-muted-foreground font-medium animate-pulse">Veriler yükleniyor...</p>
-            </div>
-        );
+        return <div className="p-6 text-center text-gray-500">Yükleniyor...</div>;
     }
 
     return (
-        <div className="max-w-7xl mx-auto space-y-10 pb-20">
-            {/* Header Redesign */}
-            <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-950 p-8 lg:p-12 border border-slate-800 shadow-2xl group">
-                <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[500px] h-[500px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none group-hover:bg-indigo-500/20 transition-colors duration-1000"></div>
-                <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-[500px] h-[500px] bg-fuchsia-500/10 rounded-full blur-[120px] pointer-events-none group-hover:bg-fuchsia-500/20 transition-colors duration-1000"></div>
-
-                <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-10">
-                    <div className="space-y-6 max-w-2xl">
-                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 text-indigo-400 text-[10px] font-black uppercase tracking-[0.2em] border border-indigo-500/20 shadow-sm">
-                            <Zap className="w-3.5 h-3.5 fill-indigo-400" />
-                            Akıllı Takip Sistemi
-                        </div>
-                        <h1 className="text-4xl lg:text-5xl font-black tracking-tighter leading-[1.1] text-white italic">
-                            Fiyat <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-fuchsia-400 pr-2">Alarmları</span>
-                        </h1>
-                        <p className="text-slate-400 text-sm lg:text-lg font-medium leading-relaxed max-w-xl">
-                            Piyasayı sizin yerinize biz takip edelim. Hedef seviyeleriniz tetiklendiğinde
-                            <span className="text-indigo-400 font-bold"> Telegram</span> ve <span className="text-fuchsia-400 font-bold"> Tarayıcı</span> üzerinden anlık bildirim alın.
-                        </p>
-                    </div>
-
-                    <div className="shrink-0">
-                        <Button
-                            onClick={handleCreateClick}
-                            size="lg"
-                            className="bg-gradient-to-r from-indigo-600 via-purple-600 to-fuchsia-600 hover:from-indigo-50 hover:to-fuchsia-500 text-white font-black rounded-[1.25rem] px-10 h-16 shadow-2xl shadow-indigo-500/20 hover:shadow-indigo-500/40 hover:-translate-y-1 active:translate-y-0 transition-all text-sm uppercase tracking-[0.1em] group"
-                        >
-                            <Plus className="w-6 h-6 mr-3 group-hover:rotate-90 transition-transform duration-500" />
-                            Yeni Alarm Kur
-                        </Button>
-                    </div>
+        <div className="space-y-6">
+            <div className="flex justify-between items-center sm:flex-row flex-col sm:gap-0 gap-4">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Fiyat Alarmları</h1>
+                    <p className="text-sm text-gray-500 mt-1">
+                        Takip ettiğiniz hisseler belirlediğiniz fiyat seviyelerine geldiğinde <b>Tarayıcı</b> ve <b>Telegram</b> üzerinden anında bildirim alın.
+                    </p>
                 </div>
-            </div>
-
-            {/* Statistics Summary Row */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <StatsCard
-                    label="Aktif Alarmlar"
-                    value={activeCount}
-                    icon={<Activity className="w-6 h-6 text-emerald-400" />}
-                    color="emerald"
-                    description="Şu an takibi yapılan aktif fiyat emirleri"
-                />
-                <StatsCard
-                    label="Tetiklenme"
-                    value={triggeredTotal}
-                    icon={<History className="w-6 h-6 text-indigo-400" />}
-                    color="indigo"
-                    subLabel="Toplam"
-                    description="Hedefe ulaşıp size bildirim gönderilen alarmlar"
-                />
-                <StatsCard
-                    label="Paket Limiti"
-                    value={`${alerts.length}/${maxAlerts}`}
-                    icon={<Shield className="w-6 h-6 text-fuchsia-400" />}
-                    color="fuchsia"
-                    progress={(alerts.length / maxAlerts) * 100}
-                    description="Mevcut paketinizdeki alarm kontenjanı"
-                />
+                <Button onClick={handleCreateClick} className="bg-blue-600 hover:bg-blue-700 text-white w-full sm:w-auto">
+                    + Yeni Alarm
+                </Button>
             </div>
 
             {/* Guest Banner */}
             {status !== 'authenticated' && (
-                <div className="bg-slate-900/60 backdrop-blur-2xl border border-indigo-500/20 rounded-[2.5rem] p-10 text-center relative overflow-hidden shadow-xl">
-                    <div className="absolute -top-20 -right-20 w-64 h-64 bg-indigo-500/5 blur-[80px] rounded-full"></div>
-                    <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-fuchsia-500/5 blur-[80px] rounded-full"></div>
-                    <h3 className="text-2xl font-black text-white mb-3 tracking-tight italic">Piyasayı 7/24 Kaçırmadan Takip Edin</h3>
-                    <p className="text-slate-400 mb-8 max-w-2xl mx-auto text-base font-medium leading-relaxed">
-                        Kendi alarmlarınızı oluşturarak hisse senetleri hedeflediğiniz fiyata geldiğinde anında haberdar olabilirsiniz. Hemen ücretsiz hesabınızı oluşturun.
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-100 dark:border-blue-800 rounded-lg p-6 text-center">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                        Piyasayı 7/24 Takip Edin
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-300 mb-4 max-w-2xl mx-auto text-sm">
+                        Kendi alarmlarınızı oluşturarak hisse senetleri hedeflediğiniz fiyata geldiğinde anında haberdar olabilirsiniz.
+                        Size özel bildirimler ve Telegram entegrasyonu için hemen ücretsiz hesabınızı oluşturun.
                     </p>
-                    <div className="flex flex-col sm:flex-row justify-center gap-4">
+                    <div className="flex justify-center gap-3">
                         <Button
-                            onClick={() => { setAuthView('REGISTER'); setIsAuthModalOpen(true); }}
-                            className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-2xl px-10 h-14"
+                            onClick={() => {
+                                setAuthView('REGISTER');
+                                setIsAuthModalOpen(true);
+                            }}
+                            variant="primary"
+                            className="bg-blue-600 hover:bg-blue-700"
                         >
                             Hemen Başla
                         </Button>
                         <Button
-                            onClick={() => { setAuthView('LOGIN'); setIsAuthModalOpen(true); }}
+                            onClick={() => {
+                                setAuthView('LOGIN');
+                                setIsAuthModalOpen(true);
+                            }}
                             variant="outline"
-                            className="border-indigo-500/30 text-indigo-400 hover:bg-slate-800 rounded-2xl px-10 h-14"
                         >
                             Giriş Yap
                         </Button>
@@ -254,235 +203,191 @@ export default function AlertsPage() {
                 </div>
             )}
 
-            {/* Permission Banners */}
-            <div className="space-y-4">
-                {status === 'authenticated' && permission === "default" && (
-                    <div className="bg-slate-900/40 backdrop-blur-md border border-indigo-500/20 p-6 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6 group hover:border-indigo-500/40 transition-colors">
-                        <div className="flex items-center gap-6 text-center md:text-left">
-                            <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-400 shadow-inner group-hover:scale-105 transition-transform duration-500">
-                                <Bell className="w-8 h-8 animate-[bounce_2s_infinite]" />
-                            </div>
-                            <div>
-                                <p className="text-lg font-black text-slate-100 tracking-tight italic">Tarayıcı Bildirimlerini Açın</p>
-                                <p className="text-sm text-slate-400 font-medium">Borsa kapalıyken veya sekmeniz altta olsa bile anında haberdar olun.</p>
-                            </div>
+            {/* Browser Permission Warning - Only show if authenticated or if user is interested */}
+            {status === 'authenticated' && permission === "default" && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 p-4 rounded-lg flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <span className="text-2xl">🔔</span>
+                        <div>
+                            <p className="font-bold">Tarayıcı Bildirimlerini Açın</p>
+                            <p className="text-sm opacity-90">Sekme kapalıyken de bildirim almak için izin vermeniz gerekiyor.</p>
                         </div>
-                        <Button
-                            onClick={requestPermission}
-                            className="bg-indigo-500 hover:bg-indigo-400 text-white font-bold rounded-xl px-8 h-12 shadow-lg shadow-indigo-500/20 transition-all"
-                        >
-                            Şimdi İzin Ver
-                        </Button>
                     </div>
-                )}
-
-                {status === 'authenticated' && permission === "denied" && (
-                    <div className="bg-red-500/5 backdrop-blur-md border border-red-500/20 p-6 rounded-[2rem] flex flex-col md:flex-row items-center justify-between gap-6">
-                        <div className="flex items-center gap-6">
-                            <div className="w-16 h-16 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500">
-                                <AlertTriangle className="w-8 h-8" />
-                            </div>
-                            <div>
-                                <p className="text-lg font-black text-slate-100 tracking-tight">Bildirim İzni Engellendi</p>
-                                <p className="text-sm text-slate-400 font-medium">Lütfen tarayıcı adres çubuğundaki kilit simgesine tıklayarak bildirimlere izin verin.</p>
-                            </div>
-                        </div>
-                        <Button
-                            variant="ghost"
-                            onClick={() => window.location.reload()}
-                            className="bg-red-500/10 hover:bg-red-500/20 text-red-500 font-bold rounded-xl px-8"
-                        >
-                            Sayfayı Yenile
-                        </Button>
-                    </div>
-                )}
-            </div>
-
-            {/* Alerts Grid Section */}
-            <div className="space-y-6">
-                <div className="flex items-center justify-between px-2">
-                    <h2 className="text-xl font-black text-white italic tracking-tight flex items-center gap-2">
-                        <Target className="w-5 h-5 text-indigo-400" />
-                        Takip Listem
-                    </h2>
-                    {alerts.length > 0 && (
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 bg-slate-800/50 px-3 py-1 rounded-full">
-                            Toplam {alerts.length} Alarm
-                        </span>
-                    )}
+                    <Button
+                        variant="ghost"
+                        onClick={requestPermission}
+                        className="bg-white dark:bg-blue-800 text-blue-600 dark:text-white border border-blue-200 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-700"
+                    >
+                        İzin Ver
+                    </Button>
                 </div>
+            )}
 
-                {loading ? (
-                    <div className="text-center py-20">
-                        <div className="w-10 h-10 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin mx-auto mb-4" />
-                        <p className="text-slate-500 font-bold text-sm">Alarmlar Getiriliyor...</p>
-                    </div>
-                ) : alerts.length === 0 ? (
-                    <div className="bg-slate-950/40 border-2 border-slate-800/50 border-dashed rounded-[3rem] p-20 flex flex-col items-center justify-center text-center group hover:bg-slate-900/40 transition-colors">
-                        <div className="w-24 h-24 bg-slate-900 rounded-full flex items-center justify-center mb-8 shadow-inner relative group-hover:scale-110 transition-transform duration-500">
-                            <Bell className="w-12 h-12 text-slate-700 group-hover:text-indigo-500 transition-colors" />
-                            <div className="absolute inset-0 bg-indigo-500/5 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+            {status === 'authenticated' && permission === "denied" && (
+                <div className="bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 p-4 rounded-lg flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                    <div className="flex items-start gap-3">
+                        <span className="text-2xl mt-1">🚫</span>
+                        <div>
+                            <p className="font-bold">Bildirim İzni Engellendi</p>
+                            <p className="text-sm opacity-90 mb-2">Bildirimleri açmak için şu adımları izleyin:</p>
+                            <ol className="text-sm list-decimal list-inside space-y-1 opacity-90">
+                                <li>Tarayıcı adres çubuğundaki <strong>kilit (🔒)</strong> simgesine tıklayın.</li>
+                                <li><strong>"İzinler"</strong> veya <strong>"Site Ayarları"</strong>nı açın.</li>
+                                <li><strong>"Bildirimler"</strong> seçeneğini bulup <strong>"İzin Ver"</strong> yapın.</li>
+                                <li>Sayfayı yenileyin.</li>
+                            </ol>
                         </div>
-                        <h3 className="text-2xl font-black text-white mb-3 italic">Henüz Bir Alarmınız Yok</h3>
-                        <p className="text-slate-500 max-w-sm mb-10 text-base font-medium">
-                            Piyasa hareketlerini anlık takip etmek için hemen ilk fiyat alarmınızı oluşturun.
-                        </p>
-                        <Button onClick={handleCreateClick} className="bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-400 text-white font-bold px-12 h-14 rounded-2xl shadow-xl shadow-indigo-500/20">
-                            Hemen Alarm Oluştur
-                        </Button>
                     </div>
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => window.location.reload()}
+                        className="bg-white dark:bg-red-800 text-red-600 dark:text-white border border-red-200 dark:border-red-700 hover:bg-red-50 dark:hover:bg-red-700 whitespace-nowrap"
+                    >
+                        Sayfayı Yenile
+                    </Button>
+                </div>
+            )}
+
+            {permission === "granted" && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 px-4 py-3 rounded-lg flex gap-3 text-sm text-blue-800 dark:text-blue-200">
+                    <span className="text-lg">💡</span>
+                    <div>
+                        <p className="font-semibold">Bildirim Gelmiyor mu?</p>
+                        <p className="opacity-90 mt-1">
+                            Bildirim sesi duyuyor ama kutucuk görmüyorsanız, bilgisayarınızın <b>"Rahatsız Etmeyin"</b> veya <b>"Odaklanma Yardımı"</b> (Focus Assist) modu açık olabilir. Windows/Mac bildirim ayarlarından tarayıcınıza izin verdiğinizden emin olun.
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {
+                loading ? (
+                    <div className="text-center py-10 text-gray-500">Yükleniyor...</div>
+                ) : alerts.length === 0 ? (
+                    <Card className="p-10 flex flex-col items-center justify-center text-center border-dashed">
+                        <div className="w-16 h-16 bg-blue-50 dark:bg-blue-900/20 rounded-full flex items-center justify-center mb-4">
+                            <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            </svg>
+                        </div>
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-white">Henüz alarmınız yok</h3>
+                        <p className="text-gray-500 max-w-sm mt-2 mb-6">
+                            Piyasa hareketlerini kaçırmamak için ilk fiyat alarmınızı oluşturun.
+                        </p>
+                        <Button onClick={handleCreateClick} variant="outline">
+                            Alarm Oluştur
+                        </Button>
+                    </Card>
                 ) : (
-                    <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
                         {alerts.map((alert) => (
-                            <AlertCard
-                                key={alert.id}
-                                alert={alert}
-                                onDelete={() => handleDelete(alert.id)}
-                                onToggle={() => handleToggleStatus(alert.id, alert.status)}
-                                isGuest={status !== 'authenticated'}
-                            />
+                            <Card key={alert.id} className={`p-4 hover:shadow-md transition-shadow relative group ${status !== 'authenticated' ? 'opacity-75' : ''}`}>
+                                <div className="flex justify-between items-start mb-2">
+                                    <div>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-bold text-lg text-gray-900 dark:text-white capitalize">
+                                                {alert.symbol}
+                                            </span>
+                                            <span className={`text-xs px-2 py-0.5 rounded font-medium ${alert.market === 'BIST'
+                                                    ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'
+                                                    : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300'
+                                                }`}>
+                                                {alert.market}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-gray-500 mt-1">
+                                            {formatDate(alert.createdAt)} tarihinde oluşturuldu
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-2">
+                                            <span className={`text-xs font-medium ${alert.status === 'ACTIVE' ? 'text-green-600 dark:text-green-400' : 'text-gray-500'}`}>
+                                                {alert.status === 'ACTIVE' ? 'Aktif' : 'Pasif'}
+                                            </span>
+                                            <Switch
+                                                checked={alert.status === 'ACTIVE'}
+                                                onCheckedChange={() => handleToggleStatus(alert.id, alert.status)}
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={() => handleDelete(alert.id)}
+                                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-full transition-all"
+                                            title="Alarmı Sil"
+                                        >
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div className="mt-4 flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <div className={`p-1.5 rounded-full ${alert.type === 'PRICE_ABOVE'
+                                            ? 'bg-green-50 text-green-600 dark:bg-green-900/20'
+                                            : 'bg-red-50 text-red-600 dark:bg-red-900/20'
+                                            }`}>
+                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={
+                                                    alert.type === 'PRICE_ABOVE'
+                                                        ? "M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" // Rising trend
+                                                        : "M13 17h8m0 0v-8m0 8l-8-8-4 4-6-6" // Falling trend
+                                                } />
+                                            </svg>
+                                        </div>
+                                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                            {alert.type === 'PRICE_ABOVE' ? 'Yükselirse' : 'Düşerse'}
+                                        </span>
+                                    </div>
+                                    <span className="text-xl font-bold font-mono text-gray-900 dark:text-white">
+                                        {formatCurrency(alert.target, alert.market === 'US' ? 'USD' : 'TRY')}
+                                    </span>
+                                </div>
+
+                                {(alert as any)._count?.logs > 0 && (
+                                    <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 flex items-center gap-2 text-xs text-orange-600 dark:text-orange-400">
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                        </svg>
+                                        <span className="font-medium">
+                                            Bugüne kadar {(alert as any)._count.logs} kez tetiklendi
+                                        </span>
+                                    </div>
+                                )}
+                            </Card>
                         ))}
                     </div>
-                )}
-            </div>
+                )
+            }
 
-            <CreateAlertDialog open={isCreateOpen} onClose={() => { setIsCreateOpen(false); fetchAlerts(); }} />
+            <CreateAlertDialog
+                open={isCreateOpen}
+                onClose={() => {
+                    setIsCreateOpen(false);
+                    fetchAlerts(); // Refresh list on close if needed
+                }}
+            />
+
             <UpgradeModal
                 open={showUpgradeModal}
                 onClose={() => setShowUpgradeModal(false)}
                 title="Alarm Hakkınız Doldu!"
                 description={`Mevcut paketinizle en fazla ${maxAlerts} adet aktif alarm oluşturabilirsiniz. Daha fazla alarm için paketinizi yükseltin.`}
             />
-            <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} initialView={authView} />
-        </div>
+
+            <AuthModal
+                isOpen={isAuthModalOpen}
+                onClose={() => setIsAuthModalOpen(false)}
+                initialView={authView}
+            />
+        </div >
     );
 }
 
-function StatsCard({ label, value, icon, color, progress, subLabel, description }: { label: string, value: string | number, icon: React.ReactNode, color: string, progress?: number, subLabel?: string, description?: string }) {
-    return (
-        <div className="bg-slate-950/40 backdrop-blur-2xl border border-slate-800/80 p-7 rounded-[2rem] group hover:border-slate-700/80 transition-all shadow-xl relative overflow-hidden">
-            <div className={cn(
-                "absolute -top-10 -right-10 w-24 h-24 blur-3xl rounded-full opacity-5 pointer-events-none transition-opacity group-hover:opacity-15",
-                color === 'emerald' ? 'bg-emerald-500' : color === 'indigo' ? 'bg-indigo-500' : 'bg-fuchsia-500'
-            )}></div>
-
-            <div className="flex items-start justify-between mb-6">
-                <div className={cn(
-                    "w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner",
-                    color === 'emerald' ? 'bg-emerald-500/10 text-emerald-400' : color === 'indigo' ? 'bg-indigo-500/10 text-indigo-400' : 'bg-fuchsia-500/10 text-fuchsia-400'
-                )}>
-                    {icon}
-                </div>
-                {subLabel && <span className="text-[10px] uppercase tracking-[0.2em] font-black bg-slate-900/80 text-slate-500 px-3 py-1 rounded-lg border border-white/5">{subLabel}</span>}
-            </div>
-
-            <div className="space-y-1">
-                <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest">{label}</p>
-                <div className="flex items-baseline gap-2">
-                    <p className="text-4xl font-black tracking-tighter text-white">{value}</p>
-                </div>
-                {description && <p className="text-[11px] text-slate-600 font-medium leading-tight pt-1">{description}</p>}
-            </div>
-
-            {progress !== undefined && (
-                <div className="mt-6 h-2 w-full bg-slate-900 rounded-full overflow-hidden border border-white/5 p-0.5">
-                    <div
-                        className={cn("h-full rounded-full transition-all duration-1000", {
-                            'bg-gradient-to-r from-emerald-600 to-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.3)]': color === 'emerald',
-                            'bg-gradient-to-r from-indigo-600 to-indigo-400 shadow-[0_0_12px_rgba(99,102,241,0.3)]': color === 'indigo',
-                            'bg-gradient-to-r from-fuchsia-600 to-fuchsia-400 shadow-[0_0_12px_rgba(217,70,239,0.3)]': color === 'fuchsia',
-                        })}
-                        style={{ width: `${Math.min(progress, 100)}%` }}
-                    />
-                </div>
-            )}
-        </div>
-    );
+// Helper to avoid hydration mismatch on dates
+function formatDate(date: Date | string) {
+    if (!date) return "";
+    return new Date(date).toLocaleDateString("tr-TR");
 }
 
-function AlertCard({ alert, onDelete, onToggle, isGuest }: { alert: any, onDelete: () => void, onToggle: () => void, isGuest: boolean }) {
-    const isAbove = alert.type === 'PRICE_ABOVE';
-    const isActive = alert.status === 'ACTIVE';
-
-    return (
-        <Card className={cn(
-            "bg-slate-950/40 backdrop-blur-2xl border-slate-800/80 rounded-[2.5rem] p-7 hover:border-indigo-500/30 transition-all group relative overflow-hidden shadow-lg",
-            !isActive && "opacity-60 grayscale-[0.3]",
-            isGuest && "opacity-75 blur-[0.5px]"
-        )}>
-            {/* Ambient Background Glow */}
-            <div className={cn(
-                "absolute -top-12 -right-12 w-32 h-32 blur-[60px] rounded-full opacity-0 pointer-events-none transition-opacity duration-700",
-                isAbove ? "bg-emerald-500/10" : "bg-red-500/10",
-                isActive ? "group-hover:opacity-100" : ""
-            )}></div>
-
-            <div className="flex justify-between items-start relative z-10 mb-8">
-                <div className="space-y-1.5">
-                    <div className="flex items-center gap-2.5">
-                        <span className="font-black text-3xl text-white tracking-tighter uppercase italic">{alert.symbol}</span>
-                        <div className={cn(
-                            "px-2.5 py-0.5 rounded-lg text-[9px] font-black border uppercase tracking-widest",
-                            alert.market === 'BIST' ? 'bg-indigo-500/10 border-indigo-500/20 text-indigo-400' : 'bg-amber-500/10 border-amber-500/20 text-amber-400'
-                        )}>
-                            {alert.market}
-                        </div>
-                    </div>
-                    <div className="flex items-center gap-2 text-slate-500">
-                        <Clock className="w-3 h-3" />
-                        <span className="text-[10px] font-black uppercase tracking-tight">
-                            {new Date(alert.createdAt).toLocaleDateString("tr-TR", { day: '2-digit', month: 'short' })} oluşturuldu
-                        </span>
-                    </div>
-                </div>
-
-                <div className="flex items-center gap-4">
-                    <div className="flex flex-col items-end gap-1.5">
-                        <div className={cn(
-                            "w-2.5 h-2.5 rounded-full",
-                            isActive
-                                ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.8)] animate-pulse"
-                                : "bg-slate-800 shadow-inner"
-                        )}></div>
-                        <Switch checked={isActive} onCheckedChange={onToggle} className="scale-90" />
-                    </div>
-                </div>
-            </div>
-
-            <div className="relative z-10 flex items-end justify-between">
-                <div className="space-y-3">
-                    <div className={cn(
-                        "inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] shadow-inner",
-                        isAbove
-                            ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                            : "bg-red-500/10 text-red-500 border border-red-500/20"
-                    )}>
-                        {isAbove ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
-                        {isAbove ? 'Üst Hedef' : 'Alt Hedef'}
-                    </div>
-                    <div>
-                        <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1 ml-1">Hedef Fiyat</p>
-                        <p className="text-4xl font-black text-white font-mono leading-none tracking-tighter">
-                            {formatCurrency(alert.target, alert.market === 'US' ? 'USD' : 'TRY')}
-                        </p>
-                    </div>
-                </div>
-
-                <div className="flex flex-col items-center gap-4">
-                    <button
-                        onClick={onDelete}
-                        className="p-3 text-slate-700 hover:text-red-500 hover:bg-red-500/10 rounded-[1.25rem] transition-all bg-slate-900 shadow-inner border border-white/5 active:scale-95"
-                    >
-                        <Trash2 className="w-5 h-5" />
-                    </button>
-                    {alert._count?.logs > 0 && (
-                        <div className="px-3 py-1.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center gap-2 shadow-sm animate-in fade-in zoom-in-50">
-                            <Zap className="w-3.5 h-3.5 fill-amber-500" />
-                            <span className="text-[10px] font-black">{alert._count.logs}</span>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </Card>
-    );
-}
