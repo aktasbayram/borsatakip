@@ -13,18 +13,39 @@ export default async function BultenPage() {
     const data = summary?.data || { indices: [], movers: { gainers: [], losers: [], active: [] }, events: [], ipos: [] };
     const dateStr = new Date().toLocaleDateString('tr-TR', { day: '2-digit', month: 'long', year: 'numeric', weekday: 'long' });
 
+    // Dynamic Market Status Logic
+    const getMarketStatus = () => {
+        const now = new Date();
+        const trTime = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Istanbul" }));
+        const hours = trTime.getHours();
+        const minutes = trTime.getMinutes();
+        const day = trTime.getDay(); // 0: Sun, 6: Sat
+
+        if (day === 0 || day === 6) return "Hafta Sonu - Piyasalar Kapalı";
+
+        const timeVal = hours * 100 + minutes;
+
+        if (timeVal < 900) return "Piyasalar Kapalı";
+        if (timeVal >= 900 && timeVal < 1000) return "Açılış Yaklaşırken";
+        if (timeVal >= 1000 && timeVal < 1800) return "Piyasalar Açık";
+        if (timeVal >= 1800 && timeVal < 1810) return "Kapanış Seansı";
+        return "Piyasa Kapandı";
+    };
+
+    const marketStatus = getMarketStatus();
+
     return (
         <div className="max-w-7xl mx-auto space-y-12 pb-20">
             {/* Editorial Header */}
-            <div className="relative pt-10 pb-6 text-center space-y-6 overflow-hidden">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(var(--primary-rgb),0.05)_0%,transparent_70%)] -z-10" />
+            <div className="relative pt-6 pb-2 text-center space-y-4 overflow-hidden">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(var(--primary-rgb),0.04)_0%,transparent_70%)] -z-10" />
 
                 <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em] mb-4 border border-primary/20 animate-in fade-in slide-in-from-top-4 duration-700">
                     <Zap className="w-3 h-3 fill-primary" />
                     Piyasa Gündemi
                 </div>
 
-                <h1 className="text-5xl md:text-7xl font-black tracking-tighter leading-none animate-in fade-in slide-in-from-bottom-8 duration-1000">
+                <h1 className="text-4xl md:text-5xl font-black tracking-tighter leading-none animate-in fade-in slide-in-from-bottom-8 duration-1000">
                     GÜNÜN <span className="text-primary italic">BÜLTENİ</span>
                 </h1>
 
@@ -33,20 +54,20 @@ export default async function BultenPage() {
                     <span className="w-1.5 h-1.5 rounded-full bg-border" />
                     <span className="flex items-center gap-1.5">
                         <Clock className="w-4 h-4" />
-                        Açılış Yaklaşırken
+                        {marketStatus}
                     </span>
                 </div>
             </div>
 
             {/* Editor's Featured Note - The Highlight */}
             {summary?.editorNote && (
-                <div className="relative group max-w-4xl mx-auto">
-                    <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/5 to-primary/20 rounded-[2.5rem] blur-xl opacity-50 group-hover:opacity-100 transition duration-1000"></div>
-                    <div className="relative bg-card/60 backdrop-blur-2xl border border-primary/20 rounded-[2.5rem] p-10 md:p-14 shadow-2xl">
-                        <div className="absolute top-0 left-10 -translate-y-1/2 bg-primary px-6 py-2 rounded-2xl text-primary-foreground text-xs font-black tracking-widest uppercase shadow-lg">
+                <div className="relative group max-w-3xl mx-auto px-4">
+                    <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 via-primary/5 to-primary/20 rounded-[2rem] blur-lg opacity-40 group-hover:opacity-100 transition duration-1000"></div>
+                    <div className="relative bg-card/60 backdrop-blur-2xl border border-primary/20 rounded-[2rem] p-6 md:p-10 shadow-xl">
+                        <div className="absolute top-0 left-8 -translate-y-1/2 bg-primary px-4 py-1.5 rounded-xl text-primary-foreground text-[10px] font-black tracking-widest uppercase shadow-lg">
                             Editörün Notu
                         </div>
-                        <p className="text-xl md:text-2xl font-serif italic text-foreground/90 leading-relaxed text-center">
+                        <p className="text-lg md:text-xl font-serif italic text-foreground/90 leading-relaxed text-center">
                             "{summary.editorNote}"
                         </p>
                     </div>

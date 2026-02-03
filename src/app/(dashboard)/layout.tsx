@@ -242,6 +242,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             <span className="w-1 h-1 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"></span>
                             Tedbirli Hisseler
                         </Link>
+                        <Link
+                            href="/market/tavan-serisi"
+                            className="text-[10px] font-black tracking-widest text-muted-foreground hover:text-primary transition-colors whitespace-nowrap flex items-center gap-2 uppercase"
+                        >
+                            <span className="w-1 h-1 rounded-full bg-fuchsia-500 shadow-[0_0_8px_rgba(217,70,239,0.5)]"></span>
+                            Tavan Serisi
+                        </Link>
                         {/* More items can be added here */}
                     </div>
                 </div>
