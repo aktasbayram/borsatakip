@@ -63,6 +63,44 @@ export default async function AdminPage() {
                     </CardContent>
                 </Card>
             </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-6">
+                <Card className="hover:shadow-lg transition-shadow border-primary/20 bg-primary/5 rounded-[2rem] overflow-hidden">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-xl">🗞️ Günün Bülteni</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <p className="text-sm text-muted-foreground font-medium">Günlük piyasa özetlerini hazırlayın ve editör notu ekleyin.</p>
+                        <Link href="/admin/bulten" className="block w-full">
+                            <Button className="w-full rounded-2xl shadow-lg ring-1 ring-primary/20">Bülteni Yönet &rarr;</Button>
+                        </Link>
+                    </CardContent>
+                </Card>
+
+                <Card className="hover:shadow-lg transition-shadow border-yellow-500/20 bg-yellow-500/5 rounded-[2rem] overflow-hidden">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-xl">⚠️ Tedbirli Hisseler</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <p className="text-sm text-muted-foreground font-medium">Borsa İstanbul VBTS kapsamındaki tedbirli hisse listesini yönetin.</p>
+                        <Link href="/admin/restricted" className="block w-full">
+                            <Button variant="outline" className="w-full rounded-2xl border-yellow-500/50 hover:bg-yellow-500/10">Tedbirleri Yönet &rarr;</Button>
+                        </Link>
+                    </CardContent>
+                </Card>
+
+                <Card className="hover:shadow-lg transition-shadow border-indigo-500/20 bg-indigo-500/5 rounded-[2rem] overflow-hidden">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-xl">🚀 Halka Arzlar</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <p className="text-sm text-muted-foreground font-medium">Halka arz takvimini ve bekleyen başvuruları güncelleyin.</p>
+                        <Link href="/admin/ipos" className="block w-full">
+                            <Button variant="outline" className="w-full rounded-2xl border-indigo-500/50 hover:bg-indigo-500/10">IPoları Yönet &rarr;</Button>
+                        </Link>
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     );
 }

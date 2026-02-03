@@ -302,3 +302,36 @@ model EconomicEvent {
   @@unique([date, time, countryCode, title])
   @@index([date])
 }
+
+model RestrictedStock {
+  id        String   @id @default(cuid())
+  code      String
+  company   String
+  measure   String
+  measureCredit Boolean @default(false) // Kredili Alım ve Açığa Satış
+  measureGross  Boolean @default(false) // Brüt Takas
+  measureSingle Boolean @default(false) // Tek Fiyat
+  measureOrder  Boolean @default(false) // Emir Paketi
+  measureNet    Boolean @default(false) // İnternet Emir Yasağı
+  startDate String
+  endDate   String
+  sortOrder Int      @default(0)
+  isLocked  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([code, measure, startDate])
+  @@index([sortOrder])
+}
+
+model MarketSummary {
+  id          String   @id @default(cuid())
+  date        String   @unique // Format: YYYY-MM-DD
+  data        Json     // Stores movers, indices, results
+  editorNote  String?  @db.Text
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([date])
+}

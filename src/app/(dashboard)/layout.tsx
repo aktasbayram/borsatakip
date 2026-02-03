@@ -222,11 +222,25 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <div className={`mx-auto ${getContainerClass()} px-4 sm:px-6 lg:px-8`}>
                     <div className="flex items-center h-9 overflow-x-auto no-scrollbar gap-6">
                         <Link
-                            href="/market/ipo"
-                            className="text-[11px] font-thin tracking-wide text-foreground/80 hover:text-primary transition-colors whitespace-nowrap flex items-center gap-1.5 uppercase"
+                            href="/market/bulten"
+                            className="text-[10px] font-black tracking-widest text-muted-foreground hover:text-primary transition-colors whitespace-nowrap flex items-center gap-2 uppercase"
                         >
-                            <span className="w-1 h-1 rounded-full bg-green-500 animate-pulse"></span>
+                            <span className="w-1 h-1 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]"></span>
+                            Günün Bülteni
+                        </Link>
+                        <Link
+                            href="/market/ipo"
+                            className="text-[10px] font-black tracking-widest text-muted-foreground hover:text-primary transition-colors whitespace-nowrap flex items-center gap-2 uppercase"
+                        >
+                            <span className="w-1 h-1 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
                             Halka Arz
+                        </Link>
+                        <Link
+                            href="/market/restricted"
+                            className="text-[10px] font-black tracking-widest text-muted-foreground hover:text-primary transition-colors whitespace-nowrap flex items-center gap-2 uppercase"
+                        >
+                            <span className="w-1 h-1 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"></span>
+                            Tedbirli Hisseler
                         </Link>
                         {/* More items can be added here */}
                     </div>

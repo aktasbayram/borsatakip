@@ -118,6 +118,18 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
                         Panel
                     </NavLink>
                     <NavLink
+                        href="/admin/bulten"
+                        icon={
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10l4 4v10a2 2 0 01-2 2z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 2v6h6" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12h10M7 16h10" />
+                            </svg>
+                        }
+                    >
+                        Günün Bülteni
+                    </NavLink>
+                    <NavLink
                         href="/admin/users"
                         icon={
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -146,6 +158,16 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
                         }
                     >
                         Halka Arz
+                    </NavLink>
+                    <NavLink
+                        href="/admin/restricted"
+                        icon={
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        }
+                    >
+                        Tedbirli Hisseler
                     </NavLink>
                     <NavLink
                         href="/admin/settings/packages"
