@@ -249,6 +249,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             <span className="w-1 h-1 rounded-full bg-fuchsia-500 shadow-[0_0_8px_rgba(217,70,239,0.5)]"></span>
                             Tavan Serisi
                         </Link>
+                        <Link
+                            href="/market/heatmap"
+                            className="text-[10px] font-black tracking-widest text-muted-foreground hover:text-primary transition-colors whitespace-nowrap flex items-center gap-2 uppercase"
+                        >
+                            <span className="w-1 h-1 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]"></span>
+                            Isı Haritası
+                        </Link>
                         {/* <Link
                             href="/market/kap"
                             className="text-[10px] font-black tracking-widest text-muted-foreground hover:text-primary transition-colors whitespace-nowrap flex items-center gap-2 uppercase"

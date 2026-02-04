@@ -1,38 +1,45 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ResponsiveContainer, Treemap, Tooltip } from 'recharts';
 import axios from 'axios';
 
 interface HeatmapNode {
     name: string;
-    size: number;
+    size?: number;
     value: number; // For TreeMap weighting
-    change: number; // For Coloring
+    change?: number; // For Coloring
     category: string;
     children?: HeatmapNode[];
-    [key: string]: any; // Allow any other props for Treemap compatibility
+    [key: string]: any;
 }
 
 const CustomizedContent = (props: any) => {
-    const { root, depth, x, y, width, height, index, payload, colors, name, change } = props;
+    const { depth, x, y, width, height, name, change } = props;
 
     // Filter out nodes that are too small to render text
-    const showText = width > 30 && height > 30;
+    const showText = width > 40 && height > 30;
+    const showPercent = width > 50 && height > 45;
 
-    // Determine color based on change
-    // Green for > 0, Red for < 0, Gray for 0
-    let fillColor = '#9ca3af'; // gray-400
-    if (change > 0) {
-        // Linear gradient or steps for green intensity
-        if (change > 5) fillColor = '#16a34a'; // green-600
-        else if (change > 2) fillColor = '#22c55e'; // green-500
-        else fillColor = '#4ade80'; // green-400
-    } else if (change < 0) {
-        if (change < -5) fillColor = '#dc2626'; // red-600
-        else if (change < -2) fillColor = '#ef4444'; // red-500
-        else fillColor = '#f87171'; // red-400
+    // Premium Color Palette
+    // Ultra-Vivid, High-Contrast Color Palette
+    let fillColor = '#9ca3af'; // neutral/gray default
+    let strokeColor = 'rgba(255,255,255,0.4)';
+
+    if (depth === 2) { // Leaf nodes (stocks)
+        if (change > 0) {
+            if (change > 5) fillColor = '#16a34a'; // Green 600
+            else if (change > 2) fillColor = '#22c55e'; // Green 500
+            else fillColor = '#4ade80'; // Green 400
+        } else if (change < 0) {
+            if (change < -5) fillColor = '#dc2626'; // Red 600
+            else if (change < -2) fillColor = '#ef4444'; // Red 500
+            else fillColor = '#f87171'; // Red 400
+        }
+    } else {
+        fillColor = 'transparent';
+        strokeColor = 'rgba(255, 255, 255, 0.1)';
     }
 
     return (
@@ -42,38 +49,54 @@ const CustomizedContent = (props: any) => {
                 y={y}
                 width={width}
                 height={height}
+                rx={4}
+                ry={4}
                 style={{
                     fill: fillColor,
-                    stroke: '#fff',
-                    strokeWidth: 2 / (depth + 1e-10),
-                    strokeOpacity: 1 / (depth + 1e-10),
+                    stroke: strokeColor,
+                    strokeWidth: depth === 0 ? 0 : 1,
+                    transition: 'all 0.5s ease-in-out'
                 }}
+                className={depth === 2 ? "hover:opacity-80 transition-opacity cursor-pointer" : ""}
             />
-            {showText ? (
+            {depth === 1 && height > 20 && (
                 <text
-                    x={x + width / 2}
-                    y={y + height / 2}
-                    textAnchor="middle"
-                    fill="#fff"
-                    fontSize={12}
-                    fontWeight="bold"
-                    dy={-5}
+                    x={x + 5}
+                    y={y + 15}
+                    fill="currentColor"
+                    fontSize={10}
+                    fontWeight="900"
+                    className="opacity-20 uppercase tracking-widest pointer-events-none"
                 >
                     {name}
                 </text>
-            ) : null}
-            {showText ? (
+            )}
+            {depth === 2 && showText && (
                 <text
                     x={x + width / 2}
-                    y={y + height / 2}
+                    y={y + height / 2 - (showPercent ? 6 : 0)}
                     textAnchor="middle"
-                    fill="#fff"
-                    fontSize={10}
-                    dy={10}
+                    fill="#ffffff"
+                    fontSize={Math.max(11, Math.min(width / 5, 14))}
+                    fontWeight="700"
+                    className="select-none pointer-events-none"
+                >
+                    {name}
+                </text>
+            )}
+            {depth === 2 && showPercent && (
+                <text
+                    x={x + width / 2}
+                    y={y + height / 2 + 10}
+                    textAnchor="middle"
+                    fill="#ffffff"
+                    fontSize={Math.max(9, Math.min(width / 7, 11))}
+                    fontWeight="600"
+                    className="select-none pointer-events-none opacity-90"
                 >
                     %{change?.toFixed(2)}
                 </text>
-            ) : null}
+            )}
         </g>
     );
 };
@@ -81,32 +104,65 @@ const CustomizedContent = (props: any) => {
 const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
         const data = payload[0].payload;
+        const isPositive = data.change >= 0;
+
         return (
-            <div className="bg-popover text-popover-foreground px-3 py-2 rounded-md shadow-md border text-xs">
-                <p className="font-bold">{data.name}</p>
-                <p>Fiyat: {Math.abs(data.size).toFixed(2)} ₺</p>
-                <p className={data.change >= 0 ? 'text-green-500' : 'text-red-500'}>
-                    Değişim: %{data.change?.toFixed(2)}
-                </p>
-                <p className="text-muted-foreground mt-1">{data.category}</p>
+            <div className="bg-background/80 backdrop-blur-xl border border-border/50 p-4 rounded-2xl shadow-2xl min-w-[160px] animate-in fade-in zoom-in duration-200">
+                <div className="flex items-center justify-between mb-2">
+                    <span className="text-lg font-black tracking-tighter">{data.name}</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isPositive ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'
+                        }`}>
+                        {data.category}
+                    </span>
+                </div>
+                <div className="space-y-1.5">
+                    <div className="flex justify-between items-center text-[11px]">
+                        <span className="text-muted-foreground">Fiyat</span>
+                        <span className="font-mono font-bold">{Math.abs(data.size).toFixed(2)} ₺</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[11px]">
+                        <span className="text-muted-foreground">Değişim</span>
+                        <span className={`font-mono font-black ${isPositive ? 'text-emerald-500' : 'text-rose-500'}`}>
+                            {isPositive ? '+' : ''}{data.change?.toFixed(2)}%
+                        </span>
+                    </div>
+                </div>
+                <div className="mt-3 pt-2 border-t border-border/10 flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full animate-pulse ${isPositive ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
+                    <span className="text-[9px] uppercase tracking-widest font-black opacity-50">Anlık Veri</span>
+                </div>
             </div>
         );
     }
     return null;
 };
 
+const ColorScale = () => (
+    <div className="flex items-center justify-center gap-2 mt-6 select-none italic text-foreground/80">
+        <span className="text-[10px] font-black uppercase tracking-wider">-5%</span>
+        <div className="flex h-2 w-56 rounded-full overflow-hidden border border-white/10 shadow-inner">
+            <div className="flex-1 bg-[#b91c1c]"></div>
+            <div className="flex-1 bg-[#dc2626]"></div>
+            <div className="flex-1 bg-[#ef4444]"></div>
+            <div className="flex-1 bg-gray-400/50"></div>
+            <div className="flex-1 bg-[#4ade80]"></div>
+            <div className="flex-1 bg-[#22c55e]"></div>
+            <div className="flex-1 bg-[#16a34a]"></div>
+        </div>
+        <span className="text-[10px] font-black uppercase tracking-wider">+5%</span>
+    </div>
+);
+
 export function MarketHeatmap() {
     const [data, setData] = useState<HeatmapNode[]>([]);
     const [loading, setLoading] = useState(true);
+    const [index, setIndex] = useState<'XU030' | 'XU100'>('XU030');
 
     useEffect(() => {
         const fetchData = async () => {
+            setLoading(true);
             try {
-                const res = await axios.get('/api/market/heatmap');
-                // The API returns a flat list. Recharts Treemap prefers nested data for "groups" (like sectors)
-                // But it can also work with flat list if we just process it.
-                // However, to make it look nice, let's group by category.
-
+                const res = await axios.get(`/api/market/heatmap?index=${index}`);
                 const flatData = res.data;
                 const categories: Record<string, HeatmapNode[]> = {};
 
@@ -114,18 +170,20 @@ export function MarketHeatmap() {
                     if (!categories[item.category]) categories[item.category] = [];
                     categories[item.category].push({
                         ...item,
-                        value: Math.abs(item.value) // Treemap needs positive value for size
+                        value: 100 // Flat weighting for better visibility of names
                     });
                 });
 
-                const treeData = Object.keys(categories).map(cat => ({
-                    name: cat,
-                    category: cat,
-                    size: 0,
-                    value: 0,
-                    change: 0, // category aggregate change (optional)
-                    children: categories[cat]
-                }));
+                const treeData = Object.keys(categories).map(cat => {
+                    const children = categories[cat];
+                    const sumValue = children.reduce((acc, curr) => acc + curr.value, 0);
+                    return {
+                        name: cat,
+                        category: cat,
+                        value: sumValue,
+                        children
+                    };
+                });
 
                 setData(treeData);
             } catch (error) {
@@ -136,42 +194,78 @@ export function MarketHeatmap() {
         };
 
         fetchData();
-        const interval = setInterval(fetchData, 60000); // 1 min update
+        const interval = setInterval(fetchData, 60000);
         return () => clearInterval(interval);
-    }, []);
+    }, [index]);
+
+    const handleIndexChange = (newIndex: string) => {
+        if (newIndex === 'XU030' || newIndex === 'XU100') {
+            setIndex(newIndex as any);
+        }
+    };
 
     if (loading && data.length === 0) {
         return (
-            <Card className="h-[400px] animate-pulse">
-                <CardHeader>
-                    <CardTitle>BIST 30 Haritası</CardTitle>
-                </CardHeader>
-                <CardContent className="h-full bg-muted/20"></CardContent>
-            </Card>
+            <div className="w-full h-[500px] flex flex-col items-center justify-center space-y-4 bg-muted/5 rounded-3xl border border-dashed border-border">
+                <div className="w-12 h-12 border-4 border-primary/10 border-t-primary rounded-full animate-spin"></div>
+                <span className="text-sm font-bold text-muted-foreground animate-pulse tracking-widest uppercase">Harita Yükleniyor...</span>
+            </div>
         );
     }
 
     return (
-        <Card className="col-span-1">
-            <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-bold flex items-center justify-between">
-                    <span>BIST 30 Isı Haritası</span>
-                    <span className="text-xs font-normal text-muted-foreground">Anlık Veri</span>
-                </CardTitle>
-            </CardHeader>
-            <CardContent className="h-[350px] p-0 overflow-hidden rounded-b-xl">
-                <ResponsiveContainer width="100%" height="100%">
-                    <Treemap
-                        data={data}
-                        dataKey="value"
-                        aspectRatio={4 / 3}
-                        stroke="#fff"
-                        fill="#8884d8"
-                        content={<CustomizedContent />}
+        <Card className="border-0 shadow-none bg-transparent h-full flex flex-col overflow-visible">
+            <CardHeader className="pb-8 px-0 flex flex-col md:flex-row md:items-end justify-between space-y-4 md:space-y-0">
+                <div className="space-y-1">
+                    <CardTitle className="text-4xl font-black tracking-tighter flex items-center gap-3">
+                        {index === 'XU030' ? 'BIST 30' : 'BIST 100'}
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] px-2 py-1 bg-primary text-primary-foreground rounded-md shadow-sm">CANLI</span>
+                    </CardTitle>
+                    <p className="text-sm text-foreground font-bold flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] anim-pulse"></span>
+                        Piyasa anlık performans dağılımı
+                    </p>
+                </div>
+
+                <div className="flex bg-muted/50 backdrop-blur-md border border-border/50 rounded-xl p-1 shadow-inner">
+                    <button
+                        onClick={() => handleIndexChange('XU030')}
+                        className={`relative px-6 py-2 rounded-lg text-[10px] font-black transition-all duration-300 uppercase tracking-widest ${index === 'XU030'
+                            ? 'bg-background shadow-lg text-primary scale-105'
+                            : 'text-muted-foreground hover:text-foreground'
+                            }`}
                     >
-                        <Tooltip content={<CustomTooltip />} />
-                    </Treemap>
-                </ResponsiveContainer>
+                        BIST 30
+                    </button>
+                    <button
+                        onClick={() => handleIndexChange('XU100')}
+                        className={`relative px-6 py-2 rounded-lg text-[10px] font-black transition-all duration-300 uppercase tracking-widest ${index === 'XU100'
+                            ? 'bg-background shadow-lg text-primary scale-105'
+                            : 'text-muted-foreground hover:text-foreground'
+                            }`}
+                    >
+                        BIST 100
+                    </button>
+                </div>
+            </CardHeader>
+
+            <CardContent className="flex-1 p-0 overflow-visible relative group">
+                <div className="absolute -inset-4 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 rounded-[2rem] -z-10 blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+                <div className="h-[600px] w-full bg-card/40 backdrop-blur-sm rounded-3xl border border-border/40 p-1 shadow-2xl overflow-hidden">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <Treemap
+                            data={data}
+                            dataKey="value"
+                            aspectRatio={4 / 3}
+                            stroke="#fff"
+                            fill="#8884d8"
+                            content={<CustomizedContent />}
+                        >
+                            <Tooltip content={<CustomTooltip />} cursor={false} />
+                        </Treemap>
+                    </ResponsiveContainer>
+                </div>
+                <ColorScale />
             </CardContent>
         </Card>
     );

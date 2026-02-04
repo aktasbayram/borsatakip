@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { MarketIndices } from '@/components/dashboard/MarketIndices';
 import { AgendaWidget } from "@/components/dashboard/AgendaWidget";
 import { IpoWidget } from "@/components/dashboard/IpoWidget";
-import { MarketHeatmap } from "@/components/dashboard/MarketHeatmap";
 import {
     Dialog,
     DialogContent,
@@ -199,8 +198,7 @@ export default function DashboardPage() {
                 </div>
             )}
 
-            {/* Market Heatmap Section */}
-            <MarketHeatmap />
+            {/* Market Heatmap moved to /market/heatmap */}
 
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h1 className="text-3xl font-bold tracking-tight">Takip Listem</h1>
