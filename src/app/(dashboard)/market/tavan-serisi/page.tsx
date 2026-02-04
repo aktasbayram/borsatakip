@@ -88,31 +88,31 @@ export default function TavanSerisiPage() {
     };
 
     return (
-        <div className="min-h-screen space-y-10 max-w-7xl mx-auto pb-20 px-2 lg:px-4">
-            {/* Elegant Header - More Compact Version */}
-            <div className="relative overflow-hidden rounded-2xl bg-slate-900 p-6 lg:p-8 text-white shadow-xl border border-white/5 mt-4">
-                <div className="absolute top-0 right-0 -mr-20 -mt-20 h-48 w-48 rounded-full bg-indigo-600/20 blur-3xl" />
-                <div className="absolute bottom-0 left-0 -ml-20 -mb-20 h-48 w-48 rounded-full bg-fuchsia-600/10 blur-3xl" />
+        <div className="max-w-7xl mx-auto space-y-6 pb-20 px-4 md:px-0">
+            {/* Elegant Header - Compact & Theme Aware */}
+            <div className="relative overflow-hidden rounded-[1.75rem] bg-card dark:bg-slate-950 p-5 lg:p-7 border border-border dark:border-slate-800 shadow-2xl group transition-colors duration-300 mt-4">
+                <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[250px] h-[250px] bg-indigo-500/5 rounded-full blur-[70px] pointer-events-none group-hover:bg-indigo-500/10 transition-colors duration-1000"></div>
+                <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-[250px] h-[250px] bg-fuchsia-500/5 rounded-full blur-[70px] pointer-events-none group-hover:bg-fuchsia-500/10 transition-colors duration-1000"></div>
 
-                <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div className="space-y-3 max-w-2xl">
-                        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/10 border border-white/10 text-[10px] font-black uppercase tracking-widest text-indigo-200">
-                            <Calculator className="w-3 h-3" />
+                <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="space-y-2.5 max-w-2xl">
+                        <div className="inline-flex items-center gap-2 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[8px] font-black uppercase tracking-[0.2em] border border-primary/20">
+                            <Calculator className="w-2.5 h-2.5" />
                             Halka Arz Aracı
                         </div>
-                        <h1 className="text-2xl lg:text-3xl font-black tracking-tighter leading-tight italic">
-                            Tavan Serisi <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-fuchsia-400 pr-2">Analizi</span>
+                        <h1 className="text-2xl lg:text-3xl font-black tracking-tighter leading-none text-foreground dark:text-white italic">
+                            Tavan Serisi <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-500 to-fuchsia-500 pr-2">Analizi</span>
                         </h1>
-                        <p className="text-slate-400 text-sm lg:text-base font-medium leading-relaxed max-w-xl">
+                        <p className="text-muted-foreground dark:text-slate-400 text-[11px] md:text-xs font-medium leading-relaxed max-w-xl">
                             Borsa İstanbul'da halka arz olan veya tavan serisine başlayan hisselerinizin
-                            <span className="text-white font-bold ml-1">potansiyel değerini</span> simüle edin.
+                            <span className="text-foreground dark:text-white font-bold ml-1">potansiyel değerini</span> simüle edin.
                         </p>
                     </div>
 
                     {results.length > 0 && (
-                        <div className="bg-white/5 backdrop-blur-md rounded-xl p-4 border border-white/10 flex flex-col items-end gap-0.5 min-w-[170px]">
-                            <span className="text-[10px] uppercase font-black text-slate-500 tracking-tighter">Başlangıç Sermayesi</span>
-                            <span className="text-2xl font-black text-white">₺{formatCurrency(summary.initialValue, 0)}</span>
+                        <div className="bg-muted/50 dark:bg-slate-900/50 backdrop-blur-md rounded-xl p-3 border border-border/50 dark:border-slate-800/50 flex flex-col items-end gap-0.5 min-w-[150px]">
+                            <span className="text-[10px] uppercase font-black text-muted-foreground dark:text-slate-500 tracking-tighter">Başlangıç Sermayesi</span>
+                            <span className="text-xl font-black text-foreground dark:text-white italic">₺{formatCurrency(summary.initialValue, 0)}</span>
                         </div>
                     )}
                 </div>
