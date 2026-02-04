@@ -93,9 +93,9 @@ export default function IpoPage() {
 
     return (
         <div className="max-w-7xl mx-auto space-y-10 pb-20 px-4 md:px-0">
-            {/* Header Section - Refined Glassmorphism */}
-            <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-950 p-8 lg:p-12 border border-slate-800 shadow-2xl group">
-                <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[400px] h-[400px] bg-indigo-500/5 rounded-full blur-[100px] pointer-events-none group-hover:bg-indigo-500/10 transition-colors duration-1000"></div>
+            {/* Header Section - Theme Aware Glassmorphism */}
+            <div className="relative overflow-hidden rounded-[2.5rem] bg-card dark:bg-slate-950 p-8 lg:p-12 border border-border dark:border-slate-800 shadow-2xl group transition-colors duration-300">
+                <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[100px] pointer-events-none group-hover:bg-primary/10 transition-colors duration-1000"></div>
                 <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none group-hover:bg-emerald-500/10 transition-colors duration-1000"></div>
 
                 <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-8">
@@ -104,19 +104,19 @@ export default function IpoPage() {
                             <Rocket className="w-3.5 h-3.5" />
                             Yatırım Fırsatları
                         </div>
-                        <h1 className="text-4xl lg:text-5xl font-black tracking-tighter leading-none text-white italic">
+                        <h1 className="text-4xl lg:text-5xl font-black tracking-tighter leading-none text-foreground dark:text-white italic">
                             Halka Arz <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-400 pr-2">Takvimi</span>
                         </h1>
-                        <p className="text-slate-400 text-sm lg:text-base font-medium leading-relaxed max-w-xl">
+                        <p className="text-muted-foreground dark:text-slate-400 text-sm lg:text-base font-medium leading-relaxed max-w-xl">
                             Borsa İstanbul'da gerçekleşecek en yeni halka arzları, talep toplama tarihlerini ve şirket analizlerini tek noktadan takip edin.
                         </p>
                     </div>
 
                     <div className="relative w-full lg:w-80 group/search">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-focus-within/search:text-primary transition-colors" />
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within/search:text-primary transition-colors" />
                         <Input
                             placeholder="Şirket veya Kod ara..."
-                            className="h-14 pl-12 bg-slate-900/50 border-slate-800 text-white rounded-2xl focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-slate-600 font-medium"
+                            className="h-14 pl-12 bg-background/50 dark:bg-slate-900/50 border-input dark:border-slate-800 text-foreground dark:text-white rounded-2xl focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted-foreground/60 font-medium"
                             value={searchTerm}
                             onChange={(e) => handleSearchChange(e.target.value)}
                         />
@@ -126,33 +126,33 @@ export default function IpoPage() {
 
             <Tabs defaultValue="approved" className="w-full">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8">
-                    <TabsList className="p-1.5 bg-slate-900 border border-slate-800 rounded-2xl h-14 w-full md:w-auto grid grid-cols-2 md:inline-flex shadow-inner">
-                        <TabsTrigger value="approved" className="rounded-xl data-[state=active]:bg-slate-800 data-[state=active]:text-white data-[state=active]:shadow-lg h-11 px-8 text-xs font-black uppercase tracking-widest transition-all gap-3">
+                    <TabsList className="p-1.5 bg-muted dark:bg-slate-900 border border-border dark:border-slate-800 rounded-2xl h-14 w-full md:w-auto grid grid-cols-2 md:inline-flex shadow-inner">
+                        <TabsTrigger value="approved" className="rounded-xl data-[state=active]:bg-background dark:data-[state=active]:bg-slate-800 data-[state=active]:text-foreground dark:data-[state=active]:text-white data-[state=active]:shadow-lg h-11 px-8 text-[10px] font-black uppercase tracking-widest transition-all gap-3 border border-transparent data-[state=active]:border-border/50">
                             Onaylı Listesi
-                            <Badge variant="secondary" className="bg-primary/10 text-primary group-data-[state=active]:bg-primary group-data-[state=active]:text-white border-0">{approvedIpos.length}</Badge>
+                            <Badge variant="secondary" className="bg-primary/10 text-primary group-data-[state=active]:bg-primary group-data-[state=active]:text-primary-foreground border-0">{approvedIpos.length}</Badge>
                         </TabsTrigger>
-                        <TabsTrigger value="drafts" className="rounded-xl data-[state=active]:bg-slate-800 data-[state=active]:text-white data-[state=active]:shadow-lg h-11 px-8 text-xs font-black uppercase tracking-widest transition-all gap-3">
+                        <TabsTrigger value="drafts" className="rounded-xl data-[state=active]:bg-background dark:data-[state=active]:bg-slate-800 data-[state=active]:text-foreground dark:data-[state=active]:text-white data-[state=active]:shadow-lg h-11 px-8 text-[10px] font-black uppercase tracking-widest transition-all gap-3 border border-transparent data-[state=active]:border-border/50">
                             Taslak Listesi
                             <Badge variant="secondary" className="bg-amber-500/10 text-amber-500 border-0">{draftIpos.length}</Badge>
                         </TabsTrigger>
                     </TabsList>
 
                     {!searchTerm && (
-                        <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-slate-900/40 border border-slate-800 text-slate-500 text-[10px] font-black uppercase tracking-widest">
+                        <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-muted/40 dark:bg-slate-900/40 border border-border dark:border-slate-800 text-muted-foreground text-[10px] font-black uppercase tracking-widest">
                             <Clock className="w-3.5 h-3.5" />
-                            Son Güncelleme: {new Date().toLocaleDateString('tr-TR')}
+                            GÜNCELLEME: {new Date().toLocaleDateString('tr-TR')}
                         </div>
                     )}
                 </div>
 
                 <TabsContent value="approved" className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    {/* Featured Section - Modernized Grid */}
+                    {/* Featured Section */}
                     {!searchTerm && newIpos.length > 0 && (
                         <div className="space-y-6">
                             <div className="flex items-center justify-between px-2">
                                 <div className="flex items-center gap-3">
                                     <div className="w-1 h-8 bg-primary rounded-full shadow-[0_0_12px_rgba(var(--primary-rgb),0.5)]"></div>
-                                    <h2 className="text-xl font-black text-white italic tracking-tight">Talep Toplayanlar</h2>
+                                    <h2 className="text-xl font-black text-foreground italic tracking-tight uppercase tracking-widest">Talep Toplayanlar</h2>
                                 </div>
                                 <div className="hidden md:flex items-center gap-2 text-primary font-black text-[10px] uppercase tracking-tighter">
                                     <Zap className="w-3 h-3 fill-primary" />
@@ -163,13 +163,13 @@ export default function IpoPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                 {newIpos.map((ipo, index) => (
                                     <Link key={index} href={`/market/ipo/${ipo.code}`} className="group block">
-                                        <Card className="relative h-full overflow-hidden border-slate-800 bg-slate-950/40 backdrop-blur-sm hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 rounded-[2rem] p-6 lg:p-7 flex flex-col gap-6">
-                                            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-20 transition-opacity">
+                                        <Card className="relative h-full overflow-hidden border-border dark:border-slate-800 bg-card/60 dark:bg-slate-950/40 backdrop-blur-sm hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 rounded-[2rem] p-6 lg:p-7 flex flex-col gap-6">
+                                            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                                                 <Building2 className="w-16 h-16 text-primary" />
                                             </div>
 
                                             <div className="flex justify-between items-start relative z-10">
-                                                <div className="w-14 h-14 rounded-2xl bg-white p-1 border border-slate-800 shrink-0 overflow-hidden flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-500">
+                                                <div className="w-14 h-14 rounded-2xl bg-white p-1 border border-border dark:border-slate-800 shrink-0 overflow-hidden flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-500">
                                                     {ipo.imageUrl ? (
                                                         <img src={ipo.imageUrl} alt={ipo.code} className="w-full h-full object-contain" />
                                                     ) : (
@@ -188,22 +188,22 @@ export default function IpoPage() {
                                             </div>
 
                                             <div className="space-y-2 relative z-10">
-                                                <h3 className="font-black text-xl text-white tracking-tight leading-tight group-hover:text-primary transition-colors">{ipo.company}</h3>
-                                                <div className="flex items-center gap-3 text-slate-500 font-black text-[10px] uppercase tracking-widest">
+                                                <h3 className="font-black text-xl text-foreground dark:text-white tracking-tight leading-tight group-hover:text-primary transition-colors">{ipo.company}</h3>
+                                                <div className="flex items-center gap-3 text-muted-foreground font-black text-[10px] uppercase tracking-widest">
                                                     <span>{ipo.code}</span>
-                                                    <span className="w-1 h-1 rounded-full bg-slate-800"></span>
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-border"></span>
                                                     <span>{ipo.market}</span>
                                                 </div>
                                             </div>
 
                                             <div className="flex items-center gap-3 pt-2 mt-auto relative z-10">
-                                                <div className="flex-1 bg-slate-900/50 rounded-[1.25rem] p-3 border border-slate-800/50 group-hover:border-primary/20 transition-colors">
-                                                    <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest block mb-0.5">Fiyat</span>
-                                                    <span className="text-lg font-black text-white italic">{ipo.price}</span>
+                                                <div className="flex-1 bg-muted/50 dark:bg-slate-900/50 rounded-[1.25rem] p-3 border border-border/50 dark:border-slate-800/50 group-hover:border-primary/20 transition-colors">
+                                                    <span className="text-[10px] text-muted-foreground font-black uppercase tracking-widest block mb-0.5">Fiyat</span>
+                                                    <span className="text-lg font-black text-foreground dark:text-white italic">{ipo.price}</span>
                                                 </div>
-                                                <div className="flex-1 bg-slate-900/50 rounded-[1.25rem] p-3 border border-slate-800/50 group-hover:border-primary/20 transition-colors">
-                                                    <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest block mb-0.5">Tarih</span>
-                                                    <span className="text-lg font-black text-white italic">{ipo.date}</span>
+                                                <div className="flex-1 bg-muted/50 dark:bg-slate-900/50 rounded-[1.25rem] p-3 border border-border/50 dark:border-slate-800/50 group-hover:border-primary/20 transition-colors">
+                                                    <span className="text-[10px] text-muted-foreground font-black uppercase tracking-widest block mb-0.5">Tarih</span>
+                                                    <span className="text-lg font-black text-foreground dark:text-white italic">{ipo.date}</span>
                                                 </div>
                                             </div>
 
@@ -217,15 +217,15 @@ export default function IpoPage() {
                         </div>
                     )}
 
-                    {/* Main Approved Table - Polished UI */}
+                    {/* Main Approved Table */}
                     <div className="space-y-6">
                         {!searchTerm && newIpos.length > 0 && (
                             <div className="flex items-center gap-3 px-2">
-                                <ListFilter className="w-5 h-5 text-slate-500" />
-                                <h2 className="text-lg font-black text-white italic tracking-tight">Tüm Halka Arzlar</h2>
+                                <ListFilter className="w-5 h-5 text-muted-foreground" />
+                                <h2 className="text-lg font-black text-foreground italic tracking-tight uppercase tracking-widest">Tüm Halka Arzlar</h2>
                             </div>
                         )}
-                        <div className="bg-slate-950/40 border border-slate-800 rounded-[2rem] overflow-hidden shadow-xl">
+                        <div className="bg-card/40 dark:bg-slate-950/40 border border-border dark:border-slate-800 rounded-[2rem] overflow-hidden shadow-xl">
                             <IpoTable
                                 ipos={paginatedApproved}
                                 totalItems={approvedIpos.length}
@@ -238,14 +238,14 @@ export default function IpoPage() {
                 </TabsContent>
 
                 <TabsContent value="drafts" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <div className="flex flex-col md:flex-row items-center gap-4 p-6 bg-slate-900/40 border border-amber-500/20 rounded-[2rem] text-amber-500 text-sm font-medium">
+                    <div className="flex flex-col md:flex-row items-center gap-4 p-6 bg-muted/30 border border-amber-500/20 rounded-[2rem] text-amber-600 dark:text-amber-500 text-sm font-medium">
                         <div className="w-12 h-12 rounded-2xl bg-amber-500/10 flex items-center justify-center shrink-0">
                             <Info className="w-6 h-6" />
                         </div>
                         <p className="leading-relaxed">Aşağıdaki şirketler SPK onay aşamasındadır. Tarih ve fiyat bilgileri resmi onay sonrası kesinleşmektedir.</p>
                     </div>
 
-                    <div className="bg-slate-950/40 border border-slate-800 rounded-[2rem] overflow-hidden shadow-xl">
+                    <div className="bg-card/40 dark:bg-slate-950/40 border border-border dark:border-slate-800 rounded-[2rem] overflow-hidden shadow-xl">
                         <IpoTable
                             ipos={paginatedDrafts}
                             isDraft
@@ -281,11 +281,11 @@ function IpoTable({
     if (totalItems === 0) {
         return (
             <div className="flex flex-col items-center justify-center py-24 text-center">
-                <div className="w-20 h-20 rounded-full bg-slate-900 flex items-center justify-center mb-6 border border-slate-800">
-                    <Building2 className="w-10 h-10 text-slate-700" />
+                <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-6 border border-border">
+                    <Building2 className="w-10 h-10 text-muted-foreground/30" />
                 </div>
-                <h3 className="text-xl font-black text-white italic mb-2">Sonuç Bulunamadı</h3>
-                <p className="text-slate-500 max-w-xs mx-auto text-sm font-medium">Bu kategoride gösterilecek herhangi bir kayıt bulunmuyor.</p>
+                <h3 className="text-xl font-black text-foreground italic mb-2">Sonuç Bulunamadı</h3>
+                <p className="text-muted-foreground max-w-xs mx-auto text-sm font-medium">Bu kategoride gösterilecek herhangi bir kayıt bulunmuyor.</p>
             </div>
         );
     }
@@ -294,22 +294,22 @@ function IpoTable({
         <div className="w-full">
             <div className="overflow-x-auto">
                 <Table>
-                    <TableHeader className="bg-slate-900/50">
-                        <TableRow className="border-slate-800 hover:bg-transparent h-14">
-                            <TableHead className="w-[380px] text-xs font-black uppercase tracking-widest text-slate-500 pl-8">Şirket Adı</TableHead>
-                            <TableHead className="text-xs font-black uppercase tracking-widest text-slate-500">{isDraft ? 'Durum' : 'Sembol'}</TableHead>
-                            <TableHead className="text-xs font-black uppercase tracking-widest text-slate-500">Birim Fiyat</TableHead>
-                            <TableHead className="text-xs font-black uppercase tracking-widest text-slate-500">Dağıtım Tarihi</TableHead>
-                            <TableHead className="hidden md:table-cell text-xs font-black uppercase tracking-widest text-slate-500">Miktar & Yapı</TableHead>
-                            <TableHead className="text-right pr-8 text-xs font-black uppercase tracking-widest text-slate-500">Detay</TableHead>
+                    <TableHeader className="bg-muted/50">
+                        <TableRow className="border-border dark:border-slate-800 hover:bg-transparent h-14">
+                            <TableHead className="w-[380px] text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground pl-8">Şirket Adı</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{isDraft ? 'Durum' : 'Sembol'}</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Birim Fiyat</TableHead>
+                            <TableHead className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Tarih</TableHead>
+                            <TableHead className="hidden md:table-cell text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Dağıtım</TableHead>
+                            <TableHead className="text-right pr-8 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Detay</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {ipos.map((ipo, index) => (
-                            <TableRow key={index} className="group border-slate-800 hover:bg-slate-900/40 transition-colors h-20">
+                            <TableRow key={index} className="group border-border dark:border-slate-800 hover:bg-muted/30 transition-colors h-20">
                                 <TableCell className="pl-8">
                                     <Link href={`/market/ipo/${ipo.code}`} className="flex items-center gap-4">
-                                        <div className="w-11 h-11 rounded-xl bg-white p-1 border border-slate-800 shrink-0 overflow-hidden flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform duration-300">
+                                        <div className="w-11 h-11 rounded-xl bg-white p-1 border border-border dark:border-slate-800 shrink-0 overflow-hidden flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform duration-300">
                                             {ipo.imageUrl ? (
                                                 <img src={ipo.imageUrl} alt={ipo.company} className="w-full h-full object-contain" />
                                             ) : (
@@ -317,12 +317,12 @@ function IpoTable({
                                             )}
                                         </div>
                                         <div className="flex flex-col min-w-0">
-                                            <span className="text-white font-black text-sm group-hover:text-primary transition-colors truncate italic tracking-tight">{ipo.company}</span>
+                                            <span className="text-foreground font-black text-sm group-hover:text-primary transition-colors truncate italic tracking-tight">{ipo.company}</span>
                                             <div className="flex items-center gap-2 mt-1">
                                                 {ipo.isNew && !isDraft && <Badge variant="secondary" className="text-[8px] h-3.5 px-1 bg-primary/10 text-primary border-primary/20">YENİ</Badge>}
                                                 {ipo.statusText && !isDraft && (
-                                                    <span className="flex items-center gap-1.5 text-[8px] font-black text-blue-400 uppercase tracking-widest">
-                                                        <div className="w-1 h-1 rounded-full bg-blue-400 animate-pulse"></div>
+                                                    <span className="flex items-center gap-1.5 text-[8px] font-black text-blue-500 dark:text-blue-400 uppercase tracking-widest">
+                                                        <div className="w-1 h-1 rounded-full bg-blue-500 dark:bg-blue-400 animate-pulse"></div>
                                                         {ipo.statusText}
                                                     </span>
                                                 )}
@@ -332,29 +332,29 @@ function IpoTable({
                                 </TableCell>
                                 <TableCell>
                                     {isDraft ? (
-                                        <Badge variant="outline" className="text-[10px] font-black tracking-widest border-amber-500/20 text-amber-500 bg-amber-500/5">TASLAK</Badge>
+                                        <Badge variant="outline" className="text-[9px] font-black tracking-widest border-amber-500/20 text-amber-600 bg-amber-500/5 uppercase">Taslak</Badge>
                                     ) : (
-                                        <span className="font-mono text-xs font-bold text-slate-400">{ipo.code}</span>
+                                        <span className="font-mono text-xs font-bold text-muted-foreground uppercase">{ipo.code}</span>
                                     )}
                                 </TableCell>
                                 <TableCell>
-                                    <span className="text-sm font-black text-white italic">{ipo.price || '-'}</span>
+                                    <span className="text-sm font-black text-foreground italic">{ipo.price || '-'}</span>
                                 </TableCell>
                                 <TableCell>
                                     {isDraft ? (
-                                        <span className="text-slate-600 italic text-[10px] font-bold uppercase tracking-widest">Bekleniyor</span>
+                                        <span className="text-muted-foreground italic text-[10px] font-bold uppercase tracking-widest">Bekleniyor</span>
                                     ) : (
-                                        <span className="text-sm font-medium text-slate-400">{ipo.date}</span>
+                                        <span className="text-sm font-medium text-muted-foreground">{ipo.date}</span>
                                     )}
                                 </TableCell>
                                 <TableCell className="hidden md:table-cell">
                                     <div className="flex flex-col gap-1">
-                                        <span className="text-xs font-black text-slate-300 tracking-tight">{ipo.lotCount}</span>
-                                        <span className="text-[9px] font-bold text-slate-600 uppercase tracking-widest">{ipo.distributionMethod}</span>
+                                        <span className="text-xs font-black text-foreground/80 tracking-tight">{ipo.lotCount}</span>
+                                        <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest">{ipo.distributionMethod}</span>
                                     </div>
                                 </TableCell>
                                 <TableCell className="text-right pr-8">
-                                    <Link href={`/market/ipo/${ipo.code}`} className="inline-flex w-10 h-10 items-center justify-center rounded-xl bg-slate-900 border border-slate-800 text-slate-500 group-hover:text-primary group-hover:border-primary/30 group-hover:bg-slate-800 transition-all active:scale-95 shadow-lg">
+                                    <Link href={`/market/ipo/${ipo.code}`} className="inline-flex w-10 h-10 items-center justify-center rounded-xl bg-card border border-border text-muted-foreground group-hover:text-primary group-hover:border-primary/30 group-hover:bg-muted transition-all active:scale-95 shadow-lg">
                                         <ArrowRight className="w-4 h-4" />
                                     </Link>
                                 </TableCell>
@@ -364,26 +364,26 @@ function IpoTable({
                 </Table>
             </div>
 
-            {/* Pagination Controls - Refined */}
+            {/* Pagination Controls */}
             {totalPages > 1 && (
-                <div className="flex flex-col md:flex-row items-center justify-between gap-6 px-8 py-8 border-t border-slate-800 bg-slate-900/20">
-                    <div className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600 order-2 md:order-1">
-                        Sayfa <span className="text-slate-300">{currentPage}</span> / {totalPages}
+                <div className="flex flex-col md:flex-row items-center justify-between gap-6 px-8 py-8 border-t border-border dark:border-slate-800 bg-muted/20 transition-colors">
+                    <div className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground order-2 md:order-1">
+                        SAYFA <span className="text-foreground">{currentPage}</span> / {totalPages}
                         <span className="mx-3 opacity-20">|</span>
-                        Toplam <span className="text-slate-300">{totalItems}</span> Kayıt
+                        TOPLAM <span className="text-foreground">{totalItems}</span> KAYIT
                     </div>
                     <div className="flex items-center gap-2 order-1 md:order-2">
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="h-10 px-4 rounded-xl text-xs font-black uppercase tracking-widest text-slate-500 hover:text-white hover:bg-slate-800 transition-all border border-transparent disabled:opacity-30"
+                            className="h-10 px-4 rounded-xl text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-muted transition-all border border-transparent disabled:opacity-30"
                             onClick={() => onPageChange(Math.max(1, currentPage - 1))}
                             disabled={currentPage === 1}
                         >
                             <ChevronLeft className="h-4 w-4 mr-2" />
                             Geri
                         </Button>
-                        <div className="hidden sm:flex items-center gap-2 bg-slate-950 p-1 rounded-xl border border-slate-800">
+                        <div className="hidden sm:flex items-center gap-2 bg-background dark:bg-slate-950 p-1 rounded-xl border border-border dark:border-slate-800 shadow-sm transition-colors">
                             {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
                                 if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
                                     return (
@@ -394,8 +394,8 @@ function IpoTable({
                                             className={cn(
                                                 "h-8 w-8 rounded-lg text-xs font-black transition-all",
                                                 currentPage === page
-                                                    ? 'bg-primary text-white shadow-lg shadow-primary/20 hover:bg-primary'
-                                                    : 'text-slate-600 hover:text-white hover:bg-slate-800'
+                                                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary'
+                                                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                                             )}
                                             onClick={() => onPageChange(page)}
                                         >
@@ -403,7 +403,7 @@ function IpoTable({
                                         </Button>
                                     );
                                 } else if (page === currentPage - 2 || page === currentPage + 2) {
-                                    return <span key={page} className="px-1 text-slate-700 text-xs font-black">...</span>;
+                                    return <span key={page} className="px-1 text-muted-foreground/30 text-xs font-black">...</span>;
                                 }
                                 return null;
                             })}
@@ -411,7 +411,7 @@ function IpoTable({
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="h-10 px-4 rounded-xl text-xs font-black uppercase tracking-widest text-slate-500 hover:text-white hover:bg-slate-800 transition-all border border-transparent disabled:opacity-30"
+                            className="h-10 px-4 rounded-xl text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-foreground hover:bg-muted transition-all border border-transparent disabled:opacity-30"
                             onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
                             disabled={currentPage === totalPages}
                         >
