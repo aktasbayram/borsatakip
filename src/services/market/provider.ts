@@ -27,6 +27,7 @@ export interface SymbolSearchResult {
 
 export interface MarketDataProvider {
     getQuote(symbol: string): Promise<MarketQuote>;
+    getQuotes(symbols: string[]): Promise<MarketQuote[]>;
     getCandles(symbol: string, range: '1D' | '1W' | '1M' | '3M' | '1Y', interval?: string): Promise<MarketCandle[]>;
     search(query: string): Promise<SymbolSearchResult[]>;
 }

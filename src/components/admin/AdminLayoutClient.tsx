@@ -259,7 +259,7 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
                             </svg>
                         }
                     >
-                        API & Sistem Ayarları
+                        Api ve Takip Kodları
                     </NavLink>
 
                     <div className="pt-4 mt-auto">

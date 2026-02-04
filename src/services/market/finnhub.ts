@@ -75,6 +75,12 @@ export class FinnhubProvider implements MarketDataProvider {
         }
     }
 
+    async getQuotes(symbols: string[]): Promise<MarketQuote[]> {
+        // Finnhub doesn't strictly support bulk quotes in free tier easily, so we parallelize
+        const promises = symbols.map(s => this.getQuote(s));
+        return Promise.all(promises);
+    }
+
     async getCandles(symbol: string, range: '1D' | '1W' | '1M' | '3M' | '1Y', interval?: string): Promise<MarketCandle[]> {
         if (await isMock()) {
             const mockCandles: MarketCandle[] = [];

@@ -116,6 +116,59 @@ export class YahooProvider implements MarketDataProvider {
         }
     }
 
+    async getQuotes(symbols: string[]): Promise<MarketQuote[]> {
+        if (symbols.length === 0) return [];
+
+        try {
+            // Yahoo Finance2 supports bulk quotes
+            const yahooFinance = require('yahoo-finance2').default;
+            const yf = new yahooFinance();
+
+            // Map all symbols to Yahoo format
+            // We need to keep track of original symbol mapping
+            const symbolMap = new Map<string, string>();
+            const yahooSymbols = symbols.map(s => {
+                let ys = s;
+                if (s === 'XU100') ys = 'XU100.IS';
+                else if (s === 'XU030') ys = 'XU030.IS';
+                else if (s === 'USDTRY') ys = 'USDTRY=X';
+                else if (s === 'EURTRY') ys = 'EURTRY=X';
+                else if (!ys.includes('=') && !ys.includes('.') && !ys.includes('-')) ys += '.IS';
+
+                symbolMap.set(ys, s); // Map Yahoo Symbol -> App Symbol
+                return ys;
+            });
+
+            // Fetch in bulk
+            const results = await yf.quote(yahooSymbols);
+
+            // Map results back to MarketQuote
+            if (!Array.isArray(results)) return [];
+
+            return results.map((quote: any) => {
+                // Try to find the original symbol
+                const yahooSym = quote.symbol;
+                const originalSymbol = symbolMap.get(yahooSym) || yahooSym.replace('.IS', '');
+
+                return {
+                    symbol: originalSymbol,
+                    price: quote.regularMarketPrice || 0,
+                    change: quote.regularMarketChange || 0,
+                    changePercent: quote.regularMarketChangePercent || 0,
+                    currency: quote.currency || 'TRY',
+                    market: (quote.currency === 'TRY' || quote.exchange === 'IST') ? 'BIST' : 'US',
+                    timestamp: Date.now(),
+                    name: quote.longName || quote.shortName || quote.displayName
+                };
+            });
+
+        } catch (error: any) {
+            console.error('Yahoo Bulk Quote Error:', error.message);
+            // Fallback to individual fetches if bulk fails
+            return Promise.all(symbols.map(s => this.getQuote(s)));
+        }
+    }
+
     // Backup method using direct Yahoo API (lightweight)
     private async getQuoteFromYahooDirect(symbol: string): Promise<MarketQuote> {
         // Map to Yahoo Symbol

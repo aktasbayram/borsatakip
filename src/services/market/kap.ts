@@ -58,34 +58,48 @@ export class KAPService {
             const { url, apiKey, apiSecret } = await getKapConfig();
             if (!apiKey || !apiSecret) return null;
 
+            // MKK Gateway usually has /generateToken at the root of /api
+            const tokenUrl = url.replace('/vyk', '') + '/generateToken';
             const auth = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64');
-            const response = await axios.get(`${url}/generateToken`, {
+            const response = await axios.get(tokenUrl, {
                 headers: { Authorization: `Basic ${auth}` },
                 timeout: 5000
             });
 
+            console.log('KAP GenerateToken Response:', response.data);
             const token = response.data?.token || response.data;
-            if (token) {
+            if (token && typeof token === 'string') {
                 // Tokens usually valid for 1 hour, let's cache for 50 mins
                 apiToken = { token, expires: now + (50 * 60 * 1000) };
                 return token;
             }
             return null;
-        } catch (error) {
-            console.error('KAP Token Generation Failed:', error);
+        } catch (error: any) {
+            console.error('KAP Token Generation Failed:', error.message, error.response?.data);
             return null;
         }
     }
 
     private static async getAuthHeader() {
+        const { apiKey, apiSecret, username, password } = await getKapConfig();
+
+        // Priority 1: MKK API Key & Secret (Modern Basic Auth)
+        if (apiKey && apiSecret) {
+            const auth = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64');
+            return { Authorization: `Basic ${auth}` };
+        }
+
+        // Priority 2: Token-based (if available/working)
         const token = await this.getAccessToken();
         if (token) return { Authorization: `Bearer ${token}` };
 
-        // Legacy Fallback to Basic Auth if Token fails
-        const { username, password } = await getKapConfig();
-        if (!username || !password) return {};
-        const auth = Buffer.from(`${username}:${password}`).toString('base64');
-        return { Authorization: `Basic ${auth}` };
+        // Priority 3: Legacy Fallback (Email/Password)
+        if (username && password) {
+            const auth = Buffer.from(`${username}:${password}`).toString('base64');
+            return { Authorization: `Basic ${auth}` };
+        }
+
+        return {};
     }
 
     public static async getMembers(): Promise<Record<string, string>> {
@@ -100,7 +114,9 @@ export class KAPService {
                 timeout: 5000
             });
 
+            console.log('KAP Members Response:', response.data);
             let members: any[] = [];
+            // ... (rest unchanged)
             const data = response.data;
             if (Array.isArray(data)) members = data;
             else if (data?.members) members = data.members;
@@ -134,6 +150,7 @@ export class KAPService {
                 timeout: 3000
             });
 
+            console.log('KAP LastIndex Response:', response.data);
             const idxStr = getValue(response.data?.lastDisclosureIndex || response.data);
             const idx = parseInt(idxStr);
             return isNaN(idx) ? null : idx;
@@ -151,11 +168,16 @@ export class KAPService {
             const lastIndex = await this.getLastDisclosureIndex();
             if (!lastIndex) return [];
 
-            const queryIndex = Math.max(0, lastIndex - 500); // Look back 500 records
+            // The API returns notifications starting FROM the provided index.
+            // To get the latest N items, we query starting from lastIndex - N.
+            const queryIndex = Math.max(0, lastIndex - limit);
             const { url } = await getKapConfig();
 
             const response = await axios.get(`${url}/disclosures`, {
-                params: { disclosureIndex: queryIndex },
+                params: {
+                    disclosureIndex: queryIndex,
+                    count: limit // Testing if count is supported, otherwise we get default 50
+                },
                 headers: await this.getAuthHeader(),
                 timeout: 8000
             });
@@ -198,13 +220,16 @@ export class KAPService {
             const lastIndex = await this.getLastDisclosureIndex();
             if (!lastIndex) return [];
 
-            const queryIndex = Math.max(0, lastIndex - 2000);
+            // For specific companies, we look back further (e.g. 5000 records)
+            // to find their recent notifications, then return the latest ones found.
+            const queryIndex = Math.max(0, lastIndex - 5000);
             const { url } = await getKapConfig();
 
             const response = await axios.get(`${url}/disclosures`, {
                 params: {
                     disclosureIndex: queryIndex,
                     companyId: memberId,
+                    count: 100
                 },
                 headers: await this.getAuthHeader(),
                 timeout: 5000

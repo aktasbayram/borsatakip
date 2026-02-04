@@ -14,6 +14,7 @@ export function getMarketProvider(market: 'BIST' | 'US'): MarketDataProvider {
 
 export const MarketService = {
     getQuote: (symbol: string, market: 'BIST' | 'US') => getMarketProvider(market).getQuote(symbol),
+    getQuotes: (symbols: string[], market: 'BIST' | 'US' = 'BIST') => getMarketProvider(market).getQuotes(symbols),
     getCandles: (symbol: string, market: 'BIST' | 'US', range: any, interval?: string) => getMarketProvider(market).getCandles(symbol, range, interval),
     search: async (query: string, market: 'BIST' | 'US') => getMarketProvider(market).search(query)
 };
