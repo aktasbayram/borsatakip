@@ -92,31 +92,31 @@ export default function IpoPage() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto space-y-8 pb-20 px-4 md:px-0">
-            {/* Header Section - More Compact Glassmorphism */}
-            <div className="relative overflow-hidden rounded-[2rem] bg-card dark:bg-slate-950 p-6 lg:p-10 border border-border dark:border-slate-800 shadow-2xl group transition-colors duration-300">
-                <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[300px] h-[300px] bg-primary/5 rounded-full blur-[80px] pointer-events-none group-hover:bg-primary/10 transition-colors duration-1000"></div>
-                <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-[300px] h-[300px] bg-emerald-500/5 rounded-full blur-[80px] pointer-events-none group-hover:bg-emerald-500/10 transition-colors duration-1000"></div>
+        <div className="max-w-7xl mx-auto space-y-6 pb-20 px-4 md:px-0">
+            {/* Header Section - Sleek & Compact Glassmorphism */}
+            <div className="relative overflow-hidden rounded-[1.75rem] bg-card dark:bg-slate-950 p-5 lg:p-7 border border-border dark:border-slate-800 shadow-2xl group transition-colors duration-300">
+                <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[250px] h-[250px] bg-primary/5 rounded-full blur-[70px] pointer-events-none group-hover:bg-primary/10 transition-colors duration-1000"></div>
+                <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-[250px] h-[250px] bg-emerald-500/5 rounded-full blur-[70px] pointer-events-none group-hover:bg-emerald-500/10 transition-colors duration-1000"></div>
 
-                <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                    <div className="space-y-3 max-w-2xl">
-                        <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[9px] font-black uppercase tracking-[0.2em] border border-primary/20">
-                            <Rocket className="w-3 h-3" />
+                <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div className="space-y-2.5 max-w-2xl">
+                        <div className="inline-flex items-center gap-2 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[8px] font-black uppercase tracking-[0.2em] border border-primary/20">
+                            <Rocket className="w-2.5 h-2.5" />
                             Yatırım Fırsatları
                         </div>
-                        <h1 className="text-3xl lg:text-4xl font-black tracking-tighter leading-none text-foreground dark:text-white italic">
+                        <h1 className="text-2xl lg:text-3xl font-black tracking-tighter leading-none text-foreground dark:text-white italic">
                             Halka Arz <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-400 pr-2">Takvimi</span>
                         </h1>
-                        <p className="text-muted-foreground dark:text-slate-400 text-xs md:text-sm font-medium leading-relaxed max-w-xl">
+                        <p className="text-muted-foreground dark:text-slate-400 text-[11px] md:text-xs font-medium leading-relaxed max-w-xl">
                             Borsa İstanbul'da gerçekleşecek en yeni halka arzları, talep toplama tarihlerini ve şirket analizlerini tek noktadan takip edin.
                         </p>
                     </div>
 
-                    <div className="relative w-full lg:w-72 group/search">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within/search:text-primary transition-colors" />
+                    <div className="relative w-full lg:w-64 group/search">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground group-focus-within/search:text-primary transition-colors" />
                         <Input
                             placeholder="Şirket veya Kod ara..."
-                            className="h-12 pl-12 bg-background/50 dark:bg-slate-900/50 border-input dark:border-slate-800 text-foreground dark:text-white rounded-xl focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted-foreground/60 font-medium text-sm"
+                            className="h-11 pl-11 bg-background/50 dark:bg-slate-900/50 border-input dark:border-slate-800 text-foreground dark:text-white rounded-lg focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted-foreground/60 font-medium text-xs"
                             value={searchTerm}
                             onChange={(e) => handleSearchChange(e.target.value)}
                         />
