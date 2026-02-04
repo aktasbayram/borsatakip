@@ -92,31 +92,31 @@ export default function IpoPage() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto space-y-10 pb-20 px-4 md:px-0">
-            {/* Header Section - Theme Aware Glassmorphism */}
-            <div className="relative overflow-hidden rounded-[2.5rem] bg-card dark:bg-slate-950 p-8 lg:p-12 border border-border dark:border-slate-800 shadow-2xl group transition-colors duration-300">
-                <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[100px] pointer-events-none group-hover:bg-primary/10 transition-colors duration-1000"></div>
-                <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[100px] pointer-events-none group-hover:bg-emerald-500/10 transition-colors duration-1000"></div>
+        <div className="max-w-7xl mx-auto space-y-8 pb-20 px-4 md:px-0">
+            {/* Header Section - More Compact Glassmorphism */}
+            <div className="relative overflow-hidden rounded-[2rem] bg-card dark:bg-slate-950 p-6 lg:p-10 border border-border dark:border-slate-800 shadow-2xl group transition-colors duration-300">
+                <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[300px] h-[300px] bg-primary/5 rounded-full blur-[80px] pointer-events-none group-hover:bg-primary/10 transition-colors duration-1000"></div>
+                <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-[300px] h-[300px] bg-emerald-500/5 rounded-full blur-[80px] pointer-events-none group-hover:bg-emerald-500/10 transition-colors duration-1000"></div>
 
-                <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-8">
-                    <div className="space-y-4 max-w-2xl">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em] border border-primary/20">
-                            <Rocket className="w-3.5 h-3.5" />
+                <div className="relative flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                    <div className="space-y-3 max-w-2xl">
+                        <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary text-[9px] font-black uppercase tracking-[0.2em] border border-primary/20">
+                            <Rocket className="w-3 h-3" />
                             Yatırım Fırsatları
                         </div>
-                        <h1 className="text-4xl lg:text-5xl font-black tracking-tighter leading-none text-foreground dark:text-white italic">
+                        <h1 className="text-3xl lg:text-4xl font-black tracking-tighter leading-none text-foreground dark:text-white italic">
                             Halka Arz <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-400 pr-2">Takvimi</span>
                         </h1>
-                        <p className="text-muted-foreground dark:text-slate-400 text-sm lg:text-base font-medium leading-relaxed max-w-xl">
+                        <p className="text-muted-foreground dark:text-slate-400 text-xs md:text-sm font-medium leading-relaxed max-w-xl">
                             Borsa İstanbul'da gerçekleşecek en yeni halka arzları, talep toplama tarihlerini ve şirket analizlerini tek noktadan takip edin.
                         </p>
                     </div>
 
-                    <div className="relative w-full lg:w-80 group/search">
+                    <div className="relative w-full lg:w-72 group/search">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within/search:text-primary transition-colors" />
                         <Input
                             placeholder="Şirket veya Kod ara..."
-                            className="h-14 pl-12 bg-background/50 dark:bg-slate-900/50 border-input dark:border-slate-800 text-foreground dark:text-white rounded-2xl focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted-foreground/60 font-medium"
+                            className="h-12 pl-12 bg-background/50 dark:bg-slate-900/50 border-input dark:border-slate-800 text-foreground dark:text-white rounded-xl focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted-foreground/60 font-medium text-sm"
                             value={searchTerm}
                             onChange={(e) => handleSearchChange(e.target.value)}
                         />
@@ -177,8 +177,8 @@ export default function IpoPage() {
                                                     )}
                                                 </div>
                                                 <div className="flex flex-col items-end gap-2">
-                                                    <Badge className="bg-emerald-500 text-white dark:bg-emerald-600 border-0 text-[10px] font-black tracking-widest px-3 h-7 uppercase shadow-[0_0_15px_rgba(16,185,129,0.4)] animate-pulse flex items-center gap-1.5">
-                                                        <Sparkles className="w-3 h-3 fill-current" />
+                                                    <Badge className="bg-emerald-500 text-white dark:bg-emerald-600 border-0 text-[9px] font-black tracking-widest px-2.5 h-6 uppercase shadow-[0_0_12px_rgba(16,185,129,0.4)] animate-pulse flex items-center gap-1.5">
+                                                        <Sparkles className="w-2.5 h-2.5 fill-current" />
                                                         Yenİ
                                                     </Badge>
                                                     {ipo.statusText && (
@@ -323,8 +323,8 @@ function IpoTable({
                                             <span className="text-foreground font-black text-sm group-hover:text-primary transition-colors truncate italic tracking-tight">{ipo.company}</span>
                                             <div className="flex items-center gap-2 mt-1">
                                                 {ipo.isNew && !isDraft && (
-                                                    <Badge variant="secondary" className="text-[9px] h-4.5 px-2 bg-emerald-500 text-white dark:bg-emerald-600 border-0 uppercase shadow-[0_0_10px_rgba(16,185,129,0.3)] animate-[bounce_2s_infinite] flex items-center gap-1">
-                                                        <Sparkles className="w-2.5 h-2.5 fill-current" />
+                                                    <Badge variant="secondary" className="text-[8px] h-4 px-1.5 bg-emerald-500 text-white dark:bg-emerald-600 border-0 uppercase shadow-[0_0_8px_rgba(16,185,129,0.3)] animate-[bounce_2s_infinite] flex items-center gap-1">
+                                                        <Sparkles className="w-2 h-2 fill-current" />
                                                         Yenİ
                                                     </Badge>
                                                 )}
