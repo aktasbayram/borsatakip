@@ -177,7 +177,7 @@ export default function IpoPage() {
                                                     )}
                                                 </div>
                                                 <div className="flex flex-col items-end gap-2">
-                                                    <Badge className="bg-primary/10 text-primary border-primary/20 text-[9px] font-black tracking-widest px-2.5 h-6">YENİ</Badge>
+                                                    <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[9px] font-black tracking-widest px-2.5 h-6 uppercase">Yenİ</Badge>
                                                     {ipo.statusText && (
                                                         <div className="h-6 px-3 rounded-full bg-blue-600 flex items-center gap-1.5 shadow-lg shadow-blue-500/20 animate-pulse">
                                                             <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping"></div>
@@ -319,7 +319,7 @@ function IpoTable({
                                         <div className="flex flex-col min-w-0">
                                             <span className="text-foreground font-black text-sm group-hover:text-primary transition-colors truncate italic tracking-tight">{ipo.company}</span>
                                             <div className="flex items-center gap-2 mt-1">
-                                                {ipo.isNew && !isDraft && <Badge variant="secondary" className="text-[8px] h-3.5 px-1 bg-primary/10 text-primary border-primary/20">YENİ</Badge>}
+                                                {ipo.isNew && !isDraft && <Badge variant="secondary" className="text-[8px] h-3.5 px-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 uppercase">Yenİ</Badge>}
                                                 {ipo.statusText && !isDraft && (
                                                     <span className="flex items-center gap-1.5 text-[8px] font-black text-blue-500 dark:text-blue-400 uppercase tracking-widest">
                                                         <div className="w-1 h-1 rounded-full bg-blue-500 dark:bg-blue-400 animate-pulse"></div>
