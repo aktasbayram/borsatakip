@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Calendar, Building2, Ticket, TrendingUp, Info, Search, ListFilter, Rocket, ChevronLeft, ChevronRight, Zap, ArrowRight, ShieldCheck } from "lucide-react";
+import { Loader2, Calendar, Building2, Ticket, TrendingUp, Info, Search, ListFilter, Rocket, ChevronLeft, ChevronRight, Zap, ArrowRight, ShieldCheck, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
