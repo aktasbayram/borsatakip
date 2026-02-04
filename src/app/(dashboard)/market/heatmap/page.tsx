@@ -1,5 +1,5 @@
 import { MarketHeatmap } from "@/components/dashboard/MarketHeatmap";
-import { Activity } from "lucide-react";
+import { Activity, Flame } from "lucide-react";
 
 export const metadata = {
     title: 'Piyasa Isı Haritası | BorsaTakip',
@@ -20,8 +20,15 @@ export default function HeatmapPage() {
                             <Activity className="w-3.5 h-3.5" />
                             Piyasa Analiz Aracı
                         </div>
-                        <h1 className="text-3xl lg:text-5xl font-black tracking-tighter leading-none text-foreground dark:text-white italic">
+                        <h1 className="text-3xl lg:text-5xl font-black tracking-tighter leading-none text-foreground dark:text-white italic flex items-center gap-3">
                             Piyasa <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-violet-500 pr-2">Isı Haritası</span>
+                            <div className="relative flex items-center justify-center translate-y-1">
+                                {/* Layered "Burning" Effect */}
+                                <Flame className="w-8 h-8 lg:w-11 lg:h-11 text-orange-600 fill-orange-600/40 blur-[1px] animate-pulse absolute" />
+                                <Flame className="w-8 h-8 lg:w-10 lg:h-10 text-orange-400 fill-orange-400/20 animate-bounce transition-all duration-1000" />
+                                <Flame className="w-6 h-6 lg:w-7 lg:h-7 text-yellow-400 fill-yellow-200/50 absolute bottom-0 animate-ping opacity-30" />
+                                <div className="absolute inset-0 bg-orange-500 blur-3xl opacity-20 animate-pulse"></div>
+                            </div>
                         </h1>
                         <p className="text-muted-foreground dark:text-slate-400 text-xs md:text-sm font-medium leading-relaxed max-w-2xl">
                             Borsa İstanbul'un nabzını görselleştirin. Hisselerin performansını,
@@ -30,11 +37,13 @@ export default function HeatmapPage() {
                         </p>
                     </div>
 
-                    <div className="hidden lg:flex bg-muted/50 dark:bg-slate-900/50 backdrop-blur-md rounded-2xl p-5 border border-border/50 dark:border-slate-800/50 flex-col items-end gap-1.5 shadow-inner">
-                        <span className="text-[10px] uppercase font-black text-muted-foreground dark:text-slate-500 tracking-[0.15em] leading-none">Canlı Takip</span>
-                        <div className="flex items-center gap-3">
-                            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.7)] animate-pulse"></div>
-                            <span className="text-2xl font-black text-foreground dark:text-white italic tracking-tighter">BIST 100 / 30</span>
+                    <div className="hidden lg:flex flex-col gap-4">
+                        <div className="bg-muted/50 dark:bg-slate-900/50 backdrop-blur-md rounded-2xl p-4 border border-border/50 dark:border-slate-800/50 flex flex-col items-end gap-1.5 shadow-inner">
+                            <span className="text-[10px] uppercase font-black text-muted-foreground dark:text-slate-500 tracking-[0.15em] leading-none">Canlı Takip</span>
+                            <div className="flex items-center gap-3">
+                                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.7)] animate-pulse"></div>
+                                <span className="text-2xl font-black text-foreground dark:text-white italic tracking-tighter">BIST 100 / 30</span>
+                            </div>
                         </div>
                     </div>
                 </div>

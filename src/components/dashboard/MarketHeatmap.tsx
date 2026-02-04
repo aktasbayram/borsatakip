@@ -57,7 +57,7 @@ const CustomizedContent = (props: any) => {
                     strokeWidth: depth === 0 ? 0 : 1,
                     transition: 'all 0.5s ease-in-out'
                 }}
-                className={depth === 2 ? "hover:opacity-80 transition-opacity cursor-pointer" : ""}
+                className={depth === 2 ? "cursor-pointer transition-all duration-200 hover:brightness-110" : ""}
             />
             {depth === 1 && height > 20 && (
                 <text
@@ -66,7 +66,8 @@ const CustomizedContent = (props: any) => {
                     fill="currentColor"
                     fontSize={10}
                     fontWeight="900"
-                    className="opacity-20 uppercase tracking-widest pointer-events-none"
+                    style={{ fontFamily: 'Arial, sans-serif', opacity: 0.2 }}
+                    className="uppercase tracking-widest pointer-events-none"
                 >
                     {name}
                 </text>
@@ -77,9 +78,8 @@ const CustomizedContent = (props: any) => {
                     y={y + height / 2 - (showPercent ? 6 : 0)}
                     textAnchor="middle"
                     fill="#ffffff"
-                    fontSize={Math.max(11, Math.min(width / 5, 14))}
-                    fontWeight="700"
-                    className="select-none pointer-events-none"
+                    fontSize={Math.max(10, Math.min(width / 5, 13))}
+                    style={{ fontFamily: 'Arial, sans-serif', fontWeight: 'bold' }}
                 >
                     {name}
                 </text>
@@ -90,9 +90,8 @@ const CustomizedContent = (props: any) => {
                     y={y + height / 2 + 10}
                     textAnchor="middle"
                     fill="#ffffff"
-                    fontSize={Math.max(9, Math.min(width / 7, 11))}
-                    fontWeight="600"
-                    className="select-none pointer-events-none opacity-90"
+                    fontSize={Math.max(9, Math.min(width / 7, 10))}
+                    style={{ fontFamily: 'Arial, sans-serif' }}
                 >
                     %{change?.toFixed(2)}
                 </text>
@@ -107,29 +106,27 @@ const CustomTooltip = ({ active, payload }: any) => {
         const isPositive = data.change >= 0;
 
         return (
-            <div className="bg-background/80 backdrop-blur-xl border border-border/50 p-4 rounded-2xl shadow-2xl min-w-[160px] animate-in fade-in zoom-in duration-200">
-                <div className="flex items-center justify-between mb-2">
-                    <span className="text-lg font-black tracking-tighter">{data.name}</span>
-                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${isPositive ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'
-                        }`}>
-                        {data.category}
+            <div
+                className="bg-[#18181b] border border-[#3f3f46] p-4 rounded-xl shadow-2xl min-w-[180px]"
+                style={{ fontFamily: 'Arial, sans-serif' }}
+            >
+                <div className="flex items-center justify-between mb-3">
+                    <span className="text-xl font-bold text-white tracking-tight">{data.name}</span>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded ${isPositive ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}`}>
+                        {isPositive ? '+' : ''}{data.change?.toFixed(2)}%
                     </span>
                 </div>
-                <div className="space-y-1.5">
-                    <div className="flex justify-between items-center text-[11px]">
-                        <span className="text-muted-foreground">Fiyat</span>
-                        <span className="font-mono font-bold">{Math.abs(data.size).toFixed(2)} ₺</span>
+
+                <div className="space-y-2">
+                    <div className="flex justify-between items-center text-xs">
+                        <span className="text-zinc-400">Sektör</span>
+                        <span className="font-bold text-zinc-100">{data.category}</span>
                     </div>
-                    <div className="flex justify-between items-center text-[11px]">
-                        <span className="text-muted-foreground">Değişim</span>
-                        <span className={`font-mono font-black ${isPositive ? 'text-emerald-500' : 'text-rose-500'}`}>
-                            {isPositive ? '+' : ''}{data.change?.toFixed(2)}%
-                        </span>
+                    <div className="h-px bg-zinc-800 w-full" />
+                    <div className="flex justify-between items-center text-xs">
+                        <span className="text-zinc-400">Son Fiyat</span>
+                        <span className="font-bold text-zinc-100">{Math.abs(data.size).toFixed(2)} ₺</span>
                     </div>
-                </div>
-                <div className="mt-3 pt-2 border-t border-border/10 flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full animate-pulse ${isPositive ? 'bg-emerald-500' : 'bg-rose-500'}`}></div>
-                    <span className="text-[9px] uppercase tracking-widest font-black opacity-50">Anlık Veri</span>
                 </div>
             </div>
         );
