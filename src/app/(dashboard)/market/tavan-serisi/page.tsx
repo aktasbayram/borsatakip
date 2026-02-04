@@ -90,7 +90,7 @@ export default function TavanSerisiPage() {
     return (
         <div className="max-w-7xl mx-auto space-y-6 pb-20 px-4 md:px-0">
             {/* Elegant Header - Compact & Theme Aware */}
-            <div className="relative overflow-hidden rounded-[1.75rem] bg-card dark:bg-slate-950 p-5 lg:p-7 border border-border dark:border-slate-800 shadow-2xl group transition-colors duration-300 mt-4">
+            <div className="relative overflow-hidden rounded-[1.75rem] bg-card dark:bg-slate-950 p-5 lg:p-7 border border-border dark:border-slate-800 shadow-2xl group transition-colors duration-300">
                 <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[250px] h-[250px] bg-indigo-500/5 rounded-full blur-[70px] pointer-events-none group-hover:bg-indigo-500/10 transition-colors duration-1000"></div>
                 <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-[250px] h-[250px] bg-fuchsia-500/5 rounded-full blur-[70px] pointer-events-none group-hover:bg-fuchsia-500/10 transition-colors duration-1000"></div>
 
