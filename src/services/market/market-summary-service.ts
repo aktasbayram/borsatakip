@@ -114,10 +114,6 @@ export class MarketSummaryService {
             }
         });
 
-        // Invalidate cache
-        // @ts-ignore
-        revalidateTag('market-summary');
-
         return summary;
     }
 
