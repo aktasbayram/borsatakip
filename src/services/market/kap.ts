@@ -1,10 +1,12 @@
 import axios from 'axios';
-
 import { ConfigService } from "@/services/config";
 
 const getKapConfig = async () => {
     return {
         url: await ConfigService.get("KAP_API_URL") || 'https://apigwdev.mkk.com.tr/api/vyk',
+        apiKey: await ConfigService.get("MKK_API_KEY"),
+        apiSecret: await ConfigService.get("MKK_API_SECRET"),
+        // Legacy fallback
         username: await ConfigService.get("KAP_API_USERNAME"),
         password: await ConfigService.get("KAP_API_PASSWORD")
     }
@@ -13,6 +15,7 @@ const getKapConfig = async () => {
 // Caching configuration
 let memberCache: Record<string, string> | null = null;
 let lastCacheTime = 0;
+let apiToken: { token: string; expires: number } | null = null;
 const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours caching for Member IDs
 
 // Domain Interfaces
@@ -22,6 +25,8 @@ export interface KAPTargetNews {
     date: string;
     summary: string;
     url: string;
+    companyCode?: string;
+    disclosureType?: string;
 }
 
 // Helper to safely extract values from potentially nested objects in response
@@ -29,7 +34,6 @@ function getValue(obj: any): string {
     if (obj === null || obj === undefined) return '';
     if (typeof obj === 'string') return obj;
     if (typeof obj === 'object') {
-        // Handle { key: { key: "value" } } pattern commonly seen in this API spec
         const values = Object.values(obj);
         if (values.length === 1) {
             const inner = values[0];
@@ -41,58 +45,78 @@ function getValue(obj: any): string {
 }
 
 export class KAPService {
+    /**
+     * Modern Token-based Auth (MKK Portal /generateToken)
+     */
+    private static async getAccessToken(): Promise<string | null> {
+        const now = Date.now();
+        if (apiToken && apiToken.expires > now + 30000) {
+            return apiToken.token;
+        }
+
+        try {
+            const { url, apiKey, apiSecret } = await getKapConfig();
+            if (!apiKey || !apiSecret) return null;
+
+            const auth = Buffer.from(`${apiKey}:${apiSecret}`).toString('base64');
+            const response = await axios.get(`${url}/generateToken`, {
+                headers: { Authorization: `Basic ${auth}` },
+                timeout: 5000
+            });
+
+            const token = response.data?.token || response.data;
+            if (token) {
+                // Tokens usually valid for 1 hour, let's cache for 50 mins
+                apiToken = { token, expires: now + (50 * 60 * 1000) };
+                return token;
+            }
+            return null;
+        } catch (error) {
+            console.error('KAP Token Generation Failed:', error);
+            return null;
+        }
+    }
+
     private static async getAuthHeader() {
+        const token = await this.getAccessToken();
+        if (token) return { Authorization: `Bearer ${token}` };
+
+        // Legacy Fallback to Basic Auth if Token fails
         const { username, password } = await getKapConfig();
         if (!username || !password) return {};
         const auth = Buffer.from(`${username}:${password}`).toString('base64');
         return { Authorization: `Basic ${auth}` };
     }
 
-    private static async getMembers(): Promise<Record<string, string>> {
-        // Return cached member list if available and fresh
+    public static async getMembers(): Promise<Record<string, string>> {
         if (memberCache && (Date.now() - lastCacheTime < CACHE_DURATION)) {
             return memberCache;
         }
 
         try {
-            console.log('Fetching KAP members from API...');
             const { url } = await getKapConfig();
             const response = await axios.get(`${url}/members`, {
                 headers: await this.getAuthHeader(),
                 timeout: 5000
             });
 
-            // Handle response data structure variations
             let members: any[] = [];
             const data = response.data;
-
-            if (Array.isArray(data)) {
-                members = data;
-            } else if (data && Array.isArray(data.members)) {
-                members = data.members;
-            } else if (typeof data === 'object') {
-                members = Object.values(data);
-            }
+            if (Array.isArray(data)) members = data;
+            else if (data?.members) members = data.members;
 
             const cache: Record<string, string> = {};
-
             for (const member of members) {
-                // Extract stockCode and ID using safe getter
                 const code = getValue(member.stockCode);
                 const id = getValue(member.id);
-
-                if (code && id) {
-                    cache[code] = id;
-                }
+                if (code && id) cache[code] = id;
             }
 
-            console.log(`Cached ${Object.keys(cache).length} KAP members.`);
             memberCache = cache;
             lastCacheTime = Date.now();
             return cache;
         } catch (error) {
             console.error('Failed to fetch KAP members:', error);
-            // Return stale cache if available, otherwise empty object
             return memberCache || {};
         }
     }
@@ -102,7 +126,7 @@ export class KAPService {
         return members[symbol] || null;
     }
 
-    private static async getLastDisclosureIndex(): Promise<number | null> {
+    public static async getLastDisclosureIndex(): Promise<number | null> {
         try {
             const { url } = await getKapConfig();
             const response = await axios.get(`${url}/lastDisclosureIndex`, {
@@ -119,29 +143,64 @@ export class KAPService {
         }
     }
 
+    /**
+     * Fetches a list of global disclosures (not filtered by symbol)
+     */
+    public static async getAllDisclosures(limit: number = 50): Promise<KAPTargetNews[]> {
+        try {
+            const lastIndex = await this.getLastDisclosureIndex();
+            if (!lastIndex) return [];
+
+            const queryIndex = Math.max(0, lastIndex - 500); // Look back 500 records
+            const { url } = await getKapConfig();
+
+            const response = await axios.get(`${url}/disclosures`, {
+                params: { disclosureIndex: queryIndex },
+                headers: await this.getAuthHeader(),
+                timeout: 8000
+            });
+
+            const data = response.data?.disclosures || response.data || [];
+            const rawDisclosures = Array.isArray(data) ? data : [data];
+
+            const mappedDisclosures = rawDisclosures
+                .map(d => {
+                    const id = getValue(d.disclosureIndex);
+                    if (!id) return null;
+
+                    return {
+                        id: String(id),
+                        title: getValue(d.title),
+                        date: getValue(d.publishDateTime) || new Date().toISOString(),
+                        summary: getValue(d.summary) || getValue(d.title),
+                        url: `https://www.kap.org.tr/tr/Bildirim/${id}`,
+                        companyCode: getValue(d.stockCode) || getValue(d.companyName) || undefined,
+                        disclosureType: getValue(d.disclosureType) || undefined
+                    } as KAPTargetNews;
+                })
+                .filter((d): d is KAPTargetNews => d !== null);
+
+            return mappedDisclosures
+                .sort((a, b) => Number(b.id) - Number(a.id))
+                .slice(0, limit);
+
+        } catch (error) {
+            console.error('Error fetching global KAP disclosures:', error);
+            return [];
+        }
+    }
+
     public static async getNews(symbol: string): Promise<KAPTargetNews[]> {
         try {
             const memberId = await this.getMemberId(symbol);
-            if (!memberId) {
-                console.warn(`KAP Member ID not found for symbol: ${symbol}`);
-                return [];
-            }
+            if (!memberId) return [];
 
-            // Get the last disclosure index to know where to start looking
             const lastIndex = await this.getLastDisclosureIndex();
-            if (!lastIndex) {
-                console.warn('Could not determine last disclosure index.');
-                return [];
-            }
+            if (!lastIndex) return [];
 
-            // Strategy: Look back X indices to find company news.
-            // Since we can't filter by date directly, we use the index.
-            // 2000 indices should cover recent activity.
             const queryIndex = Math.max(0, lastIndex - 2000);
-
-            console.log(`Fetching KAP news for ${symbol} (MemberID: ${memberId}, QueryIndex: ${queryIndex})...`);
-
             const { url } = await getKapConfig();
+
             const response = await axios.get(`${url}/disclosures`, {
                 params: {
                     disclosureIndex: queryIndex,
@@ -151,47 +210,26 @@ export class KAPService {
                 timeout: 5000
             });
 
-            // Parse response
-            let rawDisclosures: any[] = [];
-            const data = response.data;
+            const data = response.data?.disclosures || response.data || [];
+            const rawDisclosures = Array.isArray(data) ? data : [data];
 
-            if (Array.isArray(data)) {
-                rawDisclosures = data;
-            } else if (data && Array.isArray(data.disclosures)) {
-                rawDisclosures = data.disclosures;
-            } else if (typeof data === 'object') {
-                // Single object wrapper or single item
-                rawDisclosures = [data];
-            }
-
-            // Map to UI format
-            const news = rawDisclosures.map(d => {
-                const id = getValue(d.disclosureIndex);
-                const title = getValue(d.title);
-                const dateRaw = getValue(d.publishDateTime);
-                const summaryRaw = getValue(d.summary);
-
-                if (!id || !title) return null;
-
-                return {
-                    id: String(id),
-                    title: String(title),
-                    // If date is missing (common in list view), use current time as fallback 
-                    // or ideally we should fetch details. For now, fallback to avoid UI break.
-                    date: dateRaw || new Date().toISOString(),
-                    summary: summaryRaw || title,
-                    url: `https://www.kap.org.tr/tr/Bildirim/${id}`
-                };
-            }).filter((d): d is KAPTargetNews => d !== null);
-
-            // Sort by ID descending (newest first)
-            return news.sort((a, b) => Number(b.id) - Number(a.id));
+            return rawDisclosures
+                .map(d => {
+                    const id = getValue(d.disclosureIndex);
+                    if (!id) return null;
+                    return {
+                        id: String(id),
+                        title: getValue(d.title),
+                        date: getValue(d.publishDateTime) || new Date().toISOString(),
+                        summary: getValue(d.summary) || getValue(d.title),
+                        url: `https://www.kap.org.tr/tr/Bildirim/${id}`
+                    };
+                })
+                .filter((d): d is KAPTargetNews => d !== null)
+                .sort((a, b) => Number(b.id) - Number(a.id));
 
         } catch (error) {
             console.error(`Error fetching KAP news for ${symbol}:`, error);
-            if (axios.isAxiosError(error) && (error.response?.status === 401 || error.response?.status === 403)) {
-                console.warn('KAP API Auth failed. Check credentials.');
-            }
             return [];
         }
     }
