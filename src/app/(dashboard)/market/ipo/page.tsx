@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Calendar, Building2, Ticket, TrendingUp, Info, Search, ListFilter, Rocket, ChevronLeft, ChevronRight, Zap, ArrowRight, ShieldCheck, Clock } from "lucide-react";
+import { Loader2, Calendar, Building2, Ticket, TrendingUp, Info, Search, ListFilter, Rocket, ChevronLeft, ChevronRight, Zap, ArrowRight, ShieldCheck, Clock, Sparkles } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -177,7 +177,10 @@ export default function IpoPage() {
                                                     )}
                                                 </div>
                                                 <div className="flex flex-col items-end gap-2">
-                                                    <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 text-[9px] font-black tracking-widest px-2.5 h-6 uppercase">Yenİ</Badge>
+                                                    <Badge className="bg-emerald-500 text-white dark:bg-emerald-600 border-0 text-[10px] font-black tracking-widest px-3 h-7 uppercase shadow-[0_0_15px_rgba(16,185,129,0.4)] animate-pulse flex items-center gap-1.5">
+                                                        <Sparkles className="w-3 h-3 fill-current" />
+                                                        Yenİ
+                                                    </Badge>
                                                     {ipo.statusText && (
                                                         <div className="h-6 px-3 rounded-full bg-blue-600 flex items-center gap-1.5 shadow-lg shadow-blue-500/20 animate-pulse">
                                                             <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping"></div>
@@ -319,7 +322,12 @@ function IpoTable({
                                         <div className="flex flex-col min-w-0">
                                             <span className="text-foreground font-black text-sm group-hover:text-primary transition-colors truncate italic tracking-tight">{ipo.company}</span>
                                             <div className="flex items-center gap-2 mt-1">
-                                                {ipo.isNew && !isDraft && <Badge variant="secondary" className="text-[8px] h-3.5 px-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 uppercase">Yenİ</Badge>}
+                                                {ipo.isNew && !isDraft && (
+                                                    <Badge variant="secondary" className="text-[9px] h-4.5 px-2 bg-emerald-500 text-white dark:bg-emerald-600 border-0 uppercase shadow-[0_0_10px_rgba(16,185,129,0.3)] animate-[bounce_2s_infinite] flex items-center gap-1">
+                                                        <Sparkles className="w-2.5 h-2.5 fill-current" />
+                                                        Yenİ
+                                                    </Badge>
+                                                )}
                                                 {ipo.statusText && !isDraft && (
                                                     <span className="flex items-center gap-1.5 text-[8px] font-black text-blue-500 dark:text-blue-400 uppercase tracking-widest">
                                                         <div className="w-1 h-1 rounded-full bg-blue-500 dark:bg-blue-400 animate-pulse"></div>
