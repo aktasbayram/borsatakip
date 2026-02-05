@@ -51,6 +51,16 @@ export async function PUT(
             }
         });
 
+        // Send notification
+        await prisma.notification.create({
+            data: {
+                userId,
+                title: 'Paketiniz Güncellendi',
+                message: `Tebrikler! Paketiniz ${tier} olarak güncellendi. Yeni özelliklerin keyfini çıkarın.`,
+                type: 'SUCCESS',
+            }
+        });
+
         return NextResponse.json(updatedUser);
     } catch (error) {
         console.error('Package update error:', error);

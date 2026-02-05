@@ -1,7 +1,7 @@
 
 import puppeteer from 'puppeteer';
 import { db } from '@/lib/db';
-import { unstable_cache } from 'next/cache';
+import { unstable_cache, revalidateTag } from 'next/cache';
 
 export interface RestrictedStockItem {
     id: string;
@@ -140,6 +140,7 @@ export class RestrictedStockService {
                     added++;
                 }
             }
+            revalidateTag('restricted-stocks');
             return { added, updated, skipped };
         } catch (error) {
             console.error('Restricted Stock Sync Failed:', error);

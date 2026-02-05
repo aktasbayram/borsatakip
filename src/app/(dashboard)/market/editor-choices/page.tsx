@@ -9,12 +9,29 @@ import { tr } from "date-fns/locale";
 
 export default async function EditorChoicesPage() {
     const session = await auth();
-    const isPremium = session?.user && (
-        session.user.subscriptionTier !== 'FREE' && !!session.user.subscriptionTier
-    );
+    let isAllowed = false;
+
+    let currentTier = 'FREE';
+
+    if (session?.user?.id) {
+        // Fetch fresh user data to handle immediate package changes without re-login
+        const user = await db.user.findUnique({
+            where: { id: session.user.id },
+            select: { subscriptionTier: true }
+        });
+
+        if (user?.subscriptionTier) {
+            currentTier = user.subscriptionTier;
+            // @ts-ignore
+            const userPackage = await db.package.findFirst({
+                where: { name: user.subscriptionTier }
+            });
+            isAllowed = userPackage?.canSeeEditorChoices || false;
+        }
+    }
 
     let choices: any[] = [];
-    if (isPremium) {
+    if (isAllowed) {
         try {
             // @ts-ignore
             choices = await db.editorChoice.findMany({
@@ -42,7 +59,7 @@ export default async function EditorChoicesPage() {
                         Piyasa uzmanlarımızın detaylı teknik ve temel analizleriyle öne çıkan hisseler.
                     </p>
                 </div>
-                {!isPremium && (
+                {!isAllowed && (
                     <Link href="/upgrade">
                         <Button className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-8">
                             Premium'a Geç
@@ -78,23 +95,37 @@ export default async function EditorChoicesPage() {
                         </div>
                     </div>
                 </div>
-            ) : !isPremium ? (
-                // Logged In but FREE
+            ) : !isAllowed ? (
+                // Logged In but No Access
                 <div className="relative rounded-3xl overflow-hidden border border-border bg-card min-h-[400px] flex flex-col items-center justify-center p-8 text-center space-y-6">
                     <div className="absolute inset-0 bg-grid-zinc-900/5 dark:bg-grid-white/5 [mask-image:radial-gradient(white,transparent)]" />
                     <div className="relative z-10 space-y-4 max-w-md">
                         <div className="w-20 h-20 bg-amber-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
                             <TrendingUp className="w-10 h-10 text-amber-500" />
                         </div>
-                        <h2 className="text-3xl font-bold font-black">Bu İçerik Sadece Premium Üyelere Özeldir</h2>
-                        <p className="text-muted-foreground">
-                            Anlaşılan henüz FREE pakettesiniz. Editörün Seçimleri, derinlemesine analizler ve özel hisse yorumlarını içerir.
-                            Piyasa fırsatlarını kaçırmamak için üyeliğinizi hemen yükseltin.
-                        </p>
+
+                        {currentTier === 'FREE' ? (
+                            <>
+                                <h2 className="text-3xl font-bold font-black">Bu İçerik Sadece Premium Üyelere Özeldir</h2>
+                                <p className="text-muted-foreground">
+                                    Anlaşılan henüz FREE pakettesiniz. Editörün Seçimleri, derinlemesine analizler ve özel hisse yorumlarını içerir.
+                                    Piyasa fırsatlarını kaçırmamak için üyeliğinizi hemen yükseltin.
+                                </p>
+                            </>
+                        ) : (
+                            <>
+                                <h2 className="text-3xl font-bold font-black">Paket Yükseltmeniz Gerekiyor</h2>
+                                <p className="text-muted-foreground">
+                                    Mevcut paketiniz (<span className="font-bold text-foreground">{currentTier}</span>) bu içeriğe erişim izni vermiyor.
+                                    Editörün seçimlerini görüntülemek için paketinizi yükseltmeniz gerekmektedir.
+                                </p>
+                            </>
+                        )}
+
                         <div className="flex flex-col sm:flex-row gap-3 pt-4">
                             <Link href="/upgrade" className="flex-1">
                                 <Button className="w-full bg-amber-500 hover:bg-amber-600 text-white text-lg py-6 rounded-xl border-none font-bold">
-                                    Hemen Yükselt
+                                    {currentTier === 'FREE' ? "Hemen Yükselt" : "Paketi Yükselt"}
                                 </Button>
                             </Link>
                             <Link href="/">

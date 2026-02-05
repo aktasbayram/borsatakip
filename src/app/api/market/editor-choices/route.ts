@@ -7,13 +7,26 @@ export async function GET(req: Request) {
     try {
         const session = await auth();
 
-        const isPremium = session?.user && (
-            session.user.subscriptionTier !== 'FREE' && !!session.user.subscriptionTier
-        );
+        if (!session?.user?.id) {
+            return new NextResponse('Premium Subscription Required', { status: 403 });
+        }
 
-        if (!isPremium) {
-            // Return only a teaser or unauthorized
-            // For now, let's return limited info if needed, or just 403
+        const user = await db.user.findUnique({
+            where: { id: session.user.id },
+            select: { subscriptionTier: true }
+        });
+
+        if (!user?.subscriptionTier) {
+            return new NextResponse('Premium Subscription Required', { status: 403 });
+        }
+
+        const userPackage = await db.package.findFirst({
+            where: { name: user.subscriptionTier }
+        });
+
+        const isAllowed = userPackage?.canSeeEditorChoices || false;
+
+        if (!isAllowed) {
             return new NextResponse('Premium Subscription Required', { status: 403 });
         }
 

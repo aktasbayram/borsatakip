@@ -165,7 +165,11 @@ export default function IpoPage() {
                                     <Link key={index} href={`/market/ipo/${ipo.code}`} className="group block">
                                         <Card className="relative h-full overflow-hidden border-border dark:border-slate-800 bg-card/60 dark:bg-slate-950/40 backdrop-blur-sm hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 rounded-[2rem] p-6 lg:p-7 flex flex-col gap-6">
                                             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                                                <Building2 className="w-16 h-16 text-primary" />
+                                                {ipo.imageUrl ? (
+                                                    <img src={ipo.imageUrl} alt="" className="w-24 h-24 object-contain grayscale" />
+                                                ) : (
+                                                    <Building2 className="w-16 h-16 text-primary" />
+                                                )}
                                             </div>
 
                                             <div className="flex justify-between items-start relative z-10">

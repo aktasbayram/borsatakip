@@ -113,6 +113,16 @@ export async function PATCH(
                     aiCreditsTotal: credits
                 }
             });
+            // Send notification for package update
+            await prisma.notification.create({
+                data: {
+                    userId: id,
+                    title: 'Paketiniz Güncellendi',
+                    message: `Tebrikler! Paketiniz ${subscriptionTier} olarak güncellendi.`,
+                    type: 'SUCCESS',
+                }
+            });
+
             return NextResponse.json({ message: 'Paket atandı ve krediler güncellendi.' });
         }
 

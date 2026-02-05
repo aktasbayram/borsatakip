@@ -87,7 +87,7 @@ export function NotificationBell() {
             }
 
         } catch (error) {
-            console.error("Failed to fetch notifications");
+            console.error("Failed to fetch notifications:", error);
         }
     };
 

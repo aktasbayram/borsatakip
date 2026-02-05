@@ -23,7 +23,8 @@ export async function POST(req: Request) {
         name: json.name.toUpperCase(),
         price: parseFloat(json.price),
         credits: parseInt(json.credits),
-        maxAlerts: parseInt(json.maxAlerts || '2')
+        maxAlerts: parseInt(json.maxAlerts || '2'),
+        canSeeEditorChoices: json.canSeeEditorChoices || false
     };
 
     try {
@@ -54,6 +55,7 @@ export async function PUT(req: Request) {
         });
         return NextResponse.json(pkg);
     } catch (error) {
+        console.error("Error updating package:", error);
         return new NextResponse("Error updating package", { status: 500 });
     }
 }

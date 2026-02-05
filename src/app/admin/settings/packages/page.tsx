@@ -20,6 +20,7 @@ interface Package {
     features: string[];
     isPopular: boolean;
     isActive: boolean;
+    canSeeEditorChoices: boolean;
 }
 
 export default function AdminPackagesPage() {
@@ -39,6 +40,7 @@ export default function AdminPackagesPage() {
         features: string[];
         isPopular: boolean;
         isActive: boolean;
+        canSeeEditorChoices: boolean;
     }>({
         name: '',
         displayName: '',
@@ -47,7 +49,8 @@ export default function AdminPackagesPage() {
         maxAlerts: '2',
         features: [''],
         isPopular: false,
-        isActive: true
+        isActive: true,
+        canSeeEditorChoices: false
     });
 
     useEffect(() => {
@@ -74,7 +77,8 @@ export default function AdminPackagesPage() {
             maxAlerts: (pkg.maxAlerts || 2).toString(),
             features: pkg.features.length ? pkg.features : [''],
             isPopular: pkg.isPopular,
-            isActive: pkg.isActive
+            isActive: pkg.isActive,
+            canSeeEditorChoices: pkg.canSeeEditorChoices || false
         });
         setEditId(pkg.id);
         setIsEditing(true);
@@ -92,7 +96,8 @@ export default function AdminPackagesPage() {
             maxAlerts: '2',
             features: [''],
             isPopular: false,
-            isActive: true
+            isActive: true,
+            canSeeEditorChoices: false
         });
     };
 
@@ -243,6 +248,14 @@ export default function AdminPackagesPage() {
                                 <Label htmlFor="active">Aktif</Label>
                             </div>
                         </div>
+                        <div className="flex items-center gap-2 pt-2">
+                            <Switch
+                                id="editor-choices"
+                                checked={formData.canSeeEditorChoices}
+                                onCheckedChange={(checked) => setFormData({ ...formData, canSeeEditorChoices: checked })}
+                            />
+                            <Label htmlFor="editor-choices">Editörün Seçimleri Erişimi</Label>
+                        </div>
 
                         <div className="flex gap-2 pt-4">
                             <Button type="submit" className="flex-1">
@@ -273,6 +286,11 @@ export default function AdminPackagesPage() {
                                 <div className="text-2xl font-bold">{pkg.price} ₺</div>
                                 <div className="text-sm text-muted-foreground">{pkg.credits} Kredi</div>
                                 <div className="text-sm text-muted-foreground">{pkg.maxAlerts || 2} Alarm</div>
+                                {pkg.canSeeEditorChoices && (
+                                    <div className="text-xs text-green-600 font-bold mt-1">
+                                        Editör Seçimleri ✓
+                                    </div>
+                                )}
                             </div>
                         </CardHeader>
                         <CardContent>
@@ -294,6 +312,6 @@ export default function AdminPackagesPage() {
                     </Card>
                 ))}
             </div>
-        </div>
+        </div >
     );
 }
