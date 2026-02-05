@@ -57,12 +57,13 @@ const CustomizedContent = (props: any) => {
                     dominantBaseline="middle"
                     fill="#ffffff"
                     fontSize={Math.round(Math.max(10, Math.min(width * 0.16, 14)))}
-                    fontWeight="600"
+                    fontWeight="500"
                     fontFamily="Arial, sans-serif"
                     style={{
                         pointerEvents: 'none',
                         textShadow: 'none',
-                        WebkitFontSmoothing: 'antialiased'
+                        WebkitFontSmoothing: 'antialiased',
+                        letterSpacing: '0.3px'
                     }}
                 >
                     {name}
@@ -76,13 +77,14 @@ const CustomizedContent = (props: any) => {
                     dominantBaseline="middle"
                     fill="#ffffff"
                     fontSize={Math.round(Math.max(9, Math.min(width * 0.14, 12)))}
-                    fontWeight="400"
+                    fontWeight="300"
                     fontFamily="Arial, sans-serif"
                     style={{
                         pointerEvents: 'none',
                         textShadow: 'none',
                         opacity: 0.95,
-                        WebkitFontSmoothing: 'antialiased'
+                        WebkitFontSmoothing: 'antialiased',
+                        letterSpacing: '0.3px'
                     }}
                 >
                     %{change?.toFixed(2)}
