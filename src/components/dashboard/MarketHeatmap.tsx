@@ -29,8 +29,8 @@ const CustomizedContent = (props: any) => {
 
     // Dynamic color intensity based on change magnitude
     const opacity = Math.min(0.2 + (absChange / 5) * 0.8, 1);
-    const showText = width > 35 && height > 25;
-    const showPercent = width > 40 && height > 40;
+    const showText = width > 45 && height > 30;
+    const showPercent = width > 55 && height > 45;
 
     return (
         <g>
@@ -52,34 +52,40 @@ const CustomizedContent = (props: any) => {
             {depth === 2 && showText && (
                 <text
                     x={x + width / 2}
-                    y={y + height / 2}
+                    y={showPercent ? y + height / 2 - 9 : y + height / 2}
                     textAnchor="middle"
-                    dominantBaseline="central"
+                    dominantBaseline="middle"
                     fill="#ffffff"
+                    fontSize={Math.round(Math.max(10, Math.min(width * 0.16, 14)))}
+                    fontWeight="600"
+                    fontFamily="Arial, sans-serif"
                     style={{
-                        fontFamily: 'Arial, sans-serif',
-                        fontSize: Math.max(9, Math.min(width * 0.18, 13)),
                         pointerEvents: 'none',
-                        textRendering: 'geometricPrecision'
+                        textShadow: 'none',
+                        WebkitFontSmoothing: 'antialiased'
                     }}
                 >
-                    <tspan
-                        x={x + width / 2}
-                        dy={showPercent ? "-0.6em" : "0"}
-                        fontWeight="900"
-                    >
-                        {name}
-                    </tspan>
-                    {showPercent && (
-                        <tspan
-                            x={x + width / 2}
-                            dy="1.2em"
-                            fontSize="0.85em"
-                            fontWeight="500"
-                        >
-                            %{change?.toFixed(2)}
-                        </tspan>
-                    )}
+                    {name}
+                </text>
+            )}
+            {depth === 2 && showPercent && (
+                <text
+                    x={x + width / 2}
+                    y={y + height / 2 + 10}
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    fill="#ffffff"
+                    fontSize={Math.round(Math.max(9, Math.min(width * 0.14, 12)))}
+                    fontWeight="400"
+                    fontFamily="Arial, sans-serif"
+                    style={{
+                        pointerEvents: 'none',
+                        textShadow: 'none',
+                        opacity: 0.95,
+                        WebkitFontSmoothing: 'antialiased'
+                    }}
+                >
+                    %{change?.toFixed(2)}
                 </text>
             )}
         </g>
