@@ -16,31 +16,21 @@ interface HeatmapNode {
 }
 
 const CustomizedContent = (props: any) => {
-    const { depth, x, y, width, height, name, change } = props;
+    const { depth, name, change, width: rawWidth, height: rawHeight, x: rawX, y: rawY } = props;
 
-    // Filter out nodes that are too small to render text
-    const showText = width > 40 && height > 30;
-    const showPercent = width > 50 && height > 45;
+    // Pixel-snap coordinates and dimensions to eliminate blur/ghosting
+    const x = Math.round(rawX);
+    const y = Math.round(rawY);
+    const width = Math.round(rawWidth);
+    const height = Math.round(rawHeight);
 
-    // Premium Color Palette
-    // Ultra-Vivid, High-Contrast Color Palette
-    let fillColor = '#9ca3af'; // neutral/gray default
-    let strokeColor = 'rgba(255,255,255,0.4)';
+    const isPositive = change >= 0;
+    const absChange = Math.abs(change || 0);
 
-    if (depth === 2) { // Leaf nodes (stocks)
-        if (change > 0) {
-            if (change > 5) fillColor = '#16a34a'; // Green 600
-            else if (change > 2) fillColor = '#22c55e'; // Green 500
-            else fillColor = '#4ade80'; // Green 400
-        } else if (change < 0) {
-            if (change < -5) fillColor = '#dc2626'; // Red 600
-            else if (change < -2) fillColor = '#ef4444'; // Red 500
-            else fillColor = '#f87171'; // Red 400
-        }
-    } else {
-        fillColor = 'transparent';
-        strokeColor = 'rgba(255, 255, 255, 0.1)';
-    }
+    // Dynamic color intensity based on change magnitude
+    const opacity = Math.min(0.2 + (absChange / 5) * 0.8, 1);
+    const showText = width > 35 && height > 25;
+    const showPercent = width > 40 && height > 40;
 
     return (
         <g>
@@ -52,27 +42,14 @@ const CustomizedContent = (props: any) => {
                 rx={4}
                 ry={4}
                 style={{
-                    fill: fillColor,
-                    stroke: strokeColor,
+                    fill: depth === 0 ? 'none' : (isPositive ? `rgba(34, 197, 94, ${opacity})` : `rgba(239, 68, 68, ${opacity})`),
+                    stroke: '#fff',
                     strokeWidth: depth === 0 ? 0 : 1,
-                    transition: 'all 0.5s ease-in-out'
+                    transition: 'fill 0.4s ease'
                 }}
                 className={depth === 2 ? "cursor-pointer transition-all duration-200 hover:brightness-110" : ""}
             />
-            {depth === 1 && height > 20 && (
-                <text
-                    x={x + 5}
-                    y={y + 15}
-                    fill="currentColor"
-                    fontSize={10}
-                    fontWeight="900"
-                    style={{ fontFamily: 'Arial, sans-serif', opacity: 0.2 }}
-                    className="uppercase tracking-widest pointer-events-none"
-                >
-                    {name}
-                </text>
-            )}
-            {depth === 2 && (width > 30 && height > 25) && (
+            {depth === 2 && showText && (
                 <text
                     x={x + width / 2}
                     y={y + height / 2}
@@ -81,25 +58,24 @@ const CustomizedContent = (props: any) => {
                     fill="#ffffff"
                     style={{
                         fontFamily: 'Arial, sans-serif',
-                        fontSize: Math.max(9, Math.min(width / 5, 13)),
-                        pointerEvents: 'none'
+                        fontSize: Math.max(9, Math.min(width * 0.18, 13)),
+                        pointerEvents: 'none',
+                        textRendering: 'geometricPrecision'
                     }}
                 >
-                    {showText && (
-                        <tspan
-                            x={x + width / 2}
-                            dy={showPercent ? "-0.6em" : "0"}
-                            fontWeight="bold"
-                        >
-                            {name}
-                        </tspan>
-                    )}
+                    <tspan
+                        x={x + width / 2}
+                        dy={showPercent ? "-0.6em" : "0"}
+                        fontWeight="900"
+                    >
+                        {name}
+                    </tspan>
                     {showPercent && (
                         <tspan
                             x={x + width / 2}
                             dy="1.2em"
                             fontSize="0.85em"
-                            fontWeight="normal"
+                            fontWeight="500"
                         >
                             %{change?.toFixed(2)}
                         </tspan>
@@ -267,6 +243,7 @@ export function MarketHeatmap() {
                             stroke="#fff"
                             fill="#8884d8"
                             content={<CustomizedContent />}
+                            isAnimationActive={false}
                         >
                             <Tooltip content={<CustomTooltip />} cursor={false} />
                         </Treemap>
