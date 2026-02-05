@@ -41,6 +41,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             if (token.sub && session.user) {
                 session.user.id = token.sub;
                 session.user.role = token.role as string;
+                session.user.subscriptionTier = token.subscriptionTier as string;
             }
             return session;
         },
@@ -48,6 +49,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             if (user) {
                 token.sub = user.id;
                 token.role = user.role;
+                token.subscriptionTier = user.subscriptionTier;
             }
 
             if (trigger === "update" && session?.name) {

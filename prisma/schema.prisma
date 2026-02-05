@@ -335,3 +335,21 @@ model MarketSummary {
 
   @@index([date])
 }
+model EditorChoice {
+  id              String   @id @default(cuid())
+  symbol          String
+  title           String
+  content         String   @db.Text
+  technicalReview String?  @db.Text
+  fundamentalReview String? @db.Text
+  targetPrice     Float?
+  stopLoss        Float?
+  chartUrl        String?
+  isPublished     Boolean  @default(true)
+  publishedAt     DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([symbol])
+  @@index([publishedAt])
+}

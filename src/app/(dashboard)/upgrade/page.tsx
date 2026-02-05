@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BankTransferModal } from '@/components/payment/BankTransferModal';
@@ -18,6 +20,8 @@ interface Package {
 }
 
 export default function UpgradePage() {
+    const { status } = useSession();
+    const router = useRouter();
     const [currentTier, setCurrentTier] = useState<string>('FREE');
     const [loading, setLoading] = useState(true);
     const [modalOpen, setModalOpen] = useState(false);
@@ -27,26 +31,40 @@ export default function UpgradePage() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [creditsRes, packagesRes] = await Promise.all([
-                    axios.get('/api/user/credits'),
-                    axios.get('/api/packages')
-                ]);
-                setCurrentTier(creditsRes.data.tier || 'FREE');
-                setPlans(packagesRes.data);
+                const requests = [axios.get('/api/packages')];
+
+                // Only fetch credits if user is authenticated
+                if (status === 'authenticated') {
+                    requests.push(axios.get('/api/user/credits'));
+                }
+
+                const results = await Promise.all(requests);
+
+                setPlans(results[0].data);
+
+                if (status === 'authenticated' && results[1]) {
+                    setCurrentTier(results[1].data.tier || 'FREE');
+                }
             } catch (error) {
                 console.error('Failed to fetch data:', error);
             } finally {
                 setLoading(false);
             }
         };
-        fetchData();
-    }, []);
+
+        if (status !== 'loading') {
+            fetchData();
+        }
+    }, [status]);
 
     const handlePurchase = (pkg: Package) => {
+        if (status === 'unauthenticated') {
+            const redirectUrl = pkg.name === 'FREE' ? '/register' : '/login';
+            router.push(`${redirectUrl}?callbackUrl=${encodeURIComponent(window.location.href)}`);
+            return;
+        }
+
         // Map dynamic package to payment modal props
-        // Note: Modal currently accepts 'BASIC' | 'PRO'. 
-        // We might need to make Modal more flexible or map carefully.
-        // For now, passing the name directly.
         setSelectedPackage({ name: pkg.name, price: pkg.price });
         setModalOpen(true);
     };
@@ -57,17 +75,6 @@ export default function UpgradePage() {
 
     // Sort plans by price
     const sortedPlans = [...plans].sort((a, b) => a.price - b.price);
-
-    // Identify current plan index for upgrade/downgrade logic
-    // Assuming 'FREE' is always the base and not in the DB usually, 
-    // but if it IS in DB, we should handle it. 
-    // If 'FREE' is not in API, we might want to hardcode it or expect it from DB.
-    // Let's assume for now we render what API returns.
-
-    // Safety check: if no plans, at least show empty or free
-    if (plans.length === 0) {
-        // Fallback or just empty
-    }
 
     return (
         <div className="container mx-auto px-4 py-12 max-w-6xl">
@@ -81,20 +88,12 @@ export default function UpgradePage() {
             </div>
 
             <div className="grid md:grid-cols-3 gap-8">
-                {/* Always show FREE plan if it exists locally or just render DB plans? 
-                    Let's render DB plans. If user wants FREE to show, they should add it to DB 
-                    OR we hardcode FREE at start. 
-                    Let's hardcode FREE as the first option if it's not in DB.
-                */}
-
-
                 {sortedPlans.map((plan) => {
-                    const isCurrent = plan.name === currentTier;
+                    const isCurrent = status === 'authenticated' && plan.name === currentTier;
 
                     // Find current plan details to compare prices
-                    // Assuming 'FREE' is price 0 if not found in list (or we handle it)
                     const currentPlanDetails = sortedPlans.find(p => p.name === currentTier);
-                    const currentPrice = currentPlanDetails ? currentPlanDetails.price : 0; // Default to free(0) if not found
+                    const currentPrice = (status === 'authenticated' && currentPlanDetails) ? currentPlanDetails.price : 0;
 
                     // Logic:
                     // If isCurrent -> "Mevcut Paket" (Disabled)
@@ -154,14 +153,20 @@ export default function UpgradePage() {
                                         ? 'bg-green-600 cursor-default hover:bg-green-600'
                                         : isDowngrade
                                             ? 'bg-gray-200 text-gray-500 cursor-not-allowed hover:bg-gray-200'
-                                            : plan.isPopular
-                                                ? 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white'
-                                                : ''
+                                            : plan.name === 'FREE' && status === 'unauthenticated'
+                                                ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                                                : plan.isPopular
+                                                    ? 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 text-white'
+                                                    : ''
                                         }`}
                                     disabled={isCurrent || isDowngrade}
                                     onClick={() => !isCurrent && !isDowngrade && handlePurchase(plan)}
                                 >
-                                    {isCurrent ? 'Mevcut Paket' : isDowngrade ? 'Paket Düşürülemez' : 'Yükselt'}
+                                    {isCurrent
+                                        ? 'Mevcut Paket'
+                                        : isDowngrade
+                                            ? 'Paket Düşürülemez'
+                                            : (plan.name === 'FREE' && status === 'unauthenticated' ? 'Hemen Başla' : 'Yükselt')}
                                 </Button>
                             </CardContent>
                         </Card>
