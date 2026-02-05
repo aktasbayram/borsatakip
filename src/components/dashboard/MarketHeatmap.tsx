@@ -72,28 +72,38 @@ const CustomizedContent = (props: any) => {
                     {name}
                 </text>
             )}
-            {depth === 2 && showText && (
+            {depth === 2 && (width > 30 && height > 25) && (
                 <text
                     x={x + width / 2}
-                    y={y + height / 2 - (showPercent ? 9 : 0)}
+                    y={y + height / 2}
                     textAnchor="middle"
+                    dominantBaseline="central"
                     fill="#ffffff"
-                    fontSize={Math.max(10, Math.min(width / 5, 13))}
-                    style={{ fontFamily: 'Arial, sans-serif', fontWeight: '600', pointerEvents: 'none' }}
+                    style={{
+                        fontFamily: 'Arial, sans-serif',
+                        fontSize: Math.max(9, Math.min(width / 5, 13)),
+                        pointerEvents: 'none'
+                    }}
                 >
-                    {name}
-                </text>
-            )}
-            {depth === 2 && showPercent && (
-                <text
-                    x={x + width / 2}
-                    y={y + height / 2 + 11}
-                    textAnchor="middle"
-                    fill="#ffffff"
-                    fontSize={Math.max(9, Math.min(width / 7, 10))}
-                    style={{ fontFamily: 'Arial, sans-serif', fontWeight: '400', pointerEvents: 'none' }}
-                >
-                    %{change?.toFixed(2)}
+                    {showText && (
+                        <tspan
+                            x={x + width / 2}
+                            dy={showPercent ? "-0.6em" : "0"}
+                            fontWeight="bold"
+                        >
+                            {name}
+                        </tspan>
+                    )}
+                    {showPercent && (
+                        <tspan
+                            x={x + width / 2}
+                            dy="1.2em"
+                            fontSize="0.85em"
+                            fontWeight="normal"
+                        >
+                            %{change?.toFixed(2)}
+                        </tspan>
+                    )}
                 </text>
             )}
         </g>
