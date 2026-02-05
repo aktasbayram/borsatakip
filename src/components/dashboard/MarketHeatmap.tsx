@@ -75,11 +75,11 @@ const CustomizedContent = (props: any) => {
             {depth === 2 && showText && (
                 <text
                     x={x + width / 2}
-                    y={y + height / 2 - (showPercent ? 6 : 0)}
+                    y={y + height / 2 - (showPercent ? 9 : 0)}
                     textAnchor="middle"
                     fill="#ffffff"
                     fontSize={Math.max(10, Math.min(width / 5, 13))}
-                    style={{ fontFamily: 'Arial, sans-serif', fontWeight: 'bold' }}
+                    style={{ fontFamily: 'Arial, sans-serif', fontWeight: '600', pointerEvents: 'none' }}
                 >
                     {name}
                 </text>
@@ -87,11 +87,11 @@ const CustomizedContent = (props: any) => {
             {depth === 2 && showPercent && (
                 <text
                     x={x + width / 2}
-                    y={y + height / 2 + 10}
+                    y={y + height / 2 + 11}
                     textAnchor="middle"
                     fill="#ffffff"
                     fontSize={Math.max(9, Math.min(width / 7, 10))}
-                    style={{ fontFamily: 'Arial, sans-serif' }}
+                    style={{ fontFamily: 'Arial, sans-serif', fontWeight: '400', pointerEvents: 'none' }}
                 >
                     %{change?.toFixed(2)}
                 </text>

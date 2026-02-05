@@ -13,7 +13,7 @@ const XU030_SYMBOLS = [
 ];
 
 // BIST 100 Symbols (Comprehensive List)
-const XU100_SYMBOLS = [
+const XU100_SYMBOLS = Array.from(new Set([
     ...XU030_SYMBOLS,
     // Banks & Finance
     'SKBNK', 'TSKB', 'HALKB', 'VAKBN', 'ALBRK', 'ISFIN',
@@ -27,10 +27,7 @@ const XU100_SYMBOLS = [
     'MGROS', 'MIATK', 'ODAS', 'OTKAR', 'OYAKC', 'PENTA', 'QUAGR',
     'RTALB', 'SMRTG', 'SOKM', 'TAVHL', 'TKFEN', 'TMSN', 'TRGYO', 'TSKB',
     'TTKOM', 'TURSG', 'ULKER', 'VESTL', 'VESBE', 'YEOTK', 'YYLGD', 'ZOREN'
-    // Note: This list might need periodic updates. 
-    // Yahoo format usually requires these to be correct.
-    // Some symbols might be slightly different or delisted/added.
-];
+]));
 
 export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
