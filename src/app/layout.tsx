@@ -5,6 +5,7 @@ import { Providers } from "./providers";
 import { ThemeProvider } from "@/components/theme-provider";
 import { getTrackingScripts } from "@/lib/settings";
 import { HtmlParser } from "@/components/HtmlParser";
+import { GoogleAdSenseScript } from "@/components/ads/GoogleAdSenseScript";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -68,6 +69,7 @@ export default async function RootLayout({
       <body className={inter.className}>
         {/* Body Start Scripts (GTM etc.) */}
         {!!scripts.body && <HtmlParser html={scripts.body} context="body" />}
+        <GoogleAdSenseScript />
 
         <Providers>
           <ThemeProvider

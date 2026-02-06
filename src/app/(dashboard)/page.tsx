@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button';
 import { MarketIndices } from '@/components/dashboard/MarketIndices';
 import { AgendaWidget } from "@/components/dashboard/AgendaWidget";
 import { IpoWidget } from "@/components/dashboard/IpoWidget";
+import { AdUnit } from "@/components/ads/AdUnit";
+import { DashboardAdGroup } from "@/components/ads/DashboardAdGroup";
 import {
     Dialog,
     DialogContent,
@@ -195,6 +197,9 @@ export default function DashboardPage() {
                 <div className={`grid grid-cols-1 ${preferences.showAgenda && preferences.showIpo ? 'lg:grid-cols-2' : ''} gap-6`}>
                     {preferences.showAgenda && <AgendaWidget />}
                     {preferences.showIpo && <IpoWidget />}
+
+                    {/* Native-like Ad Placement Group (Mobile: Random 1, Desktop: Both) */}
+                    <DashboardAdGroup />
                 </div>
             )}
 

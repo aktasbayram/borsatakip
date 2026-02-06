@@ -13,6 +13,7 @@ import { useEffect, useState } from 'react';
 import { Chatbot } from '@/components/ai/Chatbot';
 import { NotificationBell } from '@/components/layout/NotificationBell';
 import { AuthModal } from '@/components/auth/AuthModal';
+import { AdUnit } from '@/components/ads/AdUnit';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const { data: session, status } = useSession();
@@ -382,6 +383,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                                 </button>
                             </>
                         )}
+                        <div className="border-t border-border my-2"></div>
+                        <AdUnit location="mobile_menu_bottom" className="dark:bg-transparent" />
                     </div>
                 </div>
             </div>
@@ -389,6 +392,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <main className={`mx-auto ${getContentClass()} px-4 sm:px-6 lg:px-8 py-8 transition-colors duration-300`}>
                 {children}
             </main>
+
+            {/* Footer Ad Placement (Outside Footer Component) */}
+            <div className={`mx-auto ${getContentClass()} px-4 sm:px-6 lg:px-8 pb-4`}>
+                <AdUnit location="footer_top" className="dark:bg-transparent" />
+            </div>
 
             <Footer />
 

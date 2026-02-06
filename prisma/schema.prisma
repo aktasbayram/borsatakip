@@ -356,3 +356,14 @@ model EditorChoice {
   @@index([symbol])
   @@index([publishedAt])
 }
+
+model AdPlacement {
+  id          String   @id @default(cuid())
+  label       String   
+  location    String   @unique 
+  adCode      String   // Full HTML/Script
+  isActive    Boolean  @default(true)
+  platform    String   @default("ALL") // ALL, DESKTOP, MOBILE
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
