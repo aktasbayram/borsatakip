@@ -35,7 +35,9 @@ export function AdForm({ initialData, onSuccess, onCancel }: AdFormProps) {
             location: '',
             adCode: '',
             platform: 'ALL',
-            isActive: true
+            isActive: true,
+            maxWidth: '',
+            maxHeight: ''
         }
     );
 
@@ -106,7 +108,6 @@ export function AdForm({ initialData, onSuccess, onCancel }: AdFormProps) {
                     <p className="text-xs text-muted-foreground">Reklamın nerede görüneceğini seçin.</p>
                 </div>
             </div>
-
             <div className="space-y-2">
                 <Label>Platform Hedefleme</Label>
                 <Select
@@ -122,6 +123,25 @@ export function AdForm({ initialData, onSuccess, onCancel }: AdFormProps) {
                         <SelectItem value="MOBILE">Sadece Mobile</SelectItem>
                     </SelectContent>
                 </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <Label>Maks. Genişlik (Örn: 100%, 728px)</Label>
+                    <Input
+                        value={formData.maxWidth}
+                        onChange={e => setFormData({ ...formData, maxWidth: e.target.value })}
+                        placeholder="100%"
+                    />
+                </div>
+                <div className="space-y-2">
+                    <Label>Maks. Yükseklik (Örn: 300px, 90px)</Label>
+                    <Input
+                        value={formData.maxHeight}
+                        onChange={e => setFormData({ ...formData, maxHeight: e.target.value })}
+                        placeholder="90px"
+                    />
+                </div>
             </div>
 
             <div className="space-y-2">
@@ -144,6 +164,6 @@ export function AdForm({ initialData, onSuccess, onCancel }: AdFormProps) {
                     Kaydet
                 </Button>
             </div>
-        </form>
+        </form >
     );
 }
