@@ -6,8 +6,9 @@ import axios from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar, Layers, Coins, Building2, ExternalLink } from "lucide-react";
+import { Calendar, Layers, Coins, Building2, ExternalLink, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { isIpoTradingToday } from "@/lib/utils";
 
 interface IpoItem {
     code: string;
@@ -22,6 +23,7 @@ interface IpoItem {
     statusText?: string;
     isNew?: boolean;
     showOnHomepage?: boolean;
+    firstTradingDate?: string;
 }
 
 export function IpoWidget() {
@@ -98,6 +100,12 @@ export function IpoWidget() {
                                                             <Badge className="h-3.5 px-1 text-[9px] bg-blue-600 text-white border-0 shadow-sm animate-pulse flex items-center whitespace-nowrap">
                                                                 <span className="w-1 h-1 bg-white rounded-full mr-1 animate-ping"></span>
                                                                 {ipo.statusText.toUpperCase()}
+                                                            </Badge>
+                                                        )}
+                                                        {isIpoTradingToday(ipo.firstTradingDate) && (
+                                                            <Badge className="h-3.5 px-1 text-[9px] bg-amber-500 text-white border-0 shadow-sm animate-bounce flex items-center whitespace-nowrap">
+                                                                <Bell className="w-2 h-2 mr-1 fill-current" />
+                                                                GONG
                                                             </Badge>
                                                         )}
                                                         {ipo.isNew && (

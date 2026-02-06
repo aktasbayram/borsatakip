@@ -16,6 +16,8 @@ export interface AgendaItem {
     isManual?: boolean;
     isLocked?: boolean;
     sortOrder?: number;
+    symbol?: string;
+    imageUrl?: string;
 }
 
 interface FintablesAgendaItem {
@@ -23,6 +25,8 @@ interface FintablesAgendaItem {
     type: string;
     day: string; // YYYY-MM-DD
     time: string | null;
+    image_url?: string;  // Logo URL from Fintables
+    image?: string;      // Alternative logo URL
     image_fallback_text?: string;
     data: { label: string; value: string }[];
 }
@@ -36,15 +40,12 @@ export class AgendaService {
     static async getDailyAgenda(date: string): Promise<AgendaItem[]> {
         try {
             // 1. Try to fetch from DB
-            // @ts-ignore
-            // @ts-ignore
-            const dbItems = await db.economicEvent.findMany({
-                where: { date },
-                orderBy: [
-                    { sortOrder: 'desc' },
-                    { time: 'asc' }
-                ]
-            });
+            // Use raw query to bypass outdated Prisma client (file lock issue)
+            const dbItems = await (db as any).$queryRawUnsafe(`
+                SELECT * FROM "EconomicEvent" 
+                WHERE date = $1 
+                ORDER BY "sortOrder" DESC, time ASC
+            `, date);
 
             // 2. If data exists, check if it's stale (older than 60 mins)
             const today = new Date().toISOString().split('T')[0];
@@ -75,7 +76,11 @@ export class AgendaService {
                     currency: item.currency || undefined,
                     isManual: item.isManual,
                     isLocked: item.isLocked,
-                    sortOrder: item.sortOrder
+                    sortOrder: item.sortOrder,
+                    // @ts-ignore
+                    symbol: item.symbol || undefined,
+                    // @ts-ignore
+                    imageUrl: item.imageUrl || undefined
                 }));
             }
 
@@ -95,7 +100,9 @@ export class AgendaService {
                         previous: item.previous || undefined,
                         impact: item.importance as any,
                         currency: item.currency || undefined,
-                        isManual: item.isManual
+                        isManual: item.isManual,
+                        symbol: item.symbol || undefined,
+                        imageUrl: item.imageUrl || undefined
                     }));
                 }
 
@@ -105,14 +112,11 @@ export class AgendaService {
 
 
                 // Fetch again after sync
-                // @ts-ignore
-                const freshItems = await db.economicEvent.findMany({
-                    where: { date },
-                    orderBy: [
-                        { sortOrder: 'desc' },
-                        { time: 'asc' }
-                    ]
-                });
+                const freshItems = await (db as any).$queryRawUnsafe(`
+                    SELECT * FROM "EconomicEvent" 
+                    WHERE date = $1 
+                    ORDER BY "sortOrder" DESC, time ASC
+                `, date);
 
                 return freshItems.map((item: any) => ({
                     id: item.id,
@@ -126,7 +130,11 @@ export class AgendaService {
                     currency: item.currency || undefined,
                     isManual: item.isManual,
                     isLocked: item.isLocked,
-                    sortOrder: item.sortOrder
+                    sortOrder: item.sortOrder,
+                    // @ts-ignore
+                    symbol: item.symbol || undefined,
+                    // @ts-ignore
+                    imageUrl: item.imageUrl || undefined
                 }));
             }
 
@@ -209,11 +217,49 @@ export class AgendaService {
         const actual = item.data?.find(d => d.label === 'Açıklanan' || d.label === 'Gerçekleşen')?.value;
         const previous = item.data?.find(d => d.label === 'Önceki')?.value;
 
+        // --- Logo & Symbol Detection ---
+        let symbol: string | null = null;
+        let imageUrl: string | null = null;
+
+        // PRIORITY 1: Use logo from Fintables API directly
+        if (item.image_url && !item.image_url.includes('flagcdn.com')) {
+            // Fintables provides company logos in image_url field
+            imageUrl = item.image_url;
+        } else if (item.image && !item.image.includes('flagcdn.com') && !item.image.includes('/agenda/')) {
+            // Alternative image field
+            imageUrl = item.image;
+        }
+
+        // Extract symbol from title for reference
+        // Extract symbol from title for reference but prevent false positives
+        const symbolMatch = item.title.match(/\b([A-Z]{3,5})\b/);
+        const candidateSymbol = symbolMatch ? symbolMatch[1] : null;
+
+        if (candidateSymbol) {
+            // Priority 1: If we have a Fintables logo, trust the symbol
+            if (imageUrl) {
+                symbol = candidateSymbol;
+            } else {
+                // Priority 2: Check IPO database
+                const ipo = await db.ipo.findUnique({
+                    where: { code: candidateSymbol },
+                    select: { imageUrl: true }
+                });
+
+                if (ipo?.imageUrl) {
+                    imageUrl = ipo.imageUrl;
+                    symbol = candidateSymbol;
+                }
+                // Else: Do NOT set symbol, let it fallback to country flag
+            }
+        }
+        // -------------------------------
+
         // Importance
         let importance = 'medium';
         const t = item.title.toLowerCase();
         if (item.type === 'capitalincrease' || item.type === 'dividend') importance = 'high';
-        else if (t.includes('faiz') || t.includes('gsyih') || t.includes('enflasyon') || t.includes('tüfe') || t.includes('işsizlik')) importance = 'high';
+        else if (t.includes('faiz') || t.includes('gsyih') || t.includes('gayri safi') || t.includes('enflasyon') || t.includes('tüfe') || t.includes('üfe') || t.includes('işsizlik') || t.includes('istihdam') || t.includes('konut satışları') || t.includes('perakende')) importance = 'high';
         else if (t.includes('konuşması') && (t.includes('başkanı') || t.includes('powell'))) importance = 'high';
         else if (item.type === 'ipo') importance = 'medium';
         else importance = 'medium';
@@ -249,7 +295,11 @@ export class AgendaService {
                         actual: actual || null,
                         forecast: expectation || null,
                         previous: previous || null,
-                        importance: importance
+                        importance: importance,
+                        // @ts-ignore
+                        symbol: symbol,
+                        // @ts-ignore
+                        imageUrl: imageUrl
                     }
                 });
             } else {
@@ -267,7 +317,11 @@ export class AgendaService {
                         importance: importance,
                         isManual: false,
                         isLocked: false,
-                        sortOrder: 0
+                        sortOrder: 0,
+                        // @ts-ignore
+                        symbol: symbol,
+                        // @ts-ignore
+                        imageUrl: imageUrl
                     }
                 });
             }

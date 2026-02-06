@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Calendar, Building2, Ticket, TrendingUp, Info, Search, ListFilter, Rocket, ChevronLeft, ChevronRight, Zap, ArrowRight, ShieldCheck, Clock, Sparkles } from "lucide-react";
+import { Loader2, Calendar, Building2, Ticket, TrendingUp, Info, Search, ListFilter, Rocket, ChevronLeft, ChevronRight, Zap, ArrowRight, ShieldCheck, Clock, Sparkles, Bell } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,7 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { cn } from "@/lib/utils";
+import { cn, isIpoTradingToday } from "@/lib/utils";
 
 interface IpoItem {
     code: string;
@@ -31,6 +31,7 @@ interface IpoItem {
     isNew: boolean;
     statusText?: string;
     status?: 'New' | 'Active' | 'Draft';
+    firstTradingDate?: string;
 }
 
 export default function IpoPage() {
@@ -164,13 +165,6 @@ export default function IpoPage() {
                                 {newIpos.map((ipo, index) => (
                                     <Link key={index} href={`/market/ipo/${ipo.code}`} className="group block">
                                         <Card className="relative h-full overflow-hidden border-border dark:border-slate-800 bg-card/60 dark:bg-slate-950/40 backdrop-blur-sm hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 rounded-[2rem] p-6 lg:p-7 flex flex-col gap-6">
-                                            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                                                {ipo.imageUrl ? (
-                                                    <img src={ipo.imageUrl} alt="" className="w-24 h-24 object-contain grayscale" />
-                                                ) : (
-                                                    <Building2 className="w-16 h-16 text-primary" />
-                                                )}
-                                            </div>
 
                                             <div className="flex justify-between items-start relative z-10">
                                                 <div className="w-14 h-14 rounded-2xl bg-white p-1 border border-border dark:border-slate-800 shrink-0 overflow-hidden flex items-center justify-center shadow-2xl group-hover:scale-110 transition-transform duration-500">
@@ -185,6 +179,12 @@ export default function IpoPage() {
                                                         <Sparkles className="w-2.5 h-2.5 fill-current" />
                                                         Yenİ
                                                     </Badge>
+                                                    {isIpoTradingToday(ipo.firstTradingDate) && (
+                                                        <div className="h-6 px-3 rounded-full bg-amber-500 flex items-center gap-1.5 shadow-lg shadow-amber-500/20 animate-bounce">
+                                                            <Bell className="w-2.5 h-2.5 text-white fill-current" />
+                                                            <span className="text-[9px] font-black text-white uppercase tracking-wider">GONG!</span>
+                                                        </div>
+                                                    )}
                                                     {ipo.statusText && (
                                                         <div className="h-6 px-3 rounded-full bg-blue-600 flex items-center gap-1.5 shadow-lg shadow-blue-500/20 animate-pulse">
                                                             <div className="w-1.5 h-1.5 bg-white rounded-full animate-ping"></div>
@@ -337,6 +337,12 @@ function IpoTable({
                                                         <div className="w-1 h-1 rounded-full bg-blue-500 dark:bg-blue-400 animate-pulse"></div>
                                                         {ipo.statusText}
                                                     </span>
+                                                )}
+                                                {isIpoTradingToday(ipo.firstTradingDate) && !isDraft && (
+                                                    <Badge variant="secondary" className="text-[8px] h-4 px-1.5 bg-amber-500 text-white border-0 uppercase shadow-[0_0_8px_rgba(245,158,11,0.3)] animate-bounce flex items-center gap-1">
+                                                        <Bell className="w-2 h-2 fill-current" />
+                                                        GONG
+                                                    </Badge>
                                                 )}
                                             </div>
                                         </div>

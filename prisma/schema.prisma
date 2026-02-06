@@ -297,6 +297,8 @@ model EconomicEvent {
   isManual    Boolean  @default(false)
   isLocked    Boolean  @default(false)
   sortOrder   Int      @default(0)
+  symbol      String?
+  imageUrl    String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

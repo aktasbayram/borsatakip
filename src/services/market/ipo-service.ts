@@ -18,6 +18,7 @@ export interface IpoItem {
     showOnHomepage?: boolean;
     isLocked?: boolean;
     sortOrder?: number;
+    firstTradingDate?: string;
 }
 
 export interface IpoDetail extends IpoItem {
@@ -92,7 +93,8 @@ export class IpoService {
                         // Scrape details if new or incomplete
                         // We used to skip drafts, but users want content for drafts too
                         const isDraft = item.isHazirlaniyor;
-                        const shouldScrapeDetails = (!existing || !existing.summaryInfo || (existing.summaryInfo as any[]).length === 0 || item.isNew || item.statusText?.includes('Talep'));
+                        const hasMissingTradingDate = !existing?.firstTradingDate || existing.firstTradingDate === 'Tarih Bekleniyor' || existing.firstTradingDate === '-' || existing.firstTradingDate === 'Hazırlanıyor...';
+                        const shouldScrapeDetails = (!existing || !existing.summaryInfo || (existing.summaryInfo as any[]).length === 0 || item.isNew || item.statusText?.includes('Talep') || hasMissingTradingDate);
 
                         let details: Partial<IpoDetail> = {};
                         if (shouldScrapeDetails) {
@@ -118,7 +120,7 @@ export class IpoService {
                             market: details.market || existing?.market,
                             distributionMethod: details.distributionMethod || existing?.distributionMethod,
                             leadUnderwriter: details.leadUnderwriter || existing?.leadUnderwriter,
-                            firstTradingDate: details.firstTradingDate || existing?.firstTradingDate,
+                            firstTradingDate: (details.firstTradingDate && details.firstTradingDate !== 'Tarih Bekleniyor') ? details.firstTradingDate : (existing?.firstTradingDate || 'Tarih Bekleniyor'),
                             statusText: item.statusText || '', // Overwrite to allow clearing
                             // Map status: Taslak -> DRAFT, Talep -> ACTIVE, New -> NEW
                             status: isDraft ? 'DRAFT' : (item.statusText?.includes('Talep') ? 'ACTIVE' : 'NEW'),
@@ -204,7 +206,8 @@ export class IpoService {
                             (ipo.status === 'ACTIVE' ? 'Active' : 'New'),
                         showOnHomepage: ipo.showOnHomepage,
                         isLocked: ipo.isLocked,
-                        sortOrder: ipo.sortOrder || 0
+                        sortOrder: ipo.sortOrder || 0,
+                        firstTradingDate: ipo.firstTradingDate || undefined
                     };
                 });
 
@@ -472,7 +475,7 @@ export class IpoService {
                 const market = extract(/Pazar\s*:\s*(.*?)(?:\n|$)/);
                 const code = extract(/Bist Kodu\s*:\s*([A-Z0-9]+)/) || '';
                 const leadUnderwriter = extract(/Aracı Kurum\s*:\s*(.*?)(?:\n|$)/);
-                const firstTradingDate = extract(/Bist İlk İşlem Tarihi\s*:\s*(.*?)(?:\n|$)/) || 'Tarih Bekleniyor';
+                const firstTradingDate = extract(/(?:Bist|BİST)?\s*(?:İlk İşlem Tarihi|İşlem Tarihi)\s*[:：]\s*(.*?)(?:\n|$)/i) || 'Tarih Bekleniyor';
 
                 const summaryInfo: { title: string, items: string[] }[] = [];
                 const summaryListItems = document.querySelectorAll('.sp-arz-extra ul.aex-in li');

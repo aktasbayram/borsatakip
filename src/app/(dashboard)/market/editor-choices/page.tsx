@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { ShieldAlert, Lock, Sparkles, TrendingUp, AlertCircle } from "lucide-react";
+import { ShieldAlert, Lock, Sparkles, TrendingUp, AlertCircle, ExternalLink, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +26,7 @@ export default async function EditorChoicesPage() {
             const userPackage = await db.package.findFirst({
                 where: { name: user.subscriptionTier }
             });
+            // @ts-ignore
             isAllowed = userPackage?.canSeeEditorChoices || false;
         }
     }
@@ -174,6 +175,52 @@ export default async function EditorChoicesPage() {
                                     <p className="text-slate-600 dark:text-slate-400 leading-relaxed line-clamp-4">
                                         {choice.content}
                                     </p>
+
+                                    {choice.chartUrl && (
+                                        <div className="relative mt-4 group/chart overflow-hidden rounded-2xl border border-border bg-zinc-50 dark:bg-zinc-900/50">
+                                            {/\.(jpg|jpeg|png|webp|gif|svg)$/i.test(choice.chartUrl) ? (
+                                                <div className="aspect-video relative overflow-hidden">
+                                                    <img
+                                                        src={choice.chartUrl}
+                                                        alt={`${choice.symbol} Analiz Grafiği`}
+                                                        className="w-full h-full object-cover group-hover/chart:scale-105 transition-transform duration-500"
+                                                    />
+                                                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/chart:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                                                        <a
+                                                            href={choice.chartUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="bg-white text-black px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2 transform translate-y-4 group-hover/chart:translate-y-0 transition-transform"
+                                                        >
+                                                            <ExternalLink className="w-3 h-3" />
+                                                            Tam Ekran Gör
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <div className="p-4 flex items-center justify-between gap-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
+                                                            <ImageIcon className="w-5 h-5 text-amber-500" />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-sm font-bold">Analiz Grafiği</p>
+                                                            <p className="text-[10px] text-muted-foreground truncate max-w-[150px]">{choice.chartUrl}</p>
+                                                        </div>
+                                                    </div>
+                                                    <a
+                                                        href={choice.chartUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="bg-zinc-200 dark:bg-zinc-800 hover:bg-zinc-300 dark:hover:bg-zinc-700 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-colors"
+                                                    >
+                                                        <ExternalLink className="w-3 h-3" />
+                                                        Grafiği Aç
+                                                    </a>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
 
                                     <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border/50">
                                         {choice.stopLoss && (

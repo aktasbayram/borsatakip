@@ -5,6 +5,7 @@ import * as dotenv from 'dotenv';
 import path from 'path';
 import { sendTelegramMessage } from '../src/lib/notifications';
 import { TelegramService } from '../src/lib/telegram';
+import { IpoService } from '../src/services/market/ipo-service';
 
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
@@ -166,6 +167,7 @@ async function handleTelegramUpdates(offset: number) {
 async function runWorker() {
     console.log("Starting Borsa Worker (Alerts + Telegram Bot)...");
     let updateOffset = 0;
+    let lastIpoSync = 0;
 
     // Main Loop
     while (true) {
@@ -175,6 +177,21 @@ async function runWorker() {
 
             // Telegram Bot
             updateOffset = await handleTelegramUpdates(updateOffset);
+
+            // Periodic IPO Sync (every 6 hours)
+            const now = Date.now();
+            if (now - lastIpoSync > 6 * 60 * 60 * 1000) {
+                console.log(`[${new Date().toISOString()}] Starting periodic IPO sync...`);
+                try {
+                    const result = await IpoService.syncIpos();
+                    console.log(`[${new Date().toISOString()}] IPO sync completed: Added ${result.added}, Updated ${result.updated}, Errors ${result.errors}`);
+                    lastIpoSync = now;
+                } catch (syncError) {
+                    console.error("Periodic IPO Sync Error:", syncError);
+                    // Retry in 30 minutes on failure
+                    lastIpoSync = now - (5.5 * 60 * 60 * 1000);
+                }
+            }
 
         } catch (error) {
             console.error("Worker Error:", error);

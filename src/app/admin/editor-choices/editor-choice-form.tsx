@@ -10,6 +10,7 @@ import { Switch } from "@/components/ui/switch";
 import { useSnackbar } from "notistack";
 import axios from "axios";
 import { Loader2, Save, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface EditorChoiceFormProps {
     initialData?: any;
@@ -135,13 +136,41 @@ export function EditorChoiceForm({ initialData }: EditorChoiceFormProps) {
                     />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="chartUrl">Grafik Görsel URL (Opsiyonel)</Label>
+                    <Label htmlFor="chartUrl" className="flex items-center justify-between">
+                        Grafik Görsel URL (Opsiyonel)
+                        <span className="text-[10px] font-normal text-muted-foreground italic">.jpg, .png veya prnt.sc linki</span>
+                    </Label>
                     <Input
                         id="chartUrl"
-                        placeholder="https://..."
+                        placeholder="Örn: https://i.imgur.com/abc.png veya prnt.sc linki"
                         value={formData.chartUrl}
                         onChange={(e) => setFormData({ ...formData, chartUrl: e.target.value })}
+                        className={cn(
+                            formData.chartUrl && !/\.(jpg|jpeg|png|webp|gif|svg)$/i.test(formData.chartUrl)
+                                ? "border-amber-500 focus-visible:ring-amber-500"
+                                : formData.chartUrl
+                                    ? "border-emerald-500 focus-visible:ring-emerald-500"
+                                    : ""
+                        )}
                     />
+                    {formData.chartUrl && (
+                        /\.(jpg|jpeg|png|webp|gif|svg)$/i.test(formData.chartUrl) ? (
+                            <p className="text-[11px] text-emerald-600 font-bold flex items-center gap-1 mt-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+                                Direkt Resim Algılandı: Sitede resim olarak görünecek.
+                            </p>
+                        ) : (
+                            <div className="mt-1.5 p-2 rounded-md bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50">
+                                <p className="text-[11px] text-amber-700 dark:text-amber-400 font-bold flex items-start gap-1.5">
+                                    <span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-amber-600 shrink-0"></span>
+                                    <span>
+                                        DİKKAT: Bu bir direkt resim linki değil. Sitede resim olarak değil,
+                                        <strong> "Grafiği Aç" </strong> butonu olarak görünecek.
+                                    </span>
+                                </p>
+                            </div>
+                        )
+                    )}
                 </div>
             </div>
 
