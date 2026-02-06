@@ -364,6 +364,8 @@ model AdPlacement {
   adCode      String   // Full HTML/Script
   isActive    Boolean  @default(true)
   platform    String   @default("ALL") // ALL, DESKTOP, MOBILE
+  maxWidth    String?  // e.g. "728px" or "100%"
+  maxHeight   String?  // e.g. "90px"
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }

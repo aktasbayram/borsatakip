@@ -46,27 +46,34 @@ export default async function EditorChoicesPage() {
     }
 
     return (
-        <div className="space-y-8 max-w-6xl mx-auto">
-            {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border pb-6">
-                <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                        <Sparkles className="w-6 h-6 text-amber-500 fill-amber-500 animate-pulse" />
-                        <h1 className="text-4xl font-black tracking-tight bg-gradient-to-r from-amber-500 to-orange-600 bg-clip-text text-transparent">
-                            Editörün Seçimleri
+        <div className="max-w-7xl mx-auto space-y-6 pb-20 px-4 md:px-0">
+            {/* Elegant Header - Unified Style */}
+            <div className="relative overflow-hidden rounded-[1.75rem] bg-card dark:bg-slate-950 p-5 lg:p-7 border border-border dark:border-slate-800 shadow-2xl group transition-colors duration-300">
+                <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[250px] h-[250px] bg-amber-500/5 rounded-full blur-[70px] pointer-events-none group-hover:bg-amber-500/10 transition-colors duration-1000"></div>
+                <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-[250px] h-[250px] bg-orange-500/5 rounded-full blur-[70px] pointer-events-none group-hover:bg-orange-500/10 transition-colors duration-1000"></div>
+
+                <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="space-y-2.5 max-w-2xl">
+                        <div className="inline-flex items-center gap-2 px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 text-[8px] font-black uppercase tracking-[0.2em] border border-amber-500/20">
+                            <Sparkles className="w-2.5 h-2.5" />
+                            Uzman Analizleri
+                        </div>
+                        <h1 className="text-2xl lg:text-3xl font-black tracking-tighter leading-none text-foreground dark:text-white italic">
+                            Editörün <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-500 to-orange-600 pr-2">Seçimleri</span>
                         </h1>
+                        <p className="text-muted-foreground dark:text-slate-400 text-[11px] md:text-xs font-medium leading-relaxed max-w-xl">
+                            Piyasa uzmanlarımızın detaylı teknik ve temel analizleriyle öne çıkan hisseler.
+                        </p>
                     </div>
-                    <p className="text-muted-foreground text-lg max-w-2xl">
-                        Piyasa uzmanlarımızın detaylı teknik ve temel analizleriyle öne çıkan hisseler.
-                    </p>
+
+                    {!isAllowed && (
+                        <Link href="/upgrade">
+                            <Button className="bg-amber-500 hover:bg-amber-600 text-white font-black text-[10px] px-6 h-10 rounded-xl uppercase tracking-widest shadow-lg shadow-amber-500/20">
+                                Premium'a Geç
+                            </Button>
+                        </Link>
+                    )}
                 </div>
-                {!isAllowed && (
-                    <Link href="/upgrade">
-                        <Button className="bg-amber-500 hover:bg-amber-600 text-white font-bold px-8">
-                            Premium'a Geç
-                        </Button>
-                    </Link>
-                )}
             </div>
 
             {/* Access Control section */}

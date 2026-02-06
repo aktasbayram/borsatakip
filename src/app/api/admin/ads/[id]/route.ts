@@ -25,6 +25,8 @@ export async function PUT(
         if (body.adCode !== undefined) updateData.adCode = body.adCode;
         if (body.platform !== undefined) updateData.platform = body.platform;
         if (body.isActive !== undefined) updateData.isActive = body.isActive;
+        if (body.maxWidth !== undefined) updateData.maxWidth = body.maxWidth;
+        if (body.maxHeight !== undefined) updateData.maxHeight = body.maxHeight;
 
         console.log('[ADS_PUT] Update data:', JSON.stringify(updateData, null, 2));
 

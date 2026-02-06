@@ -44,7 +44,9 @@ export async function POST(req: Request) {
                 location,
                 adCode,
                 platform: platform || "ALL",
-                isActive: true
+                isActive: true,
+                maxWidth: body.maxWidth || null,
+                maxHeight: body.maxHeight || null
             }
         });
 

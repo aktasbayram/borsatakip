@@ -16,6 +16,8 @@ interface AdPlacement {
     adCode: string;
     platform: string;
     isActive: boolean;
+    maxWidth?: string;
+    maxHeight?: string;
 }
 
 interface AdFormProps {
@@ -96,6 +98,8 @@ export function AdForm({ initialData, onSuccess, onCancel }: AdFormProps) {
                             <SelectItem value="dashboard_grid_2">Dashboard (Sağ Alt)</SelectItem>
                             <SelectItem value="footer_top">Footer (Sayfa Altı)</SelectItem>
                             <SelectItem value="mobile_menu_bottom">Mobil Menü (En Alt)</SelectItem>
+                            <SelectItem value="dashboard_header_full">Dashboard Header (Tam Genişlik)</SelectItem>
+                            <SelectItem value="symbol_detail_banner">Hisse Detay Banner (Grafik Altı)</SelectItem>
                             {/* Future locations can be added here */}
                         </SelectContent>
                     </Select>

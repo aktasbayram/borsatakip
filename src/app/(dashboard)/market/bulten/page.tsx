@@ -36,26 +36,37 @@ export default async function BultenPage() {
 
     return (
         <div className="max-w-7xl mx-auto space-y-12 pb-20">
-            {/* Editorial Header */}
-            <div className="relative pt-6 pb-2 text-center space-y-4 overflow-hidden">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(var(--primary-rgb),0.04)_0%,transparent_70%)] -z-10" />
+            {/* Elegant Header - Unified Style */}
+            <div className="relative overflow-hidden rounded-[1.75rem] bg-card dark:bg-slate-950 p-5 lg:p-7 border border-border dark:border-slate-800 shadow-2xl group transition-colors duration-300">
+                <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[250px] h-[250px] bg-primary/5 rounded-full blur-[70px] pointer-events-none group-hover:bg-primary/10 transition-colors duration-1000"></div>
+                <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-[250px] h-[250px] bg-blue-500/5 rounded-full blur-[70px] pointer-events-none group-hover:bg-blue-500/10 transition-colors duration-1000"></div>
 
-                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-[0.2em] mb-4 border border-primary/20 animate-in fade-in slide-in-from-top-4 duration-700">
-                    <Zap className="w-3 h-3 fill-primary" />
-                    Piyasa Gündemi
-                </div>
+                <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="space-y-2.5 max-w-2xl">
+                        <div className="inline-flex items-center gap-2 px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[8px] font-black uppercase tracking-[0.2em] border border-primary/20">
+                            <Zap className="w-2.5 h-2.5" />
+                            Piyasa Gündemi
+                        </div>
+                        <h1 className="text-2xl lg:text-3xl font-black tracking-tighter leading-none text-foreground dark:text-white italic">
+                            Günün <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-blue-500 pr-2">Bülteni</span>
+                        </h1>
+                        <div className="flex items-center gap-3 text-muted-foreground dark:text-slate-400 text-[11px] md:text-xs font-medium leading-relaxed">
+                            <span>{dateStr}</span>
+                            <span className="w-1.5 h-1.5 rounded-full bg-border" />
+                            <span className="flex items-center gap-1.5">
+                                <Clock className="w-3.5 h-3.5" />
+                                {marketStatus}
+                            </span>
+                        </div>
+                    </div>
 
-                <h1 className="text-4xl md:text-5xl font-black tracking-tighter leading-none animate-in fade-in slide-in-from-bottom-8 duration-1000">
-                    GÜNÜN <span className="text-primary italic">BÜLTENİ</span>
-                </h1>
-
-                <div className="flex items-center justify-center gap-4 text-muted-foreground font-medium text-sm md:text-base">
-                    <span>{dateStr}</span>
-                    <span className="w-1.5 h-1.5 rounded-full bg-border" />
-                    <span className="flex items-center gap-1.5">
-                        <Clock className="w-4 h-4" />
-                        {marketStatus}
-                    </span>
+                    <div className="bg-muted/50 dark:bg-slate-900/50 backdrop-blur-md rounded-xl p-3 border border-border/50 dark:border-slate-800/50 flex flex-col items-end gap-0.5 min-w-[150px]">
+                        <span className="text-[10px] uppercase font-black text-muted-foreground dark:text-slate-500 tracking-tighter">BIST Durum Analizi</span>
+                        <div className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
+                            <span className="text-xl font-black text-foreground dark:text-white italic">Aktif Takip</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 

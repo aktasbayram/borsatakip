@@ -16,23 +16,33 @@ export default async function RestrictedStocksPage() {
     const { stocks, lastUpdated } = await getStocks();
 
     return (
-        <div className="space-y-8 pb-10">
-            {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div className="space-y-1">
-                    <h1 className="text-4xl font-extrabold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
-                        Tedbirli Hisseler
-                    </h1>
-                    <p className="text-muted-foreground text-lg max-w-2xl leading-relaxed">
-                        Borsa İstanbul'da işlem gören ve çeşitli kısıtlamalar kapsamındaki güncel hisse listesi.
-                    </p>
-                </div>
-                {lastUpdated && (
-                    <div className="flex items-center gap-3 bg-emerald-500/5 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-4 py-2 rounded-2xl border border-emerald-500/20 text-xs font-semibold shadow-sm backdrop-blur-md transition-all hover:bg-emerald-500/10">
-                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
-                        <span>Veri Güncelliği: {new Date(lastUpdated).toLocaleString('tr-TR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}</span>
+        <div className="max-w-7xl mx-auto space-y-6 pb-20 px-4 md:px-0">
+            {/* Elegant Header - Unified Style */}
+            <div className="relative overflow-hidden rounded-[1.75rem] bg-card dark:bg-slate-950 p-5 lg:p-7 border border-border dark:border-slate-800 shadow-2xl group transition-colors duration-300">
+                <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[250px] h-[250px] bg-red-500/5 rounded-full blur-[70px] pointer-events-none group-hover:bg-red-500/10 transition-colors duration-1000"></div>
+                <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-[250px] h-[250px] bg-amber-500/5 rounded-full blur-[70px] pointer-events-none group-hover:bg-amber-500/10 transition-colors duration-1000"></div>
+
+                <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="space-y-2.5 max-w-2xl">
+                        <div className="inline-flex items-center gap-2 px-2 py-0.5 rounded-full bg-red-500/10 text-red-500 dark:text-red-400 text-[8px] font-black uppercase tracking-[0.2em] border border-red-500/20">
+                            <AlertTriangle className="w-2.5 h-2.5" />
+                            VBTS Kapsamı
+                        </div>
+                        <h1 className="text-2xl lg:text-3xl font-black tracking-tighter leading-none text-foreground dark:text-white italic">
+                            Tedbirli <span className="text-transparent bg-clip-text bg-gradient-to-r from-red-500 to-amber-500 pr-2">Hisseler</span>
+                        </h1>
+                        <p className="text-muted-foreground dark:text-slate-400 text-[11px] md:text-xs font-medium leading-relaxed max-w-xl">
+                            Borsa İstanbul'da işlem gören ve çeşitli kısıtlamalar kapsamındaki güncel hisse listesi.
+                        </p>
                     </div>
-                )}
+
+                    {lastUpdated && (
+                        <div className="bg-muted/50 dark:bg-slate-900/50 backdrop-blur-md rounded-xl p-3 border border-border/50 dark:border-slate-800/50 flex flex-col items-end gap-0.5 min-w-[150px]">
+                            <span className="text-[10px] uppercase font-black text-muted-foreground dark:text-slate-500 tracking-tighter">Son Güncelleme</span>
+                            <span className="text-xl font-black text-foreground dark:text-white italic">{new Date(lastUpdated).toLocaleString('tr-TR', { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {/* Information Alert */}

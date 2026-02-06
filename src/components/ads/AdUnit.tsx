@@ -9,6 +9,8 @@ interface AdPlacement {
     adCode: string; // This expects the INS tag attributes or partial HTML
     isActive: boolean;
     platform: string;
+    maxWidth?: string;
+    maxHeight?: string;
 }
 
 interface AdUnitProps {
@@ -63,9 +65,15 @@ export function AdUnit({ location, className = '' }: AdUnitProps) {
     if (!ad || !isClient) return null;
 
     return (
-        <div className={`w-full flex flex-col items-center justify-center my-4 overflow-hidden ${className}`}>
+        <div
+            className={`w-full flex flex-col items-center justify-center my-4 overflow-hidden ${className}`}
+            style={{
+                maxWidth: ad.maxWidth || undefined,
+                maxHeight: ad.maxHeight || undefined
+            }}
+        >
             <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">Reklam</div>
-            <div dangerouslySetInnerHTML={{ __html: ad.adCode }} />
+            <div className="w-full flex justify-center" dangerouslySetInnerHTML={{ __html: ad.adCode }} />
         </div>
     );
 }

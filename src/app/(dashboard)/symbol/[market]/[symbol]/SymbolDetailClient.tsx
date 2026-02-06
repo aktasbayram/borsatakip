@@ -19,6 +19,7 @@ import { CreditBadge } from '@/components/subscription/CreditBadge';
 import { UpgradeModal } from '@/components/subscription/UpgradeModal';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { FeaturePromoModal } from '@/components/marketing/FeaturePromoModal';
+import { AdUnit } from '@/components/ads/AdUnit';
 
 export default function SymbolDetailClient() {
     const params = useParams();
@@ -416,6 +417,9 @@ export default function SymbolDetailClient() {
                     </div>
                 )}
             </div>
+
+            {/* Ad Placement: Symbol Detail Banner */}
+            <AdUnit location="symbol_detail_banner" className="mb-6" />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card className="relative overflow-hidden">
