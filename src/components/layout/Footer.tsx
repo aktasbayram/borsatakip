@@ -1,13 +1,38 @@
+"use client";
+
 import Link from 'next/link';
 import { useLayoutWidth } from '@/hooks/useLayoutWidth';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
+
+interface PageItem {
+    title: string;
+    slug: string;
+}
 
 export function Footer() {
     const { getContainerClass } = useLayoutWidth();
     const currentYear = new Date().getFullYear();
+    const [pages, setPages] = useState<PageItem[]>([]);
+
+    useEffect(() => {
+        const fetchPages = async () => {
+            try {
+                const response = await axios.get('/api/pages');
+                if (response.data.success) {
+                    setPages(response.data.data);
+                }
+            } catch (error) {
+                console.error("Footer pages fetch error:", error);
+            }
+        };
+
+        fetchPages();
+    }, []);
 
     return (
         <footer className="bg-card border-t border-border mt-auto">
-            <div className={`mx-auto ${getContainerClass()} px-4 sm:px-6 lg:px-8 py-8`}>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
                     {/* Brand Section */}
                     <div className="col-span-1 md:col-span-2">
@@ -57,30 +82,22 @@ export function Footer() {
                         </ul>
                     </div>
 
-                    {/* Settings Links */}
+                    {/* Settings & Pages Links */}
                     <div>
                         <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4">
-                            Ayarlar
+                            Kurumsal
                         </h3>
                         <ul className="space-y-2">
+                            {pages.map((page) => (
+                                <li key={page.slug}>
+                                    <Link href={`/p/${page.slug}`} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                                        {page.title}
+                                    </Link>
+                                </li>
+                            ))}
                             <li>
-                                <Link href="/settings/account" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                                    Hesap Ayarları
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/settings/appearance" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                                    Tema ve Görünüm
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/settings/notifications" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                                    Bildirimler
-                                </Link>
-                            </li>
-                            <li>
-                                <Link href="/upgrade" className="text-sm text-primary hover:text-primary/80 transition-colors font-medium">
-                                    Pro'ya Yükselt
+                                <Link href="/contact" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                                    İletişim
                                 </Link>
                             </li>
                         </ul>
@@ -94,12 +111,6 @@ export function Footer() {
                             © {currentYear} BorsaTakip. Tüm hakları saklıdır.
                         </p>
                         <div className="flex items-center gap-6">
-                            <Link href="/privacy" className="text-xs text-muted-foreground hover:text-primary transition-colors">
-                                Gizlilik Politikası
-                            </Link>
-                            <Link href="/terms" className="text-xs text-muted-foreground hover:text-primary transition-colors">
-                                Kullanım Şartları
-                            </Link>
                             <a
                                 href="https://github.com/aktasbayram"
                                 target="_blank"

@@ -100,6 +100,30 @@ export default async function AdminPage() {
                         </Link>
                     </CardContent>
                 </Card>
+
+                <Card className="hover:shadow-lg transition-shadow border-slate-500/20 bg-slate-500/5 rounded-[2rem] overflow-hidden">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-xl">📄 Sayfalar</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <p className="text-sm text-muted-foreground font-medium">Gizlilik politikası, kullanım şartları gibi statik sayfaları yönetin.</p>
+                        <Link href="/admin/pages" className="block w-full">
+                            <Button variant="outline" className="w-full rounded-2xl border-slate-500/50 hover:bg-slate-500/10">Sayfaları Yönet &rarr;</Button>
+                        </Link>
+                    </CardContent>
+                </Card>
+
+                <Card className="hover:shadow-lg transition-shadow border-cyan-500/20 bg-cyan-500/5 rounded-[2rem] overflow-hidden">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-xl">✍️ Yazılar & Blog</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <p className="text-sm text-muted-foreground font-medium">Sitedeki haberleri, analizleri ve makaleleri yönetin.</p>
+                        <Link href="/admin/posts" className="block w-full">
+                            <Button variant="outline" className="w-full rounded-2xl border-cyan-500/50 hover:bg-cyan-500/10">Yazıları Yönet &rarr;</Button>
+                        </Link>
+                    </CardContent>
+                </Card>
             </div>
         </div>
     );

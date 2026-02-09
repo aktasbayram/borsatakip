@@ -72,7 +72,7 @@ export default function IpoPage() {
     const approvedIpos = filteredIpos.filter(x => x.status === 'Active' || x.status === 'New');
     const draftIpos = filteredIpos.filter(x => x.status !== 'Active' && x.status !== 'New');
 
-    const newIpos = approvedIpos.filter(x => x.isNew);
+    const collectingIpos = approvedIpos.filter(x => x.statusText === 'TALEP TOPLANIYOR');
 
     const paginatedApproved = approvedIpos.slice((approvedPage - 1) * itemsPerPage, approvedPage * itemsPerPage);
     const paginatedDrafts = draftIpos.slice((draftPage - 1) * itemsPerPage, draftPage * itemsPerPage);
@@ -148,7 +148,7 @@ export default function IpoPage() {
 
                 <TabsContent value="approved" className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     {/* Featured Section */}
-                    {!searchTerm && newIpos.length > 0 && (
+                    {!searchTerm && collectingIpos.length > 0 && (
                         <div className="space-y-6">
                             <div className="flex items-center justify-between px-2">
                                 <div className="flex items-center gap-3">
@@ -157,12 +157,12 @@ export default function IpoPage() {
                                 </div>
                                 <div className="hidden md:flex items-center gap-2 text-primary font-black text-[10px] uppercase tracking-tighter">
                                     <Zap className="w-3 h-3 fill-primary" />
-                                    Yeni Başvurular
+                                    Aktif
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {newIpos.map((ipo, index) => (
+                                {collectingIpos.map((ipo, index) => (
                                     <Link key={index} href={`/market/ipo/${ipo.code}`} className="group block">
                                         <Card className="relative h-full overflow-hidden border-border dark:border-slate-800 bg-card/60 dark:bg-slate-950/40 backdrop-blur-sm hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/5 transition-all duration-500 rounded-[2rem] p-6 lg:p-7 flex flex-col gap-6">
 
@@ -226,7 +226,7 @@ export default function IpoPage() {
 
                     {/* Main Approved Table */}
                     <div className="space-y-6">
-                        {!searchTerm && newIpos.length > 0 && (
+                        {!searchTerm && (
                             <div className="flex items-center gap-3 px-2">
                                 <ListFilter className="w-5 h-5 text-muted-foreground" />
                                 <h2 className="text-lg font-black text-foreground italic tracking-tight uppercase tracking-widest">Tüm Halka Arzlar</h2>

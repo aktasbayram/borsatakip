@@ -58,11 +58,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         { name: 'Alarmlar', href: '/alerts' },
         { name: 'Analizler', href: '/analysis' },
         { name: 'Haberler', href: '/news' },
+        { name: 'Blog', href: '/blog' },
     ] : [
         { name: 'Piyasalar', href: '/' },
         { name: 'Portföy', href: '/portfolio' },
         { name: 'Alarmlar', href: '/alerts' },
         { name: 'Haberler', href: '/news' },
+        { name: 'Blog', href: '/blog' },
     ];
 
     return (

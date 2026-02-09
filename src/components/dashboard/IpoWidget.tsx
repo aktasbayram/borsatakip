@@ -34,12 +34,15 @@ export function IpoWidget() {
         const fetchIpos = async () => {
             try {
                 const response = await axios.get('/api/market/ipos');
-                // Filter: show all scraped IPOs (they don't have showOnHomepage flag) 
-                // OR manual IPOs that have showOnHomepage set to true
-                const visibleIpos = response.data.filter((ipo: any) =>
-                    ipo.showOnHomepage === true || ipo.showOnHomepage === undefined
-                );
-                setIpos(visibleIpos.slice(0, 5));
+                // Filter out Drafts ONLY if they are also NOT new (e.g. old drafts)
+                // But for now, since we sort by homepage position, whatever is on homepage (even drafts) should show up.
+                // We just filter out explicit 'Draft' status if desired, but user said "Hazırlanıyor ... olsa yeni halka arz olabiliyor"
+
+                // So let's show everything, because sortOrder will push old stuff to bottom.
+                const validIpos = response.data;
+
+                // Show top 10 sorted by the backend (Active > New > Date)
+                setIpos(validIpos.slice(0, 10));
             } catch (error) {
                 console.error('Failed to fetch IPOs', error);
             } finally {

@@ -66,17 +66,19 @@ export function AdUnit({ location, className = '' }: AdUnitProps) {
 
     return (
         <div
-            className={`w-full flex flex-col my-4 overflow-hidden ${className}`}
+            className={`w-full flex flex-col my-8 px-4 overflow-hidden rounded-2xl bg-accent/5 border border-border/20 backdrop-blur-sm ${className}`}
             style={{
                 maxWidth: ad.maxWidth || undefined,
                 maxHeight: ad.maxHeight || undefined,
-                marginInline: ad.maxWidth ? 'auto' : undefined
+                marginInline: 'auto'
             }}
         >
-            <div className="text-[10px] text-gray-400 uppercase tracking-wider mb-1 text-center">
-                Reklam
+            <div className="flex items-center justify-center gap-2 py-2 border-b border-border/10">
+                <div className="h-0.5 w-4 bg-muted-foreground/20"></div>
+                <span className="text-[9px] text-muted-foreground font-black uppercase tracking-[0.2em]">Sponsorlu İçerik</span>
+                <div className="h-0.5 w-4 bg-muted-foreground/20"></div>
             </div>
-            <div className="w-full flex justify-center [&>*]:w-full" dangerouslySetInnerHTML={{ __html: ad.adCode }} />
+            <div className="w-full py-4 flex justify-center [&>*]:w-full transition-opacity duration-500 min-h-[50px]" dangerouslySetInnerHTML={{ __html: ad.adCode }} />
         </div>
     );
 }

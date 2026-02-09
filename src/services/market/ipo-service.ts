@@ -19,6 +19,7 @@ export interface IpoItem {
     isLocked?: boolean;
     sortOrder?: number;
     firstTradingDate?: string;
+    createdAt?: Date | string;
 }
 
 export interface IpoDetail extends IpoItem {
@@ -65,7 +66,9 @@ export class IpoService {
                 // This ensures they have the latest createdAt timestamp in the DB.
                 const reversedList = [...scrapedList].reverse();
 
+                let index = 0;
                 for (const item of reversedList) {
+                    index++;
                     try {
                         // Try to generate a valid code if missing
                         let code = item.code;
@@ -126,6 +129,7 @@ export class IpoService {
                             status: isDraft ? 'DRAFT' : (item.statusText?.includes('Talep') ? 'ACTIVE' : 'NEW'),
                             isNew: item.isNew,
                             summaryInfo: details.summaryInfo ? (details.summaryInfo as any) : existing?.summaryInfo,
+                            sortOrder: index + 1, // Higher index = Newer on homepage (since we reversed list)
                         };
 
                         if (existing) {
@@ -207,23 +211,20 @@ export class IpoService {
                         showOnHomepage: ipo.showOnHomepage,
                         isLocked: ipo.isLocked,
                         sortOrder: ipo.sortOrder || 0,
-                        firstTradingDate: ipo.firstTradingDate || undefined
+                        firstTradingDate: ipo.firstTradingDate || undefined,
+                        createdAt: ipo.createdAt // Pass for sorting
                     };
                 });
 
-                // Sort: Homepage items first, then by status, then by intelligence
+                // Sort: Homepage Order (sortOrder) Descending > Active > New > CreatedAt
                 mapped.sort((a, b) => {
-                    // 1. Pinned to homepage
-                    const aShow = a.showOnHomepage ? 1 : 0;
-                    const bShow = b.showOnHomepage ? 1 : 0;
-                    if (aShow !== bShow) return bShow - aShow;
-
-                    // 2. Manual Sort Order (Higher numbers first)
+                    // 1. Sort Order (Mirrors Homepage Position)
+                    // Higher sortOrder means it was higher on the list (processed later in reversed loop)
                     if ((a.sortOrder || 0) !== (b.sortOrder || 0)) {
                         return (b.sortOrder || 0) - (a.sortOrder || 0);
                     }
 
-                    // 3. Currently active / collecting bids
+                    // 2. Currently active / collecting bids (Talep Toplanıyor)
                     const isTalepA = a.statusText?.includes('TALEP') || a.status === 'Active';
                     const isTalepB = b.statusText?.includes('TALEP') || b.status === 'Active';
                     if (isTalepA !== isTalepB) return isTalepB ? 1 : -1;
@@ -231,16 +232,12 @@ export class IpoService {
                     // 3. New tag
                     if (a.isNew !== b.isNew) return b.isNew ? 1 : -1;
 
-                    // 4. Year aware sort
-                    const getYear = (d: string) => {
-                        const match = String(d).match(/20\d{2}/);
-                        return match ? parseInt(match[0]) : 0;
-                    };
-                    const yearA = getYear(a.date || '');
-                    const yearB = getYear(b.date || '');
-                    if (yearA !== yearB) return yearB - yearA;
-
-                    return 0; // Default same
+                    // 4. Created At (Addition Order)
+                    // @ts-ignore
+                    const dateA = new Date(a.createdAt || 0).getTime();
+                    // @ts-ignore
+                    const dateB = new Date(b.createdAt || 0).getTime();
+                    return dateB - dateA;
                 });
 
                 return mapped;
@@ -362,6 +359,40 @@ export class IpoService {
             // Helper for extraction
             const extractItems = async () => {
                 return await page.evaluate(() => {
+                    const monthMap: { [key: string]: number } = {
+                        'Ocak': 0, 'Şubat': 1, 'Mart': 2, 'Nisan': 3, 'Mayıs': 4, 'Haziran': 5,
+                        'Temmuz': 6, 'Ağustos': 7, 'Eylül': 8, 'Ekim': 9, 'Kasım': 10, 'Aralık': 11
+                    };
+
+                    const parseDateRange = (dateStr: string) => {
+                        try {
+                            // "11-12-13 Şubat 2026" or "14-15 Aralık"
+                            const parts = dateStr.trim().split(' ');
+                            if (parts.length < 2) return null;
+
+                            const yearStr = parts.find(p => /20\d{2}/.test(p));
+                            const year = yearStr ? parseInt(yearStr) : new Date().getFullYear();
+
+                            const monthStr = parts.find(p => monthMap[p] !== undefined);
+                            const month = monthStr ? monthMap[monthStr] : -1;
+
+                            if (month === -1) return null;
+
+                            // Extract days
+                            const dayPart = parts[0];
+                            const days = dayPart.split('-').map(d => parseInt(d)).filter(n => !isNaN(n));
+
+                            if (days.length === 0) return null;
+
+                            const start = new Date(year, month, days[0]);
+                            const end = new Date(year, month, days[days.length - 1]);
+                            start.setHours(0, 0, 0, 0);
+                            end.setHours(23, 59, 59, 999);
+
+                            return { start, end };
+                        } catch (e) { return null; }
+                    };
+
                     return Array.from(document.querySelectorAll('article.index-list')).map(el => {
                         const htmlEl = el as HTMLElement;
                         const linkEl = htmlEl.querySelector('a') as HTMLAnchorElement;
@@ -377,9 +408,21 @@ export class IpoService {
                         const isNew = !!htmlEl.querySelector('.il-new');
 
                         let statusText = '';
-                        // Fix for Akhan Un: Check specific item for Talep Toplanıyor text/badge
-                        // STRICTER REGEX: Ensure we match exact phrase and avoid "Talep Toplama Bitti" false positives
+                        // 1. Text checks
                         if (text.match(/Talep\s*Toplanıyor/i)) statusText = 'TALEP TOPLANIYOR';
+
+                        // 2. Date checks if text missing
+                        if (!statusText && timeText) {
+                            const range = parseDateRange(timeText);
+                            if (range) {
+                                const now = new Date();
+                                if (now >= range.start && now <= range.end) {
+                                    statusText = 'TALEP TOPLANIYOR';
+                                } else if (now < range.start) {
+                                    // Future
+                                }
+                            }
+                        }
 
                         const draftRegex = /haz[ıi]rla|taslak|bekle/i;
                         const isHazirlaniyor = draftRegex.test(timeText) || draftRegex.test(headerText) || draftRegex.test(text) || timeText.includes('Hazırlanıyor');
