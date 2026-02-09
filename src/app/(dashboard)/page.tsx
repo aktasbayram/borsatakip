@@ -189,23 +189,26 @@ export default function DashboardPage() {
 
     // Unified View (Guest & User)
     return (
-        <div className="space-y-6">
-
-            {preferences.showIndices && <MarketIndices />}
+        <div>
+            <div className="mb-6">
+                {preferences.showIndices && <MarketIndices />}
+            </div>
 
             {(preferences.showAgenda || preferences.showIpo) && (
-                <div className={`grid grid-cols-1 ${preferences.showAgenda && preferences.showIpo ? 'lg:grid-cols-2' : ''} gap-6`}>
+                <div className={`grid grid-cols-1 ${preferences.showAgenda && preferences.showIpo ? 'lg:grid-cols-2' : ''} gap-6 mb-6`}>
                     {preferences.showAgenda && <AgendaWidget />}
                     {preferences.showIpo && <IpoWidget />}
 
                     {/* Native-like Ad Placement Group (Mobile: Random 1, Desktop: Both) */}
-                    <DashboardAdGroup />
+                    <div className="col-span-full -my-6">
+                        <DashboardAdGroup />
+                    </div>
                 </div>
             )}
 
             {/* Market Heatmap moved to /market/heatmap */}
 
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <h1 className="text-3xl font-bold tracking-tight">Takip Listem</h1>
                 <SymbolSearch onSelect={handleAddSymbol} />
             </div>

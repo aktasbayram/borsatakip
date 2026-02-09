@@ -14,7 +14,7 @@ export interface IpoItem {
     distributionMethod: string; // "Eşit Dağıtım" etc.
     isNew?: boolean;
     statusText?: string;
-    status: 'New' | 'Active' | 'Draft';
+    status: 'NEW' | 'ACTIVE' | 'DRAFT';
     showOnHomepage?: boolean;
     isLocked?: boolean;
     sortOrder?: number;
@@ -206,8 +206,8 @@ export class IpoService {
                         distributionMethod: ipo.distributionMethod || '-',
                         isNew: ipo.isNew,
                         statusText: ipo.statusText || undefined,
-                        status: (ipo.status === 'DRAFT' || (isDraftDate && !ipo.isLocked)) ? 'Draft' :
-                            (ipo.status === 'ACTIVE' ? 'Active' : 'New'),
+                        status: (ipo.status === 'DRAFT' || (isDraftDate && !ipo.isLocked)) ? 'DRAFT' :
+                            (ipo.status === 'ACTIVE' ? 'ACTIVE' : 'NEW'),
                         showOnHomepage: ipo.showOnHomepage,
                         isLocked: ipo.isLocked,
                         sortOrder: ipo.sortOrder || 0,
@@ -225,8 +225,8 @@ export class IpoService {
                     }
 
                     // 2. Currently active / collecting bids (Talep Toplanıyor)
-                    const isTalepA = a.statusText?.includes('TALEP') || a.status === 'Active';
-                    const isTalepB = b.statusText?.includes('TALEP') || b.status === 'Active';
+                    const isTalepA = a.statusText?.includes('TALEP') || a.status === 'ACTIVE';
+                    const isTalepB = b.statusText?.includes('TALEP') || b.status === 'ACTIVE';
                     if (isTalepA !== isTalepB) return isTalepB ? 1 : -1;
 
                     // 3. New tag
@@ -280,7 +280,7 @@ export class IpoService {
             distributionMethod: ipo.distributionMethod || '-',
             isNew: ipo.isNew,
             statusText: ipo.statusText || undefined,
-            status: (ipo.status === 'DRAFT' || (isDraftDate && !ipo.isLocked)) ? 'Draft' : (ipo.status === 'ACTIVE' ? 'Active' : 'New'),
+            status: (ipo.status === 'DRAFT' || (isDraftDate && !ipo.isLocked)) ? 'DRAFT' : (ipo.status === 'ACTIVE' ? 'ACTIVE' : 'NEW'),
             showOnHomepage: ipo.showOnHomepage,
             isLocked: ipo.isLocked,
 
@@ -448,8 +448,8 @@ export class IpoService {
                 if (!urlsSeen.has(item.url)) { allItems.push(item); urlsSeen.add(item.url); }
             }
 
-            // 2. Drafts (k/taslak) - Restore full pagination with optimized browser
-            for (let p = 1; p <= 8; p++) {
+            // 2. Drafts (k/taslak) - Increased pagination to capture all ~200 drafts
+            for (let p = 1; p <= 20; p++) {
                 const url = p === 1 ? 'https://halkarz.com/k/taslak/' : `https://halkarz.com/k/taslak/page/${p}/`;
                 try {
                     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });

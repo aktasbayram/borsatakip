@@ -10,7 +10,18 @@ const postSchema = z.object({
     excerpt: z.string().optional(),
     imageUrl: z.string().optional(),
     category: z.string().optional(),
+    categoryId: z.string().optional(),
     isPublished: z.boolean().default(true),
+    // SEO Fields
+    seoTitle: z.string().optional(),
+    seoDescription: z.string().optional(),
+    keywords: z.string().optional(),
+    focusKeyword: z.string().optional(),
+    canonicalUrl: z.string().optional(),
+    // OG Fields
+    ogTitle: z.string().optional(),
+    ogDescription: z.string().optional(),
+    ogImage: z.string().optional(),
 });
 
 export async function PUT(
@@ -30,7 +41,24 @@ export async function PUT(
         const post = await db.post.update({
             where: { id },
             data: {
-                ...validatedData,
+                title: validatedData.title,
+                slug: validatedData.slug,
+                content: validatedData.content,
+                excerpt: validatedData.excerpt,
+                imageUrl: validatedData.imageUrl,
+                category: validatedData.category,
+                categoryId: validatedData.categoryId,
+                isPublished: validatedData.isPublished,
+                // SEO Fields
+                seoTitle: validatedData.seoTitle,
+                seoDescription: validatedData.seoDescription,
+                keywords: validatedData.keywords,
+                focusKeyword: validatedData.focusKeyword,
+                canonicalUrl: validatedData.canonicalUrl,
+                // OG Fields
+                ogTitle: validatedData.ogTitle,
+                ogDescription: validatedData.ogDescription,
+                ogImage: validatedData.ogImage,
             },
         });
 

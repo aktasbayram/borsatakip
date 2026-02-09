@@ -84,12 +84,6 @@ export default async function PublicPage({ params }: { params: Promise<{ slug: s
                 </Card>
             </div>
 
-            {/* Sub-Footer Brand Decoration */}
-            <div className="text-center pt-10 select-none opacity-[0.03] dark:opacity-[0.05] pointer-events-none overflow-hidden h-24">
-                <span className="text-[120px] font-black tracking-tighter text-foreground inline-block rotate-1 whitespace-nowrap">
-                    BORSATAKIP KURUMSAL
-                </span>
-            </div>
         </div>
     );
 }

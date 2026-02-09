@@ -389,12 +389,38 @@ model Post {
   content     String   @db.Text
   excerpt     String?  @db.Text
   imageUrl    String?
-  category    String?
+  category    String? // Old string field, kept for migration if needed
+  categoryId  String?
+  catRel      Category? @relation(fields: [categoryId], references: [id])
   isPublished Boolean  @default(true)
   publishedAt DateTime @default(now())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  // SEO Fields
+  seoTitle        String?
+  seoDescription  String?  @db.Text
+  keywords        String?
+  focusKeyword    String?
+  canonicalUrl    String?
+
+  // Social Media (Open Graph)
+  ogTitle         String?
+  ogDescription   String?  @db.Text
+  ogImage         String?
 
   @@index([slug])
   @@index([isPublished, publishedAt])
+  @@index([categoryId])
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  slug        String   @unique
+  description String?
+  posts       Post[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([slug])
 }

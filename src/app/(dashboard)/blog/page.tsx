@@ -5,96 +5,121 @@ import { Card, CardContent } from "@/components/ui/card";
 import { ChevronRight, Calendar, Clock, User, ArrowLeft, Tag } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
-export default async function BlogListPage() {
-    const posts = await db.post.findMany({
-        where: { isPublished: true },
-        orderBy: { publishedAt: "desc" },
-    });
+interface BlogListPageProps {
+    searchParams: Promise<{
+        category?: string;
+    }>
+}
+
+export default async function BlogListPage(props: BlogListPageProps) {
+    const searchParams = await props.searchParams;
+    const categorySlug = searchParams.category;
+
+    // Fetch categories and posts in parallel
+    const [categories, posts] = await Promise.all([
+        db.category.findMany({
+            orderBy: { name: 'asc' },
+            include: { _count: { select: { posts: true } } }
+        }),
+        db.post.findMany({
+            where: {
+                isPublished: true,
+                ...(categorySlug ? {
+                    catRel: { slug: categorySlug }
+                } : {})
+            },
+            orderBy: { publishedAt: "desc" },
+            include: { catRel: true }
+        })
+    ]);
+
+    // Find current category name for display
+    const currentCategory = categories.find((c: any) => c.slug === categorySlug);
 
     return (
-        <div className="max-w-7xl mx-auto space-y-8 pb-20 px-4 md:px-0">
-            {/* Elegant Header - Consistent Style */}
-            <div className="relative overflow-hidden rounded-[2rem] bg-card dark:bg-slate-950 p-8 lg:p-12 border border-border dark:border-slate-800 shadow-2xl group transition-colors duration-300">
-                <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/4 w-[400px] h-[400px] bg-cyan-500/5 rounded-full blur-[100px] pointer-events-none group-hover:bg-cyan-500/10 transition-colors duration-1000"></div>
-                <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/4 w-[400px] h-[400px] bg-blue-500/5 rounded-full blur-[100px] pointer-events-none group-hover:bg-blue-500/10 transition-colors duration-1000"></div>
-
-                <div className="relative space-y-6">
-                    <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
-                        <Link href="/" className="hover:text-primary transition-colors">BorsaTakip</Link>
-                        <ChevronRight className="w-3 h-3" />
-                        <span className="text-cyan-500/60">Analiz & Haber</span>
-                    </div>
-
-                    <div className="space-y-2">
-                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 text-cyan-500 text-[10px] font-black uppercase tracking-[0.2em] border border-cyan-500/20">
-                            <Clock className="w-3 h-3" />
-                            Güncel Analizler
-                        </div>
-                        <h1 className="text-4xl lg:text-6xl font-black tracking-tighter leading-none text-foreground dark:text-white italic uppercase">
-                            Yazılar <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-500 to-blue-500 pr-2">& Makaleler</span>
+        <div className="max-w-7xl mx-auto space-y-4 pb-20 px-4 md:px-0">
+            {/* Ultra-Minimal Compact Header */}
+            <div className="relative bg-card border border-border/40 rounded-xl overflow-hidden shadow-sm">
+                <div className="p-3 lg:px-5 lg:py-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                    <div className="space-y-0.5">
+                        <nav className="flex items-center gap-2 text-[8px] font-bold tracking-[0.2em] text-muted-foreground uppercase opacity-40">
+                            <Link href="/" className="hover:text-primary transition-colors">BorsaTakip</Link>
+                            <ChevronRight className="w-2 h-2" />
+                            <span>Analiz & Haber</span>
+                        </nav>
+                        <h1 className="text-lg lg:text-2xl font-extrabold tracking-tight text-foreground leading-tight">
+                            {currentCategory ? currentCategory.name : 'Yazılar'} <span className="text-primary/70">& Makaleler</span>
                         </h1>
                     </div>
-                    <p className="max-w-xl text-muted-foreground text-sm font-medium leading-relaxed">
-                        Piyasalardaki son gelişmeleri, uzman analizlerini ve eğitim içeriklerimizi buradan takip edebilirsiniz.
-                    </p>
+                    <div className="hidden md:flex items-center gap-2 text-primary opacity-50">
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                        <span className="text-[9px] font-bold uppercase tracking-widest">Güncel Analizler</span>
+                    </div>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Compact Category Navigation */}
+            <div className="flex flex-wrap items-center gap-2 pb-4 border-b border-border/10">
+                <Link
+                    href="/blog"
+                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${!categorySlug ? 'bg-primary text-white shadow-sm' : 'bg-muted/30 hover:bg-muted/60 text-muted-foreground'}`}
+                >
+                    Tümü
+                </Link>
+                {categories.map((cat: any) => (
+                    <Link
+                        key={cat.id}
+                        href={`/blog?category=${cat.slug}`}
+                        className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${categorySlug === cat.slug ? 'bg-primary text-white shadow-sm' : 'bg-muted/30 hover:bg-muted/60 text-muted-foreground'}`}
+                    >
+                        {cat.name}
+                    </Link>
+                ))}
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {posts.length === 0 ? (
-                    <div className="col-span-full py-20 text-center text-muted-foreground bg-muted/5 rounded-[2rem] border-2 border-dashed border-border/50">
-                        <LayoutList className="w-12 h-12 mx-auto mb-4 opacity-20" />
-                        <p className="text-lg font-medium">Henüz yazı bulunmuyor.</p>
+                    <div className="col-span-full py-16 text-center text-muted-foreground bg-muted/5 rounded-xl border border-dashed border-border/40">
+                        <p className="text-base font-bold">Henüz yazı bulunmuyor.</p>
                     </div>
                 ) : (
-                    posts.map((post) => (
-                        <Link key={post.id} href={`/blog/${post.slug}`} className="group relative">
-                            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-[2.5rem] blur-xl opacity-0 group-hover:opacity-100 transition duration-500"></div>
-                            <Card className="relative h-full bg-card/40 backdrop-blur-xl border border-border/50 hover:border-cyan-500/30 transition-all duration-300 rounded-[2rem] overflow-hidden flex flex-col">
+                    posts.map((post: any) => (
+                        <Link key={post.id} href={`/blog/${post.slug}`} className="group h-full">
+                            <Card className="h-full bg-card border border-border/40 hover:border-primary/40 transition-all duration-300 rounded-xl overflow-hidden shadow-sm hover:shadow-md flex flex-col">
                                 {post.imageUrl && (
-                                    <div className="relative h-48 w-full overflow-hidden">
+                                    <div className="relative h-32 w-full overflow-hidden border-b border-border/10">
                                         <img
                                             src={post.imageUrl}
                                             alt={post.title}
-                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                                         />
-                                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
-                                        <div className="absolute bottom-4 left-4">
-                                            <Badge className="bg-cyan-500/90 text-white border-none text-[10px] font-black uppercase tracking-widest">
-                                                {post.category || "Analiz"}
-                                            </Badge>
-                                        </div>
                                     </div>
                                 )}
 
-                                <CardContent className="p-6 flex-1 flex flex-col">
-                                    {!post.imageUrl && (
-                                        <div className="mb-4">
-                                            <Badge variant="outline" className="border-cyan-500/30 text-cyan-500 text-[10px] font-black uppercase tracking-widest">
-                                                {post.category || "Analiz"}
-                                            </Badge>
-                                        </div>
-                                    )}
+                                <CardContent className="p-4 flex-1 flex flex-col">
+                                    <div className="flex items-center gap-2 mb-3">
+                                        <Badge variant="outline" className="border-primary/20 text-primary text-[8px] font-bold uppercase tracking-widest px-2 py-0.5">
+                                            {post.catRel?.name || post.category || "Analiz"}
+                                        </Badge>
+                                        <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-tighter">
+                                            {new Date(post.publishedAt).toLocaleDateString('tr-TR')}
+                                        </span>
+                                    </div>
 
-                                    <div className="flex-1 space-y-3">
-                                        <h2 className="text-xl font-black tracking-tight group-hover:text-cyan-500 transition-colors duration-300 leading-tight">
+                                    <div className="flex-1 space-y-2">
+                                        <h2 className="text-base font-bold tracking-tight group-hover:text-primary transition-colors duration-300 leading-tight line-clamp-2">
                                             {post.title}
                                         </h2>
                                         {post.excerpt && (
-                                            <p className="text-muted-foreground text-sm font-medium line-clamp-3 leading-relaxed">
+                                            <p className="text-muted-foreground text-[11px] font-semibold line-clamp-2 leading-relaxed opacity-70">
                                                 {post.excerpt}
                                             </p>
                                         )}
                                     </div>
 
-                                    <div className="mt-6 pt-4 border-t border-border/50 flex items-center justify-between text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                                        <div className="flex items-center gap-1.5">
-                                            <Calendar className="w-3 h-3" />
-                                            {new Date(post.publishedAt).toLocaleDateString('tr-TR')}
-                                        </div>
-                                        <div className="group-hover:translate-x-1 transition-transform duration-300 text-cyan-500">
-                                            Okumaya Devam Et &rarr;
-                                        </div>
+                                    <div className="mt-4 pt-3 border-t border-border/10 flex items-center justify-between text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest italic">
+                                        Devamını Oku
+                                        <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
                                     </div>
                                 </CardContent>
                             </Card>
@@ -106,7 +131,7 @@ export default async function BlogListPage() {
     );
 }
 
-function Badge({ children, className, variant = "default" }: any) {
+function Badge({ children, className, variant = "default" }: { children: React.ReactNode, className?: string, variant?: "default" | "outline" | "secondary" }) {
     const variants: any = {
         default: "bg-primary text-primary-foreground",
         outline: "border border-input bg-background",

@@ -11,15 +11,13 @@ export function DashboardAdGroup() {
         setShowFirst(Math.random() < 0.5);
     }, []);
 
-    const baseClass = "col-span-1 shadow-sm border rounded-xl bg-white dark:bg-gray-950";
-
     return (
-        <>
+        <div className="col-span-full grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Ad 1: Visible if showFirst OR Desktop */}
             <div className={`${showFirst ? 'block' : 'hidden'} md:block col-span-1`}>
                 <AdUnit
                     location="dashboard_grid_1"
-                    className={baseClass}
+                    className="w-full"
                 />
             </div>
 
@@ -27,9 +25,9 @@ export function DashboardAdGroup() {
             <div className={`${!showFirst ? 'block' : 'hidden'} md:block col-span-1`}>
                 <AdUnit
                     location="dashboard_grid_2"
-                    className={baseClass}
+                    className="w-full"
                 />
             </div>
-        </>
+        </div>
     );
 }

@@ -5,7 +5,7 @@ export default function robots(): MetadataRoute.Robots {
         rules: {
             userAgent: '*',
             allow: '/',
-            disallow: ['/admin/', '/api/', '/settings/'],
+            disallow: ['/admin/', '/api/', '/settings/', '/auth/'],
         },
         sitemap: 'https://borsatakip.app/sitemap.xml',
     };

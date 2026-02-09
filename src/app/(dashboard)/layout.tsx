@@ -391,14 +391,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 </div>
             </div>
 
-            <main className={`mx-auto ${getContentClass()} px-4 sm:px-6 lg:px-8 py-8 transition-colors duration-300`}>
-                <AdUnit location="dashboard_header_full" className="w-full mb-6 -mt-6" />
+            <main className={`mx-auto ${getContentClass()} px-4 sm:px-6 lg:px-8 transition-colors duration-300`}>
+                <AdUnit location="dashboard_header_full" className="w-full" />
                 {children}
             </main>
 
             {/* Footer Ad Placement (Outside Footer Component) */}
-            <div className={`mx-auto ${getContentClass()} px-4 sm:px-6 lg:px-8 pb-4`}>
-                <AdUnit location="footer_top" className="dark:bg-transparent -mt-6" />
+            <div className={`mx-auto ${getContentClass()} px-4 sm:px-6 lg:px-8`}>
+                <AdUnit location="footer_top" className="dark:bg-transparent" />
             </div>
 
             <Footer />

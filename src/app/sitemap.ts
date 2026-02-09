@@ -1,9 +1,10 @@
+import { db } from '@/lib/db';
 import { MetadataRoute } from 'next';
 
 // In a real scenario, you would fetch these from your API/DB
 const POPULAR_SYMBOLS = ['THYAO', 'ASELS', 'GARAN', 'AKBNK', 'EREGL', 'SASA', 'HEKTS', 'SISE', 'KCHOL', 'BIMAS'];
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const baseUrl = 'https://borsatakip.app';
 
     // 1. Static Routes
@@ -15,6 +16,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
         '/market/restricted',
         '/analysis',
         '/news',
+        '/blog',
     ].map((route) => ({
         url: `${baseUrl}${route}`,
         lastModified: new Date(),
@@ -30,5 +32,31 @@ export default function sitemap(): MetadataRoute.Sitemap {
         priority: 0.9,
     }));
 
-    return [...routes, ...symbolRoutes];
+    // 3. Dynamic Blog Posts
+    const posts = await db.post.findMany({
+        where: { isPublished: true },
+        select: { slug: true, updatedAt: true },
+    });
+
+    const postRoutes = posts.map((post) => ({
+        url: `${baseUrl}/blog/${post.slug}`,
+        lastModified: post.updatedAt,
+        changeFrequency: 'weekly' as const,
+        priority: 0.7,
+    }));
+
+    // 4. Dynamic Pages
+    const pages = await db.page.findMany({
+        where: { isActive: true },
+        select: { slug: true, updatedAt: true },
+    });
+
+    const pageRoutes = pages.map((page) => ({
+        url: `${baseUrl}/p/${page.slug}`,
+        lastModified: page.updatedAt,
+        changeFrequency: 'monthly' as const,
+        priority: 0.6,
+    }));
+
+    return [...routes, ...symbolRoutes, ...postRoutes, ...pageRoutes];
 }

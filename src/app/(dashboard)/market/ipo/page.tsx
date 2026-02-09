@@ -30,7 +30,7 @@ interface IpoItem {
     distributionMethod: string;
     isNew: boolean;
     statusText?: string;
-    status?: 'New' | 'Active' | 'Draft';
+    status?: 'NEW' | 'ACTIVE' | 'DRAFT';
     firstTradingDate?: string;
 }
 
@@ -69,8 +69,16 @@ export default function IpoPage() {
         ipo.code.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const approvedIpos = filteredIpos.filter(x => x.status === 'Active' || x.status === 'New');
-    const draftIpos = filteredIpos.filter(x => x.status !== 'Active' && x.status !== 'New');
+    // Helper to detect draft/preparation status
+    const isDraftOrPreparation = (ipo: IpoItem) => {
+        if (ipo.status === 'DRAFT') return true;
+        // Check if date contains preparation-related keywords
+        const dateText = ipo.date?.toLowerCase() || '';
+        return /haz[ıi]rlan|taslak|bekle/i.test(dateText);
+    };
+
+    const draftIpos = filteredIpos.filter(isDraftOrPreparation);
+    const approvedIpos = filteredIpos.filter(x => !isDraftOrPreparation(x));
 
     const collectingIpos = approvedIpos.filter(x => x.statusText === 'TALEP TOPLANIYOR');
 

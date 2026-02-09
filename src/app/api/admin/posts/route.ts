@@ -9,8 +9,19 @@ const postSchema = z.object({
     content: z.string().min(1, "İçerik gerekli"),
     excerpt: z.string().optional(),
     imageUrl: z.string().optional(),
-    category: z.string().optional(),
+    category: z.string().optional(), // Keep for backward compatibility
+    categoryId: z.string().optional(), // New relation
     isPublished: z.boolean().default(true),
+    // SEO Fields
+    seoTitle: z.string().optional(),
+    seoDescription: z.string().optional(),
+    keywords: z.string().optional(),
+    focusKeyword: z.string().optional(),
+    canonicalUrl: z.string().optional(),
+    // OG Fields
+    ogTitle: z.string().optional(),
+    ogDescription: z.string().optional(),
+    ogImage: z.string().optional(),
 });
 
 export async function GET() {
@@ -22,6 +33,9 @@ export async function GET() {
     try {
         const posts = await db.post.findMany({
             orderBy: { createdAt: "desc" },
+            include: {
+                catRel: true // Include category details
+            }
         });
         return NextResponse.json({ data: posts });
     } catch (error) {
@@ -41,7 +55,24 @@ export async function POST(request: Request) {
 
         const post = await db.post.create({
             data: {
-                ...validatedData,
+                title: validatedData.title,
+                slug: validatedData.slug,
+                content: validatedData.content,
+                excerpt: validatedData.excerpt,
+                imageUrl: validatedData.imageUrl,
+                category: validatedData.category, // Legacy
+                categoryId: validatedData.categoryId, // Relation
+                isPublished: validatedData.isPublished,
+                // SEO Fields
+                seoTitle: validatedData.seoTitle,
+                seoDescription: validatedData.seoDescription,
+                keywords: validatedData.keywords,
+                focusKeyword: validatedData.focusKeyword,
+                canonicalUrl: validatedData.canonicalUrl,
+                // OG Fields
+                ogTitle: validatedData.ogTitle,
+                ogDescription: validatedData.ogDescription,
+                ogImage: validatedData.ogImage,
             },
         });
 

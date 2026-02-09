@@ -103,7 +103,7 @@ export default function PostsAdminPage() {
                                         </div>
                                     </TableCell>
                                     <TableCell>
-                                        <Badge variant="outline">{post.category || "Genel"}</Badge>
+                                        <Badge variant="outline">{post.catRel?.name || post.category || "Genel"}</Badge>
                                     </TableCell>
                                     <TableCell>
                                         <Badge variant={post.isPublished ? "default" : "secondary"}>

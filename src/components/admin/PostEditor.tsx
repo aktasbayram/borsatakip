@@ -13,6 +13,9 @@ import { Switch } from "@/components/ui/switch";
 import { Save, ArrowLeft, FileText, ImageIcon, LayoutList } from "lucide-react";
 import Link from "next/link";
 import RichTextEditor from "@/components/ui/rich-text-editor";
+import { CategoryManager } from "@/components/admin/CategoryManager";
+import { SeoManager } from "@/components/admin/SeoManager";
+import { slugify } from "@/lib/slugify";
 
 interface PostEditorProps {
     initialData?: any;
@@ -28,24 +31,36 @@ export default function PostEditor({ initialData }: PostEditorProps) {
         content: initialData?.content || "",
         excerpt: initialData?.excerpt || "",
         imageUrl: initialData?.imageUrl || "",
-        category: initialData?.category || "Genel",
+        category: initialData?.category || "Genel", // Keep for compatibility
+        categoryId: initialData?.categoryId || initialData?.catRel?.id || "",
         isPublished: initialData?.isPublished ?? true,
+        // SEO Fields
+        seoTitle: initialData?.seoTitle || "",
+        seoDescription: initialData?.seoDescription || "",
+        keywords: initialData?.keywords || "",
+        focusKeyword: initialData?.focusKeyword || "",
+        canonicalUrl: initialData?.canonicalUrl || "",
+        // OG Fields
+        ogTitle: initialData?.ogTitle || "",
+        ogDescription: initialData?.ogDescription || "",
+        ogImage: initialData?.ogImage || "",
     });
 
     const isEdit = !!initialData?.id;
 
+
+
     // Auto-generate slug from title
     useEffect(() => {
         if (!isEdit && formData.title) {
-            const generatedSlug = formData.title
-                .toLowerCase()
-                .trim()
-                .replace(/[^\w\s-]/g, "")
-                .replace(/[\s_-]+/g, "-")
-                .replace(/^-+|-+$/g, "");
+            const generatedSlug = slugify(formData.title);
+            // Only update if slug hasn't been manually edited (simple check: if it matches the simplified previous title)
+            // But here we just overwrite if it's not edit mode, as per common behavior
             setFormData((prev) => ({ ...prev, slug: generatedSlug }));
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [formData.title, isEdit]);
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -133,6 +148,9 @@ export default function PostEditor({ initialData }: PostEditorProps) {
                             </div>
                         </CardContent>
                     </Card>
+
+                    {/* SEO Manager Component */}
+                    <SeoManager formData={formData} setFormData={setFormData} />
                 </div>
 
                 {/* Sidebar Options */}
@@ -160,11 +178,9 @@ export default function PostEditor({ initialData }: PostEditorProps) {
                             </div>
 
                             <div className="space-y-2">
-                                <Label>Kategori</Label>
-                                <Input
-                                    value={formData.category}
-                                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                    className="bg-accent/30 border-none rounded-xl"
+                                <CategoryManager
+                                    selectedCategoryId={formData.categoryId}
+                                    onSelect={(id) => setFormData({ ...formData, categoryId: id })}
                                 />
                             </div>
 
