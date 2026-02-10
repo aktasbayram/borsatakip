@@ -78,20 +78,22 @@ export default function PostEditor({ initialData }: PostEditorProps) {
 
     // Auto-save logic
     const { trigger: triggerAutosave, isAutosaving, lastSavedAt } = useAutosave(async () => {
-        // Only autosave if we have a title and it's an existing post or we are creating a draft
-        if (!formData.title) return;
+        // Only autosave if we have the minimum requirements (title, slug, content) 
+        // especially for new posts to pass Zod validation on the server
+        if (!formData.title || !formData.slug || !formData.content) return;
 
         try {
             if (isEdit) {
                 await axios.put(`/api/admin/posts/${initialData.id}`, { ...formData, autoSave: true });
             } else {
-                // For new posts, we usually don't want to create 100 drafts
-                // Maybe wait for manual first save? Or silent draft creation?
-                // WordPress creates a draft as soon as you type. 
-                // Let's implement silent draft creation if there's significant content
-                if (formData.content.length > 50) {
-                    // We would need the ID back to keep updating the same draft
-                    // For now, let's focus on existing posts or just update the session storage
+                // For new posts, create a draft and redirect to the edit page
+                const res = await axios.post("/api/admin/posts", {
+                    ...formData,
+                    isPublished: false
+                });
+
+                if (res.data?.data?.id) {
+                    router.replace(`/admin/posts/${res.data.data.id}`);
                 }
             }
         } catch (error) {
@@ -101,10 +103,8 @@ export default function PostEditor({ initialData }: PostEditorProps) {
 
     // Watch for changes to trigger autosave
     useEffect(() => {
-        if (isEdit) {
-            triggerAutosave();
-        }
-    }, [formData.title, formData.content, formData.excerpt, formData.seoTitle, formData.seoDescription, isEdit]);
+        triggerAutosave();
+    }, [formData.title, formData.content, formData.excerpt, formData.seoTitle, formData.seoDescription]);
 
     // Auto-generate slug from title
     useEffect(() => {
