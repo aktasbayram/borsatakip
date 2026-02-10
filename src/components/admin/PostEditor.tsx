@@ -16,6 +16,10 @@ import RichTextEditor from "@/components/ui/rich-text-editor";
 import { CategoryManager } from "@/components/admin/CategoryManager";
 import { SeoManager } from "@/components/admin/SeoManager";
 import { slugify } from "@/lib/slugify";
+import { useAutosave } from "@/hooks/useAutosave";
+import { Cloud, CloudUpload, Clock, Check } from "lucide-react";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
 
 interface PostEditorProps {
     initialData?: any;
@@ -72,13 +76,42 @@ export default function PostEditor({ initialData }: PostEditorProps) {
         }
     }, [isEdit]);
 
+    // Auto-save logic
+    const { trigger: triggerAutosave, isAutosaving, lastSavedAt } = useAutosave(async () => {
+        // Only autosave if we have a title and it's an existing post or we are creating a draft
+        if (!formData.title) return;
+
+        try {
+            if (isEdit) {
+                await axios.put(`/api/admin/posts/${initialData.id}`, { ...formData, autoSave: true });
+            } else {
+                // For new posts, we usually don't want to create 100 drafts
+                // Maybe wait for manual first save? Or silent draft creation?
+                // WordPress creates a draft as soon as you type. 
+                // Let's implement silent draft creation if there's significant content
+                if (formData.content.length > 50) {
+                    // We would need the ID back to keep updating the same draft
+                    // For now, let's focus on existing posts or just update the session storage
+                }
+            }
+        } catch (error) {
+            console.error("Autosave Error:", error);
+        }
+    });
+
+    // Watch for changes to trigger autosave
+    useEffect(() => {
+        if (isEdit) {
+            triggerAutosave();
+        }
+    }, [formData.title, formData.content, formData.excerpt, formData.seoTitle, formData.seoDescription, isEdit]);
+
     // Auto-generate slug from title
     useEffect(() => {
         if (!isEdit && formData.title && !sessionStorage.getItem('ai_generated_post')) { // Don't overwrite if just loaded from AI
             const generatedSlug = slugify(formData.title);
             setFormData((prev) => ({ ...prev, slug: generatedSlug }));
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [formData.title, isEdit]);
 
 
@@ -117,10 +150,32 @@ export default function PostEditor({ initialData }: PostEditorProps) {
                         {isEdit ? "Yazıyı Düzenle" : "Yeni Yazı Ekle"}
                     </h1>
                 </div>
-                <Button onClick={handleSubmit} disabled={loading} className="px-8 shadow-lg shadow-primary/20">
-                    <Save className="mr-2 h-4 w-4" />
-                    {isEdit ? "Güncelle" : "Yayınla"}
-                </Button>
+                <div className="flex items-center gap-6">
+                    {/* Autosave Status */}
+                    <div className="hidden md:flex items-center gap-2 text-xs text-muted-foreground bg-accent/20 px-3 py-1.5 rounded-full border border-border/50">
+                        {isAutosaving ? (
+                            <>
+                                <CloudUpload className="w-3.5 h-3.5 animate-bounce text-indigo-500" />
+                                <span>Kaydediliyor...</span>
+                            </>
+                        ) : lastSavedAt ? (
+                            <>
+                                <Check className="w-3.5 h-3.5 text-green-500" />
+                                <span>Otomatik kaydedildi: {format(lastSavedAt, 'HH:mm:ss', { locale: tr })}</span>
+                            </>
+                        ) : (
+                            <>
+                                <Clock className="w-3.5 h-3.5" />
+                                <span>Değişiklik bekleniyor</span>
+                            </>
+                        )}
+                    </div>
+
+                    <Button onClick={handleSubmit} disabled={loading} className="px-8 shadow-lg shadow-primary/20">
+                        <Save className="mr-2 h-4 w-4" />
+                        {isEdit ? "Güncelle" : "Yayınla"}
+                    </Button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
