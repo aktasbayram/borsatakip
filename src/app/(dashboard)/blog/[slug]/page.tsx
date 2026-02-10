@@ -52,6 +52,12 @@ export default async function BlogPostPage({
         notFound();
     }
 
+    // Increment viewCount
+    await db.post.update({
+        where: { id: post.id },
+        data: { viewCount: { increment: 1 } }
+    });
+
     const jsonLd = {
         "@context": "https://schema.org",
         "@type": "BlogPosting",

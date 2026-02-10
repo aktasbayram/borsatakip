@@ -52,12 +52,30 @@ export default function PostEditor({ initialData }: PostEditorProps) {
 
 
 
+    // Check for AI generated content
+    useEffect(() => {
+        const aiPostStr = sessionStorage.getItem('ai_generated_post');
+        if (!isEdit && aiPostStr) {
+            try {
+                const aiPost = JSON.parse(aiPostStr);
+                setFormData((prev) => ({
+                    ...prev,
+                    ...aiPost,
+                    slug: slugify(aiPost.title) // Ensure slug is generated
+                }));
+                enqueueSnackbar("Yapay zeka taslağı yüklendi! 🤖✨", { variant: "info" });
+                // Clear it so it doesn't persist on refresh/back
+                sessionStorage.removeItem('ai_generated_post');
+            } catch (e) {
+                console.error("Failed to parse AI post", e);
+            }
+        }
+    }, [isEdit]);
+
     // Auto-generate slug from title
     useEffect(() => {
-        if (!isEdit && formData.title) {
+        if (!isEdit && formData.title && !sessionStorage.getItem('ai_generated_post')) { // Don't overwrite if just loaded from AI
             const generatedSlug = slugify(formData.title);
-            // Only update if slug hasn't been manually edited (simple check: if it matches the simplified previous title)
-            // But here we just overwrite if it's not edit mode, as per common behavior
             setFormData((prev) => ({ ...prev, slug: generatedSlug }));
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps

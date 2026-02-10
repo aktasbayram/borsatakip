@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Plus, Pencil, ExternalLink, FileText, LayoutList } from "lucide-react";
+import { Plus, Pencil, ExternalLink, FileText, LayoutList, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
     Table,
@@ -15,10 +15,12 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { useSnackbar } from "notistack";
+import { AIGeneratorModal } from "@/components/admin/AIGeneratorModal";
 
 export default function PostsAdminPage() {
     const [posts, setPosts] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isAIModalOpen, setIsAIModalOpen] = useState(false);
     const { enqueueSnackbar } = useSnackbar();
 
     const fetchPosts = async () => {
@@ -58,13 +60,27 @@ export default function PostsAdminPage() {
                         Sitedeki haberleri, analizleri ve makaleleri buradan yönetin.
                     </p>
                 </div>
-                <Link href="/admin/posts/new">
-                    <Button>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Yeni Yazı Ekle
+                <div className="flex items-center gap-3">
+                    <Button
+                        onClick={() => setIsAIModalOpen(true)}
+                        className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold shadow-lg shadow-indigo-500/20"
+                    >
+                        <Sparkles className="w-4 h-4 mr-2" />
+                        AI ile Yaz
                     </Button>
-                </Link>
+                    <Link href="/admin/posts/new">
+                        <Button>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Yeni Yazı Ekle
+                        </Button>
+                    </Link>
+                </div>
             </div>
+
+            <AIGeneratorModal
+                isOpen={isAIModalOpen}
+                onClose={() => setIsAIModalOpen(false)}
+            />
 
             <div className="border rounded-xl bg-card overflow-hidden shadow-sm">
                 <Table>

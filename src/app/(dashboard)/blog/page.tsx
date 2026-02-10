@@ -11,15 +11,17 @@ import { BlogFeedAd } from "@/components/blog/BlogFeedAd";
 interface BlogListPageProps {
     searchParams: Promise<{
         category?: string;
+        limit?: string;
     }>
 }
 
 export default async function BlogListPage(props: BlogListPageProps) {
     const searchParams = await props.searchParams;
     const categorySlug = searchParams.category;
+    const limit = parseInt(searchParams.limit || "10");
 
     // Fetch categories and posts in parallel
-    const [categories, posts] = await Promise.all([
+    const [categories, allPostsFetched, popularPosts] = await Promise.all([
         db.category.findMany({
             orderBy: { name: 'asc' },
             include: { _count: { select: { posts: true } } }
@@ -31,10 +33,20 @@ export default async function BlogListPage(props: BlogListPageProps) {
                     catRel: { slug: categorySlug }
                 } : {})
             },
+            take: limit + 1, // Fetch one extra to see if there are more
             orderBy: { publishedAt: "desc" },
+            include: { catRel: true }
+        }),
+        db.post.findMany({
+            where: { isPublished: true },
+            take: 4,
+            orderBy: { viewCount: "desc" },
             include: { catRel: true }
         })
     ]);
+
+    const hasMore = allPostsFetched.length > limit;
+    const posts = allPostsFetched.slice(0, limit);
 
     // Find current category name for display
     const currentCategory = categories.find((c: any) => c.slug === categorySlug);
@@ -47,23 +59,41 @@ export default async function BlogListPage(props: BlogListPageProps) {
             <div className="flex flex-col lg:flex-row gap-8">
                 {/* MAIN CONTENT (75%) */}
                 <div className="flex-1 space-y-6">
-                    {/* Compact Category Navigation */}
-                    <div className="flex flex-wrap items-center gap-2 pb-4 border-b border-border/10">
-                        <Link
-                            href="/blog"
-                            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${!categorySlug ? 'bg-primary text-white shadow-sm' : 'bg-muted/30 hover:bg-muted/60 text-muted-foreground'}`}
-                        >
-                            Tümü
-                        </Link>
-                        {categories.map((cat: any) => (
-                            <Link
-                                key={cat.id}
-                                href={`/blog?category=${cat.slug}`}
-                                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${categorySlug === cat.slug ? 'bg-primary text-white shadow-sm' : 'bg-muted/30 hover:bg-muted/60 text-muted-foreground'}`}
-                            >
-                                {cat.name}
-                            </Link>
-                        ))}
+                    {/* Modern Refined Category Navigation */}
+                    <div className="relative group/nav">
+                        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-2 scroll-smooth">
+                            <div className="flex bg-muted/20 backdrop-blur-sm p-1 rounded-2xl border border-border/5 shadow-inner">
+                                <Link
+                                    href="/blog"
+                                    className={`relative px-5 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all duration-300 z-10 ${!categorySlug
+                                        ? 'bg-primary text-white shadow-lg shadow-primary/25 scale-[1.02]'
+                                        : 'text-muted-foreground/70 hover:text-foreground hover:bg-white/5'
+                                        }`}
+                                >
+                                    Tümü
+                                </Link>
+
+                                <div className="mx-1 w-[1px] h-4 bg-border/20 self-center" />
+
+                                <div className="flex gap-1">
+                                    {categories.map((cat: any) => (
+                                        <Link
+                                            key={cat.id}
+                                            href={`/blog?category=${cat.slug}`}
+                                            className={`px-5 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all duration-300 ${categorySlug === cat.slug
+                                                ? 'bg-primary text-white shadow-lg shadow-primary/25 scale-[1.02]'
+                                                : 'text-muted-foreground/70 hover:text-foreground hover:bg-white/5'
+                                                }`}
+                                        >
+                                            {cat.name}
+                                        </Link>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Subtle fade effect for overflow on mobile */}
+                        <div className="absolute top-0 right-0 h-full w-12 bg-gradient-to-l from-background to-transparent pointer-events-none md:hidden" />
                     </div>
 
                     <div className="space-y-4">
@@ -127,6 +157,26 @@ export default async function BlogListPage(props: BlogListPageProps) {
                                         )}
                                     </React.Fragment>
                                 ))}
+
+                                {/* Load More Button */}
+                                {hasMore && (
+                                    <div className="pt-8 pb-4 flex justify-center">
+                                        <Link
+                                            href={{
+                                                pathname: '/blog',
+                                                query: {
+                                                    ...(categorySlug ? { category: categorySlug } : {}),
+                                                    limit: limit + 10
+                                                }
+                                            }}
+                                            scroll={false}
+                                            className="group relative px-8 py-3 bg-primary/5 hover:bg-primary text-primary hover:text-white rounded-2xl text-xs font-black uppercase tracking-[0.2em] transition-all duration-500 overflow-hidden shadow-sm hover:shadow-xl hover:shadow-primary/20 border border-primary/10 hover:border-primary active:scale-95"
+                                        >
+                                            <span className="relative z-10">Daha Fazla Gör</span>
+                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:animate-shimmer" />
+                                        </Link>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </div>
@@ -161,7 +211,7 @@ export default async function BlogListPage(props: BlogListPageProps) {
                             <div className="flex-1 h-[1px] bg-border/20" />
                         </div>
                         <div className="space-y-4">
-                            {posts.slice(0, 4).map((post: any, i: number) => (
+                            {popularPosts.map((post: any, i: number) => (
                                 <Link key={post.id} href={`/blog/${post.slug}`} className="flex gap-3 group">
                                     <div className="relative w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-muted">
                                         <img src={post.imageUrl} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
