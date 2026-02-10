@@ -6,6 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { ArrowLeft, Building2, Calendar, Coins, ExternalLink, FileText, PieChart, Info } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { AdUnit } from "@/components/ads/AdUnit";
 
 interface PageProps {
     params: Promise<{
@@ -118,63 +119,91 @@ export default async function IpoDetailPage({ params }: PageProps) {
                             </div>
                         </CardContent>
                     </Card>
+
+                    {/* Left Column Ad Placement */}
+                    <AdUnit location="ipo_sidebar_bottom" />
                 </div>
 
                 {/* Right Column: Detailed Info Sections */}
                 <div className="lg:col-span-2 space-y-6">
-                    {/* Render all generic summary sections scraped from "Özet Bilgiler" */}
-                    {detail.summaryInfo && detail.summaryInfo.map((section, idx) => {
-                        // Skip table sections specifically
-                        if (section.title === 'Finansal Tablo' && section.items.some(i => i.includes('Hasılat'))) {
-                            return (
-                                <Card key={idx}>
-                                    <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
-                                        <TrendingUpIcon className="w-5 h-5 text-primary" />
-                                        <h3 className="font-bold">{section.title}</h3>
+                    {(() => {
+                        // 1. Filter and prepare generic sections
+                        const validSections = (detail.summaryInfo || []).filter(section => {
+                            // Skip 'Halka Arz Büyüklüğü' as it is shown in the left column
+                            if (section.title.includes('Halka Arz Büyüklüğü')) return false;
+                            return true;
+                        });
+
+                        // 2. Determine random insertion index (between 0 and length - 1)
+                        // This will run on the server, so it's random per request
+                        const randomIndex = validSections.length > 0
+                            ? Math.floor(Math.random() * validSections.length)
+                            : -1;
+
+                        return validSections.map((section, idx) => {
+                            // Skip table sections specifically (render distinct card style)
+                            if (section.title === 'Finansal Tablo' && section.items.some(i => i.includes('Hasılat'))) {
+                                return (
+                                    <div key={idx}>
+                                        <Card>
+                                            <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
+                                                <TrendingUpIcon className="w-5 h-5 text-primary" />
+                                                <h3 className="font-bold">{section.title}</h3>
+                                            </div>
+                                            <CardContent className="p-4">
+                                                <ul className="space-y-2">
+                                                    {section.items.map((item, i) => (
+                                                        <li key={i} className="text-sm border-b border-gray-50 dark:border-gray-800/50 last:border-0 pb-2 last:pb-0">
+                                                            {item}
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            </CardContent>
+                                        </Card>
+
+                                        {/* Insert Ad if this matches random index */}
+                                        {idx === randomIndex && (
+                                            <AdUnit location="ipo_content_middle" className="mt-6" />
+                                        )}
                                     </div>
-                                    <CardContent className="p-4">
-                                        <ul className="space-y-2">
-                                            {section.items.map((item, i) => (
-                                                <li key={i} className="text-sm border-b border-gray-50 dark:border-gray-800/50 last:border-0 pb-2 last:pb-0">
-                                                    {item}
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </CardContent>
-                                </Card>
-                            )
-                        }
+                                )
+                            }
 
-                        // Skip 'Halka Arz Büyüklüğü' as it is shown in the left column
-                        if (section.title.includes('Halka Arz Büyüklüğü')) return null;
+                            // Determine icon based on title keywords
+                            let Icon: React.ElementType = FileText;
+                            if (section.title.includes('Fon')) Icon = PieChart;
+                            else if (section.title.includes('Tahsisat')) Icon = UsersIcon;
+                            else if (section.title.includes('Satmama')) Icon = FileText;
+                            else if (section.title.includes('Fiyat İstikrarı')) Icon = TrendingUpIcon;
+                            else if (section.title.includes('Halka Arz Şekli')) Icon = Info;
 
-                        // Determine icon based on title keywords
-                        let Icon: React.ElementType = FileText;
-                        if (section.title.includes('Fon')) Icon = PieChart;
-                        else if (section.title.includes('Tahsisat')) Icon = UsersIcon;
-                        else if (section.title.includes('Satmama')) Icon = FileText;
-                        else if (section.title.includes('Fiyat İstikrarı')) Icon = TrendingUpIcon;
-                        else if (section.title.includes('Halka Arz Şekli')) Icon = Info;
+                            return (
+                                <div key={idx}>
+                                    <Card>
+                                        <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
+                                            <Icon className="w-5 h-5 text-primary" />
+                                            <h3 className="font-bold">{section.title}</h3>
+                                        </div>
+                                        <CardContent className="p-4">
+                                            <ul className="space-y-2">
+                                                {section.items.map((item, i) => (
+                                                    <li key={i} className="flex items-start gap-2 text-sm">
+                                                        <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
+                                                        <span>{item}</span>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </CardContent>
+                                    </Card>
 
-                        return (
-                            <Card key={idx}>
-                                <div className="p-4 border-b border-gray-100 dark:border-gray-800 flex items-center gap-2">
-                                    <Icon className="w-5 h-5 text-primary" />
-                                    <h3 className="font-bold">{section.title}</h3>
+                                    {/* Insert Ad if this matches random index */}
+                                    {idx === randomIndex && (
+                                        <AdUnit location="ipo_content_middle" className="mt-6" />
+                                    )}
                                 </div>
-                                <CardContent className="p-4">
-                                    <ul className="space-y-2">
-                                        {section.items.map((item, i) => (
-                                            <li key={i} className="flex items-start gap-2 text-sm">
-                                                <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                                                <span>{item}</span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </CardContent>
-                            </Card>
-                        );
-                    })}
+                            );
+                        });
+                    })()}
                 </div>
             </div>
         </div>

@@ -34,6 +34,8 @@ export default function PostEditor({ initialData }: PostEditorProps) {
         category: initialData?.category || "Genel", // Keep for compatibility
         categoryId: initialData?.categoryId || initialData?.catRel?.id || "",
         isPublished: initialData?.isPublished ?? true,
+        isFeatured: initialData?.isFeatured ?? false,
+        featuredOrder: initialData?.featuredOrder ?? 0,
         // SEO Fields
         seoTitle: initialData?.seoTitle || "",
         seoDescription: initialData?.seoDescription || "",
@@ -194,15 +196,42 @@ export default function PostEditor({ initialData }: PostEditorProps) {
                                 />
                             </div>
 
-                            <div className="pt-4 border-t border-border/50 flex items-center justify-between">
-                                <div className="space-y-0.5">
-                                    <Label>Yayınlama Durumu</Label>
-                                    <p className="text-[10px] text-muted-foreground">Makaleyi hemen yayına al veya taslak olarak sakla.</p>
+                            <div className="pt-4 border-t border-border/50 space-y-4">
+                                <div className="flex items-center justify-between">
+                                    <div className="space-y-0.5">
+                                        <Label>Yayınlama Durumu</Label>
+                                        <p className="text-[10px] text-muted-foreground">Makaleyi hemen yayına al veya taslak olarak sakla.</p>
+                                    </div>
+                                    <Switch
+                                        checked={formData.isPublished}
+                                        onCheckedChange={(checked) => setFormData({ ...formData, isPublished: checked })}
+                                    />
                                 </div>
-                                <Switch
-                                    checked={formData.isPublished}
-                                    onCheckedChange={(checked) => setFormData({ ...formData, isPublished: checked })}
-                                />
+
+                                <div className="flex items-center justify-between">
+                                    <div className="space-y-0.5">
+                                        <Label>Öne Çıkar</Label>
+                                        <p className="text-[10px] text-muted-foreground">Ana sayfada vitrin alanında göster.</p>
+                                    </div>
+                                    <Switch
+                                        checked={formData.isFeatured}
+                                        onCheckedChange={(checked) => setFormData({ ...formData, isFeatured: checked })}
+                                    />
+                                </div>
+
+                                {formData.isFeatured && (
+                                    <div className="space-y-2 animate-in slide-in-from-top-2 duration-300">
+                                        <Label className="text-xs font-bold">Öne Çıkma Sırası (Büyükten Küçüğe)</Label>
+                                        <Input
+                                            type="number"
+                                            value={formData.featuredOrder}
+                                            onChange={(e) => setFormData({ ...formData, featuredOrder: parseInt(e.target.value) || 0 })}
+                                            className="bg-accent/30 border-none rounded-xl"
+                                            placeholder="Örn: 10"
+                                        />
+                                        <p className="text-[10px] text-muted-foreground italic">En yüksek sayıya sahip olan yazı en büyük alanda görünür.</p>
+                                    </div>
+                                )}
                             </div>
                         </CardContent>
                     </Card>

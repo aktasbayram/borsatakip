@@ -143,7 +143,7 @@ export default async function RestrictedStocksPage() {
             </div>
 
             <p className="text-center text-xs text-muted-foreground/50 italic px-4 leading-relaxed">
-                * Bu bilgiler Fintables üzerinden otomatik senkronize edilmektedir. Gerçek zamanlı veriler için lütfen KAP duyurularını takip edin.
+                * Bu bilgiler Fintables üzerinden otomatik senkronize edilmektedir. Gerçek zamanlı veriler için lütfen resmi duyuruları takip edin.
             </p>
         </div>
     );

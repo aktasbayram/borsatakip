@@ -12,6 +12,8 @@ const postSchema = z.object({
     category: z.string().optional(),
     categoryId: z.string().optional(),
     isPublished: z.boolean().default(true),
+    isFeatured: z.boolean().optional(),
+    featuredOrder: z.number().optional(),
     // SEO Fields
     seoTitle: z.string().optional(),
     seoDescription: z.string().optional(),
@@ -47,8 +49,10 @@ export async function PUT(
                 excerpt: validatedData.excerpt,
                 imageUrl: validatedData.imageUrl,
                 category: validatedData.category,
-                categoryId: validatedData.categoryId,
+                categoryId: validatedData.categoryId || null,
                 isPublished: validatedData.isPublished,
+                isFeatured: validatedData.isFeatured,
+                featuredOrder: validatedData.featuredOrder,
                 // SEO Fields
                 seoTitle: validatedData.seoTitle,
                 seoDescription: validatedData.seoDescription,
@@ -63,11 +67,14 @@ export async function PUT(
         });
 
         return NextResponse.json({ data: post });
-    } catch (error) {
+    } catch (error: any) {
+        console.error("PUT /api/admin/posts/[id] error:", error);
         if (error instanceof z.ZodError) {
             return NextResponse.json({ error: error.errors }, { status: 400 });
         }
-        return NextResponse.json({ error: "Failed to update post" }, { status: 500 });
+        return NextResponse.json({
+            error: error.message || "Yazı güncellenirken bir hata oluştu"
+        }, { status: 500 });
     }
 }
 

@@ -100,9 +100,12 @@ export function AdForm({ initialData, onSuccess, onCancel }: AdFormProps) {
                             <SelectItem value="dashboard_grid_2">Dashboard (Sağ Alt)</SelectItem>
                             <SelectItem value="footer_top">Footer (Sayfa Altı)</SelectItem>
                             <SelectItem value="mobile_menu_bottom">Mobil Menü (En Alt)</SelectItem>
-                            <SelectItem value="dashboard_header_full">Dashboard Header (Tam Genişlik)</SelectItem>
+                            <SelectItem value="header_full">Header (Tam Genişlik)</SelectItem>
                             <SelectItem value="symbol_detail_banner">Hisse Detay Banner (Grafik Altı)</SelectItem>
-                            {/* Future locations can be added here */}
+                            <SelectItem value="ipo_sidebar_bottom">Halka Arz Detay (Sol Alt)</SelectItem>
+                            <SelectItem value="ipo_content_middle">Halka Arz Detay (İçerik Arası)</SelectItem>
+                            <SelectItem value="blog_feed_middle">Blog Sayfası (Akış İçi)</SelectItem>
+                            <SelectItem value="blog_sidebar_sticky">Blog Sayfası (Yan Panel - Yapışkan)</SelectItem>
                         </SelectContent>
                     </Select>
                     <p className="text-xs text-muted-foreground">Reklamın nerede görüneceğini seçin.</p>

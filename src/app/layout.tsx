@@ -24,7 +24,7 @@ export const metadata: Metadata = {
     default: "Borsa Takip - Canlı Borsa ve Hisse Analizi",
     template: "%s | Borsa Takip"
   },
-  description: "Borsa İstanbul (BIST) ve ABD borsalarını canlı takip edin. Hisse analizleri, KAP bildirimleri, portföy takibi ve anlık fiyat alarmları.",
+  description: "Borsa İstanbul (BIST) ve ABD borsalarını canlı takip edin. Hisse analizleri, portföy takibi ve anlık fiyat alarmları.",
   keywords: ["Borsa", "BIST", "Hisse Senedi", "Canlı Borsa", "Portfolio", "Analiz", "Teknik Analiz", "Temettü"],
   authors: [{ name: "Bayram Aktaş" }],
   openGraph: {

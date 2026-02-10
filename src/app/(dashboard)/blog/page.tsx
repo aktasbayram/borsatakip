@@ -1,9 +1,12 @@
+import React from "react";
 import { db } from "@/lib/db";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChevronRight, Calendar, Clock, User, ArrowLeft, Tag } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { FeaturedPosts } from "@/components/blog/FeaturedPosts";
+import { BlogFeedAd } from "@/components/blog/BlogFeedAd";
 
 interface BlogListPageProps {
     searchParams: Promise<{
@@ -37,95 +40,155 @@ export default async function BlogListPage(props: BlogListPageProps) {
     const currentCategory = categories.find((c: any) => c.slug === categorySlug);
 
     return (
-        <div className="max-w-7xl mx-auto space-y-4 pb-20 px-4 md:px-0">
-            {/* Ultra-Minimal Compact Header */}
-            <div className="relative bg-card border border-border/40 rounded-xl overflow-hidden shadow-sm">
-                <div className="p-3 lg:px-5 lg:py-3 flex flex-col md:flex-row md:items-center justify-between gap-3">
-                    <div className="space-y-0.5">
-                        <nav className="flex items-center gap-2 text-[8px] font-bold tracking-[0.2em] text-muted-foreground uppercase opacity-40">
-                            <Link href="/" className="hover:text-primary transition-colors">BorsaTakip</Link>
-                            <ChevronRight className="w-2 h-2" />
-                            <span>Analiz & Haber</span>
-                        </nav>
-                        <h1 className="text-lg lg:text-2xl font-extrabold tracking-tight text-foreground leading-tight">
-                            {currentCategory ? currentCategory.name : 'Yazılar'} <span className="text-primary/70">& Makaleler</span>
-                        </h1>
+        <div className="max-w-7xl mx-auto space-y-8 pb-20 px-4 md:px-0">
+            {/* Featured Posts (Vitrine) remains at top */}
+            <FeaturedPosts />
+
+            <div className="flex flex-col lg:flex-row gap-8">
+                {/* MAIN CONTENT (75%) */}
+                <div className="flex-1 space-y-6">
+                    {/* Compact Category Navigation */}
+                    <div className="flex flex-wrap items-center gap-2 pb-4 border-b border-border/10">
+                        <Link
+                            href="/blog"
+                            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${!categorySlug ? 'bg-primary text-white shadow-sm' : 'bg-muted/30 hover:bg-muted/60 text-muted-foreground'}`}
+                        >
+                            Tümü
+                        </Link>
+                        {categories.map((cat: any) => (
+                            <Link
+                                key={cat.id}
+                                href={`/blog?category=${cat.slug}`}
+                                className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${categorySlug === cat.slug ? 'bg-primary text-white shadow-sm' : 'bg-muted/30 hover:bg-muted/60 text-muted-foreground'}`}
+                            >
+                                {cat.name}
+                            </Link>
+                        ))}
                     </div>
-                    <div className="hidden md:flex items-center gap-2 text-primary opacity-50">
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
-                        <span className="text-[9px] font-bold uppercase tracking-widest">Güncel Analizler</span>
+
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2 px-1">
+                            <div className="w-1 h-4 bg-primary rounded-full" />
+                            <h2 className="text-xs font-black uppercase tracking-widest text-foreground/80">Son Yazılar</h2>
+                        </div>
+
+                        {posts.length === 0 ? (
+                            <div className="py-16 text-center text-muted-foreground bg-muted/5 rounded-xl border border-dashed border-border/40">
+                                <p className="text-base font-bold">Henüz yazı bulunmuyor.</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-6">
+                                {posts.map((post: any, index: number) => (
+                                    <React.Fragment key={post.id}>
+                                        <Link href={`/blog/${post.slug}`} className="group block">
+                                            <Card className="bg-card border-none shadow-none hover:bg-accent/5 transition-all duration-300 rounded-xl overflow-hidden flex flex-col md:flex-row gap-5 p-2 md:p-3">
+                                                {post.imageUrl && (
+                                                    <div className="relative w-full md:w-56 h-40 md:h-36 shrink-0 overflow-hidden rounded-lg">
+                                                        <img
+                                                            src={post.imageUrl}
+                                                            alt={post.title}
+                                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                                        />
+                                                    </div>
+                                                )}
+
+                                                <div className="flex-1 flex flex-col justify-center py-1 space-y-2">
+                                                    <div className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground/60 uppercase">
+                                                        <span className="flex items-center gap-1">
+                                                            <Calendar className="w-3 h-3" />
+                                                            {new Date(post.publishedAt).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                                                        </span>
+                                                        <Badge variant="outline" className="text-[8px] border-primary/20 text-primary px-1.5 py-0">
+                                                            {post.catRel?.name || "Borsa"}
+                                                        </Badge>
+                                                    </div>
+
+                                                    <h2 className="text-base md:text-xl font-black tracking-tight group-hover:text-primary transition-colors leading-snug line-clamp-2">
+                                                        {post.title}
+                                                    </h2>
+
+                                                    <p className="text-muted-foreground text-[11px] md:text-xs font-medium line-clamp-2 leading-relaxed opacity-80">
+                                                        {post.excerpt || (post.content ? post.content.replace(/[#*`]/g, '').replace(/<[^>]*>/g, '').slice(0, 150) + "..." : "")}
+                                                    </p>
+
+                                                    <div className="pt-2 flex items-center justify-between">
+                                                        <div className="flex items-center gap-2 text-[10px] font-bold text-primary uppercase tracking-wider">
+                                                            <div className="w-6 h-[2px] bg-primary/30" />
+                                                            Devamını Oku
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </Card>
+                                        </Link>
+
+                                        {/* Inject dynamic Ad every 4 posts */}
+                                        {(index + 1) % 4 === 0 && (
+                                            <BlogFeedAd />
+                                        )}
+                                    </React.Fragment>
+                                ))}
+                            </div>
+                        )}
                     </div>
                 </div>
-            </div>
 
-            {/* Compact Category Navigation */}
-            <div className="flex flex-wrap items-center gap-2 pb-4 border-b border-border/10">
-                <Link
-                    href="/blog"
-                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${!categorySlug ? 'bg-primary text-white shadow-sm' : 'bg-muted/30 hover:bg-muted/60 text-muted-foreground'}`}
-                >
-                    Tümü
-                </Link>
-                {categories.map((cat: any) => (
-                    <Link
-                        key={cat.id}
-                        href={`/blog?category=${cat.slug}`}
-                        className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${categorySlug === cat.slug ? 'bg-primary text-white shadow-sm' : 'bg-muted/30 hover:bg-muted/60 text-muted-foreground'}`}
-                    >
-                        {cat.name}
-                    </Link>
-                ))}
-            </div>
+                {/* SIDEBAR (25%) */}
+                <div className="w-full lg:w-80 shrink-0 space-y-8">
+                    {/* Newsletter Widget */}
+                    <Card className="bg-primary/[0.03] border-primary/10 rounded-2xl p-6 space-y-4">
+                        <div className="space-y-1">
+                            <h3 className="text-lg font-black tracking-tight">Bültenimize Katılın</h3>
+                            <p className="text-[11px] font-medium text-muted-foreground leading-relaxed">
+                                Hemen ücretsiz üye olun ve yeni güncellemelerden haberdar olan ilk kişi olun.
+                            </p>
+                        </div>
+                        <div className="space-y-2">
+                            <input
+                                type="email"
+                                placeholder="E-Posta Adresiniz"
+                                className="w-full bg-background border-border/40 rounded-xl px-4 py-2.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                            />
+                            <button className="w-full bg-primary text-white rounded-xl py-2.5 text-xs font-black uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
+                                Abone Ol
+                            </button>
+                        </div>
+                    </Card>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {posts.length === 0 ? (
-                    <div className="col-span-full py-16 text-center text-muted-foreground bg-muted/5 rounded-xl border border-dashed border-border/40">
-                        <p className="text-base font-bold">Henüz yazı bulunmuyor.</p>
-                    </div>
-                ) : (
-                    posts.map((post: any) => (
-                        <Link key={post.id} href={`/blog/${post.slug}`} className="group h-full">
-                            <Card className="h-full bg-card border border-border/40 hover:border-primary/40 transition-all duration-300 rounded-xl overflow-hidden shadow-sm hover:shadow-md flex flex-col">
-                                {post.imageUrl && (
-                                    <div className="relative h-32 w-full overflow-hidden border-b border-border/10">
-                                        <img
-                                            src={post.imageUrl}
-                                            alt={post.title}
-                                            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                        />
+                    {/* Popular Posts Widget */}
+                    <div className="space-y-4">
+                        <div className="flex items-center gap-2 border-b border-primary/20 pb-2">
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-foreground">Popüler Yazılar</h3>
+                            <div className="flex-1 h-[1px] bg-border/20" />
+                        </div>
+                        <div className="space-y-4">
+                            {posts.slice(0, 4).map((post: any, i: number) => (
+                                <Link key={post.id} href={`/blog/${post.slug}`} className="flex gap-3 group">
+                                    <div className="relative w-16 h-16 shrink-0 rounded-lg overflow-hidden bg-muted">
+                                        <img src={post.imageUrl} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                                        <div className="absolute top-0 left-0 bg-black/60 text-white text-[8px] font-bold w-4 h-4 flex items-center justify-center">{i + 1}</div>
                                     </div>
-                                )}
-
-                                <CardContent className="p-4 flex-1 flex flex-col">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <Badge variant="outline" className="border-primary/20 text-primary text-[8px] font-bold uppercase tracking-widest px-2 py-0.5">
-                                            {post.catRel?.name || post.category || "Analiz"}
-                                        </Badge>
-                                        <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-tighter">
-                                            {new Date(post.publishedAt).toLocaleDateString('tr-TR')}
-                                        </span>
-                                    </div>
-
-                                    <div className="flex-1 space-y-2">
-                                        <h2 className="text-base font-bold tracking-tight group-hover:text-primary transition-colors duration-300 leading-tight line-clamp-2">
+                                    <div className="space-y-1 py-0.5">
+                                        <h4 className="text-[11px] font-bold leading-tight line-clamp-2 group-hover:text-primary transition-colors">
                                             {post.title}
-                                        </h2>
-                                        {post.excerpt && (
-                                            <p className="text-muted-foreground text-[11px] font-semibold line-clamp-2 leading-relaxed opacity-70">
-                                                {post.excerpt}
-                                            </p>
-                                        )}
+                                        </h4>
+                                        <div className="flex items-center gap-2 text-[8px] font-bold text-muted-foreground/60">
+                                            <Clock className="w-2 h-2" />
+                                            {new Date(post.publishedAt).toLocaleDateString('tr-TR')}
+                                        </div>
                                     </div>
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
 
-                                    <div className="mt-4 pt-3 border-t border-border/10 flex items-center justify-between text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest italic">
-                                        Devamını Oku
-                                        <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </Link>
-                    ))
-                )}
+                    {/* Sticky Sidebar Ad - Persistent Visibility */}
+                    <div className="sticky top-24 pt-4">
+                        <BlogFeedAd
+                            location="blog_sidebar_sticky"
+                            className="py-0"
+                        />
+                    </div>
+                </div>
             </div>
         </div>
     );

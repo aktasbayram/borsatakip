@@ -266,13 +266,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)] animate-pulse"></span>
                             Editörün Seçimleri
                         </Link>
-                        {/* <Link
-                            href="/market/kap"
-                            className="text-[10px] font-black tracking-widest text-muted-foreground hover:text-primary transition-colors whitespace-nowrap flex items-center gap-2 uppercase"
-                        >
-                            <span className="w-1 h-1 rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)] animate-pulse"></span>
-                            KAP Bildirimleri
-                        </Link> */}
+
                         {/* More items can be added here */}
                     </div>
                 </div>

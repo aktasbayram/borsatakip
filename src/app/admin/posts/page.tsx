@@ -73,6 +73,7 @@ export default function PostsAdminPage() {
                             <TableHead>Başlık</TableHead>
                             <TableHead>Kategori</TableHead>
                             <TableHead>Durum</TableHead>
+                            <TableHead>Öne Çıkan</TableHead>
                             <TableHead>Tarih</TableHead>
                             <TableHead className="text-right">İşlemler</TableHead>
                         </TableRow>
@@ -109,6 +110,15 @@ export default function PostsAdminPage() {
                                         <Badge variant={post.isPublished ? "default" : "secondary"}>
                                             {post.isPublished ? "Yayında" : "Taslak"}
                                         </Badge>
+                                    </TableCell>
+                                    <TableCell>
+                                        {post.isFeatured ? (
+                                            <Badge variant="default" className="bg-amber-500 hover:bg-amber-600 border-0">
+                                                ★ Sıra: {post.featuredOrder}
+                                            </Badge>
+                                        ) : (
+                                            <span className="text-muted-foreground text-xs italic">Hayır</span>
+                                        )}
                                     </TableCell>
                                     <TableCell className="text-muted-foreground text-xs font-medium">
                                         {new Date(post.publishedAt).toLocaleDateString("tr-TR")}

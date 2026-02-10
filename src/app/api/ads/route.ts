@@ -21,7 +21,8 @@ export async function GET(req: Request) {
                 label: true,
                 location: true,
                 adCode: true,
-                platform: true
+                platform: true,
+                isActive: true
             }
         });
 

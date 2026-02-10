@@ -393,6 +393,8 @@ model Post {
   categoryId  String?
   catRel      Category? @relation(fields: [categoryId], references: [id])
   isPublished Boolean  @default(true)
+  isFeatured  Boolean  @default(false)
+  featuredOrder Int     @default(0)
   publishedAt DateTime @default(now())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

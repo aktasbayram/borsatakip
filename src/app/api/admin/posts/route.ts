@@ -12,6 +12,8 @@ const postSchema = z.object({
     category: z.string().optional(), // Keep for backward compatibility
     categoryId: z.string().optional(), // New relation
     isPublished: z.boolean().default(true),
+    isFeatured: z.boolean().optional(),
+    featuredOrder: z.number().optional(),
     // SEO Fields
     seoTitle: z.string().optional(),
     seoDescription: z.string().optional(),
@@ -61,8 +63,10 @@ export async function POST(request: Request) {
                 excerpt: validatedData.excerpt,
                 imageUrl: validatedData.imageUrl,
                 category: validatedData.category, // Legacy
-                categoryId: validatedData.categoryId, // Relation
+                categoryId: validatedData.categoryId || null, // Relation
                 isPublished: validatedData.isPublished,
+                isFeatured: validatedData.isFeatured,
+                featuredOrder: validatedData.featuredOrder,
                 // SEO Fields
                 seoTitle: validatedData.seoTitle,
                 seoDescription: validatedData.seoDescription,
@@ -78,9 +82,10 @@ export async function POST(request: Request) {
 
         return NextResponse.json({ data: post });
     } catch (error) {
+        console.error("POST /api/admin/posts error:", error);
         if (error instanceof z.ZodError) {
             return NextResponse.json({ error: error.errors }, { status: 400 });
         }
-        return NextResponse.json({ error: "Failed to create post" }, { status: 500 });
+        return NextResponse.json({ error: "Yazı oluşturulurken bir hata oluştu" }, { status: 500 });
     }
 }

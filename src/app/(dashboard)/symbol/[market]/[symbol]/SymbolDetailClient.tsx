@@ -38,8 +38,7 @@ export default function SymbolDetailClient() {
 
     // ... imports ...
     const { calculateRSI, calculateMACD } = require('@/lib/indicators');
-    const [kapNews, setKapNews] = useState<any[]>([]);
-    const [selectedNews, setSelectedNews] = useState<any>(null);
+
 
     // AI Analysis
     const [isAIModalOpen, setIsAIModalOpen] = useState(false);
@@ -120,11 +119,6 @@ export default function SymbolDetailClient() {
                     axios.get(`/api/market/candles?symbol=${symbol}&market=${market}&range=${range}&interval=${interval}`)
                 ];
 
-                // Fetch KAP news only for BIST stocks
-                if (market === 'BIST') {
-                    requests.push(axios.get(`/api/market/news?symbol=${symbol}&market=${market}`));
-                }
-
                 const responses = await Promise.all(requests);
                 setQuote(responses[0].data);
 
@@ -148,10 +142,6 @@ export default function SymbolDetailClient() {
                     setMacdData([]);
                 }
 
-                // Set KAP news if available
-                if (market === 'BIST' && responses[2]) {
-                    setKapNews(responses[2].data);
-                }
             } catch (error) {
                 console.error(error);
                 setCandles([]);
@@ -341,8 +331,7 @@ export default function SymbolDetailClient() {
                     market,
                     price: quote?.price,
                     change: quote?.changePercent,
-                    candles: candles.slice(-30),
-                    news: kapNews.slice(0, 3)
+                    candles: candles.slice(-30)
                 }}
             />
 
@@ -542,120 +531,8 @@ export default function SymbolDetailClient() {
                 </div>
             </div>
 
-            {/* KAP News Section - Only for BIST stocks */}
-            {
-                market === 'BIST' && kapNews.length > 0 && (
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <span>📰</span>
-                                KAP Haberleri
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-4">
-                                {kapNews.map((news) => (
-                                    <button
-                                        key={news.id}
-                                        onClick={() => setSelectedNews(news)}
-                                        className="w-full text-left block p-4 border rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
-                                    >
-                                        <div className="flex justify-between items-start gap-4">
-                                            <div className="flex-1">
-                                                <h3 className="font-semibold text-sm mb-1">{news.title}</h3>
-                                                <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
-                                                    {news.summary}
-                                                </p>
-                                                <span className="text-xs text-gray-500">
-                                                    {new Date(news.date).toLocaleDateString('tr-TR', {
-                                                        year: 'numeric',
-                                                        month: 'long',
-                                                        day: 'numeric'
-                                                    })}
-                                                </span>
-                                            </div>
-                                            <svg
-                                                className="w-4 h-4 text-gray-400 flex-shrink-0 mt-1"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                            </svg>
-                                        </div>
-                                    </button>
-                                ))}
-                            </div>
-                        </CardContent>
-                    </Card>
-                )
-            }
 
-            {/* KAP News Modal - Rendered via Portal to avoid z-index/overflow issues */}
-            {
-                selectedNews && typeof document !== 'undefined' && createPortal(
-                    <div
-                        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999] p-4"
-                        onClick={() => setSelectedNews(null)}
-                    >
-                        <div
-                            className="bg-white dark:bg-gray-800 rounded-lg max-w-2xl w-full max-h-[80vh] overflow-y-auto shadow-2xl"
-                            onClick={(e) => e.stopPropagation()}
-                        >
-                            <div className="sticky top-0 bg-white dark:bg-gray-800 border-b p-4 flex justify-between items-start z-10">
-                                <div className="flex-1 pr-4">
-                                    <h2 className="text-xl font-bold mb-2">{selectedNews.title}</h2>
-                                    <span className="text-sm text-gray-500">
-                                        {selectedNews.date ? new Date(selectedNews.date).toLocaleDateString('tr-TR', {
-                                            year: 'numeric',
-                                            month: 'long',
-                                            day: 'numeric',
-                                            hour: '2-digit',
-                                            minute: '2-digit'
-                                        }) : ''}
-                                    </span>
-                                </div>
-                                <button
-                                    onClick={() => setSelectedNews(null)}
-                                    className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-                                >
-                                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                    </svg>
-                                </button>
-                            </div>
-                            <div className="p-6">
-                                <div className="prose dark:prose-invert max-w-none">
-                                    <p className="text-gray-700 dark:text-gray-300 mb-4 whitespace-pre-line">
-                                        {selectedNews.summary}
-                                    </p>
-                                </div>
-                                <div className="mt-6 flex flex-col sm:flex-row gap-3">
-                                    <a
-                                        href={selectedNews.url}
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors text-center flex items-center justify-center gap-2"
-                                    >
-                                        <span>KAP&apos;ta Görüntüle</span>
-                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                                        </svg>
-                                    </a>
-                                    <button
-                                        onClick={() => setSelectedNews(null)}
-                                        className="flex-1 bg-gray-200 dark:bg-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
-                                    >
-                                        Kapat
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>,
-                    document.body
-                )
-            }
-
+            {/* Auth Modal */}
             <AuthModal
                 isOpen={isAuthModalOpen}
                 onClose={() => setIsAuthModalOpen(false)}
