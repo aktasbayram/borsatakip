@@ -220,22 +220,22 @@ export function ThemeSettingsDialog({ open, onClose }: ThemeSettingsDialogProps)
                         <span className={`font-medium text-sm ${theme === "sharp-dark" ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-400"}`}>Keskin (Koyu)</span>
                     </div>
 
-                    {/* Luxury Theme */}
+                    {/* Cyberpunk Theme */}
                     <div
-                        className={`cursor-pointer group flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all ${theme === "luxury"
-                            ? "border-amber-500 bg-amber-50/10 dark:bg-amber-900/10 shadow-md"
-                            : "border-gray-200 dark:border-gray-800 hover:border-amber-200 dark:hover:border-amber-800"
+                        className={`cursor-pointer group flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all ${theme === "cyberpunk"
+                            ? "border-[#00f3ff] bg-[#00f3ff]/10 shadow-[0_0_15px_rgba(0,243,255,0.2)]"
+                            : "border-gray-200 dark:border-gray-800 hover:border-[#00f3ff]/50 dark:hover:border-[#00f3ff]/30"
                             }`}
-                        onClick={() => { setTheme("luxury"); onClose(); }}
+                        onClick={() => { setTheme("cyberpunk"); onClose(); }}
                     >
-                        <div className="w-full aspect-video rounded-lg bg-gradient-to-br from-[#020617] to-[#1e1b4b] border border-amber-500/30 p-2 flex gap-2 pointer-events-none">
-                            <div className="w-1/3 h-full bg-[#0f172a]/80 rounded-md border border-amber-500/20 shadow-lg"></div>
+                        <div className="w-full aspect-video rounded-md bg-black border border-[#00f3ff]/30 p-2 flex gap-2 pointer-events-none">
+                            <div className="w-1/3 h-full bg-[#00f3ff]/10 rounded border border-[#00f3ff]/20"></div>
                             <div className="w-2/3 h-full flex flex-col gap-2">
-                                <div className="w-full h-8 bg-amber-500/20 rounded-md border border-amber-500/30"></div>
-                                <div className="w-full h-full bg-[#0f172a]/80 rounded-md border border-amber-500/20"></div>
+                                <div className="w-full h-8 bg-[#ff00ff]/20 rounded border border-[#ff00ff]/20"></div>
+                                <div className="w-full h-full bg-[#00f3ff]/5 rounded border border-[#00f3ff]/10"></div>
                             </div>
                         </div>
-                        <span className={`font-medium text-sm ${theme === "luxury" ? "text-amber-600 dark:text-amber-400" : "text-gray-600 dark:text-gray-400"}`}>Luxury (Premium)</span>
+                        <span className={`font-medium text-sm ${theme === "cyberpunk" ? "text-[#00f3ff]" : "text-gray-600 dark:text-gray-400"}`}>Cyberpunk (Neon)</span>
                     </div>
 
 

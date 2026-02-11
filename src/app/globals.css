@@ -4,7 +4,7 @@
   Define dark mode variants to include our dark-based custom themes.
   This allows 'dark:' utilities to work in fintech and terminal modes.
 */
-@variant dark (&:where(.dark, .fintech, .terminal, .sharp-dark, .luxury, .dark *, .fintech *, .terminal *, .sharp-dark *, .luxury *));
+@variant dark (&:where(.dark, .fintech, .terminal, .sharp-dark, .cyberpunk, .dark *, .fintech *, .terminal *, .sharp-dark *, .cyberpunk *));
 
 @theme {
   --color-background: var(--background);
@@ -205,39 +205,40 @@
 
 /* 
   -----------------------------------------
-  THEME 5: LUXURY (Midnight & Gold)
-  Deep blue background with gold accents
+  THEME 5: CYBERPUNK (Neon High-Contrast)
+  Pitch black background with neon cyan/magenta
   -----------------------------------------
 */
-.luxury {
-  --background: #020617;
-  /* Slate 950 / Midnight */
-  --foreground: #f8fafc;
-  --card: rgba(15, 23, 42, 0.4);
-  /* Slate 900 with transparency */
-  --card-foreground: #f8fafc;
-  --popover: #0f172a;
-  --popover-foreground: #f8fafc;
-  --primary: #fbbf24;
-  /* Amber 400 (Gold) */
-  --primary-foreground: #020617;
-  --secondary: rgba(15, 23, 42, 0.6);
-  --secondary-foreground: #f8fafc;
-  --muted: #0f172a;
-  --muted-foreground: #94a3b8;
-  --accent: #fbbf24;
-  --accent-foreground: #020617;
-  --destructive: #ef4444;
+.cyberpunk {
+  --background: #050505;
+  --foreground: #00f3ff;
+  /* Neon Cyan */
+  --card: rgba(0, 0, 0, 0.8);
+  --card-foreground: #ffffff;
+  --popover: #000000;
+  --popover-foreground: #00f3ff;
+  --primary: #00f3ff;
+  /* Neon Cyan */
+  --primary-foreground: #000000;
+  --secondary: #ff00ff;
+  /* Neon Magenta */
+  --secondary-foreground: #ffffff;
+  --muted: #1a1a1a;
+  --muted-foreground: #888888;
+  --accent: #ffea00;
+  /* Neon Yellow */
+  --accent-foreground: #000000;
+  --destructive: #ff0044;
   --destructive-foreground: #ffffff;
-  --border: rgba(251, 191, 36, 0.15);
-  /* Faint gold border */
-  --input: #0f172a;
-  --ring: #fbbf24;
-  --radius: 0.75rem;
+  --border: #00f3ff;
+  /* Neon Cyan Border */
+  --input: #000000;
+  --ring: #ff00ff;
+  --radius: 0.25rem;
 }
 
-.luxury body {
-  background-image: radial-gradient(circle at top right, #1e1b4b, #020617);
+.cyberpunk body {
+  background: linear-gradient(135deg, #050505 0%, #0a0a0a 101%);
   background-attachment: fixed;
 }
 
