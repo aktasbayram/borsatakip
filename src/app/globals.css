@@ -173,6 +173,14 @@
   --input: #e2e8f0;
   --ring: #2563eb;
   --radius: 0px !important;
+  --radius-xs: 0px !important;
+  --radius-sm: 0px !important;
+  --radius-md: 0px !important;
+  --radius-lg: 0px !important;
+  --radius-xl: 0px !important;
+  --radius-2xl: 0px !important;
+  --radius-3xl: 0px !important;
+  --radius-4xl: 0px !important;
 }
 
 .sharp-dark {
@@ -196,6 +204,14 @@
   --input: #1e293b;
   --ring: #3b82f6;
   --radius: 0px !important;
+  --radius-xs: 0px !important;
+  --radius-sm: 0px !important;
+  --radius-md: 0px !important;
+  --radius-lg: 0px !important;
+  --radius-xl: 0px !important;
+  --radius-2xl: 0px !important;
+  --radius-3xl: 0px !important;
+  --radius-4xl: 0px !important;
 }
 
 
