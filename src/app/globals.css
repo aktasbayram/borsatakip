@@ -4,7 +4,7 @@
   Define dark mode variants to include our dark-based custom themes.
   This allows 'dark:' utilities to work in fintech and terminal modes.
 */
-@variant dark (&:where(.dark, .fintech, .terminal, .dark *, .fintech *, .terminal *));
+@variant dark (&:where(.dark, .fintech, .terminal, .sharp-dark, .dark *, .fintech *, .terminal *, .sharp-dark *));
 
 @theme {
   --color-background: var(--background);
