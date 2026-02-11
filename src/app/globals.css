@@ -142,7 +142,7 @@
   --border: #333333;
   --input: #111111;
   --ring: #ff6600;
-  --radius: 0px;
+  --radius: 0px !important;
   /* Sharp edges */
 }
 
@@ -172,7 +172,7 @@
   --border: #e2e8f0;
   --input: #e2e8f0;
   --ring: #2563eb;
-  --radius: 0px;
+  --radius: 0px !important;
 }
 
 .sharp-dark {
@@ -195,13 +195,10 @@
   --border: #1e293b;
   --input: #1e293b;
   --ring: #3b82f6;
-  --radius: 0px;
+  --radius: 0px !important;
 }
 
-.sharp *,
-.sharp-dark * {
-  border-radius: 0 !important;
-}
+
 
 /* 
   -----------------------------------------

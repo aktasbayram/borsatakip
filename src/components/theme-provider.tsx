@@ -12,7 +12,7 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
                     const html = document.documentElement;
                     const classes = html.className.split(' ');
-                    const themeClasses = ['light', 'dark', 'fintech', 'terminal'];
+                    const themeClasses = ['light', 'dark', 'fintech', 'terminal', 'sharp', 'sharp-dark', 'emerald'];
 
                     // Find which theme classes are present
                     const presentThemes = classes.filter(c => themeClasses.includes(c));
