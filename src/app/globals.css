@@ -213,8 +213,6 @@
   --radius-4xl: 0px;
 }
 
-
-
 /* 
   -----------------------------------------
   THEME 5: EMERALD (Stock Market Green)
@@ -223,16 +221,12 @@
 */
 .emerald {
   --background: #020617;
-  /* Keeping it dark enough for readability */
   --foreground: #ecfdf5;
-  /* Mint White */
   --card: rgba(6, 78, 59, 0.4);
-  /* Dark Emerald green */
   --card-foreground: #ffffff;
   --popover: #064e3b;
   --popover-foreground: #ecfdf5;
   --primary: #10b981;
-  /* Emerald Green */
   --primary-foreground: #022c22;
   --secondary: rgba(6, 78, 59, 0.6);
   --secondary-foreground: #ecfdf5;
@@ -261,8 +255,6 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-
-
 /* Glassmorphism Utilities for Fintech */
 .fintech .card,
 .fintech .glass {
@@ -274,9 +266,4 @@ body {
 /* Terminal Monospace Override */
 .terminal {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-}
-
-.terminal * {
-  border-radius: 0 !important;
-  /* Force sharp edges everywhere */
 }
