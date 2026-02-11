@@ -184,6 +184,42 @@ export function ThemeSettingsDialog({ open, onClose }: ThemeSettingsDialogProps)
                         <span className={`font-medium text-sm ${theme === "terminal" ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-400"}`}>Terminal</span>
                     </div>
 
+                    {/* Sharp Light Theme */}
+                    <div
+                        className={`cursor-pointer group flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all ${theme === "sharp"
+                            ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/20 shadow-md"
+                            : "border-gray-200 dark:border-gray-800 hover:border-blue-200 dark:hover:border-blue-800"
+                            }`}
+                        onClick={() => { setTheme("sharp"); onClose(); }}
+                    >
+                        <div className="w-full aspect-video rounded-none bg-white border border-gray-400 p-2 flex gap-2 pointer-events-none">
+                            <div className="w-1/3 h-full bg-gray-100 rounded-none border border-gray-300"></div>
+                            <div className="w-2/3 h-full flex flex-col gap-2">
+                                <div className="w-full h-8 bg-gray-100 rounded-none border border-gray-300"></div>
+                                <div className="w-full h-full bg-gray-100 rounded-none border border-gray-300"></div>
+                            </div>
+                        </div>
+                        <span className={`font-medium text-sm ${theme === "sharp" ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-400"}`}>Keskin (Açık)</span>
+                    </div>
+
+                    {/* Sharp Dark Theme */}
+                    <div
+                        className={`cursor-pointer group flex flex-col items-center gap-3 p-4 rounded-xl border-2 transition-all ${theme === "sharp-dark"
+                            ? "border-blue-500 bg-blue-50/50 dark:bg-blue-900/20 shadow-md"
+                            : "border-gray-200 dark:border-gray-800 hover:border-blue-200 dark:hover:border-blue-800"
+                            }`}
+                        onClick={() => { setTheme("sharp-dark"); onClose(); }}
+                    >
+                        <div className="w-full aspect-video rounded-none bg-[#020617] border border-gray-700 p-2 flex gap-2 pointer-events-none">
+                            <div className="w-1/3 h-full bg-[#1e293b] rounded-none border border-gray-600"></div>
+                            <div className="w-2/3 h-full flex flex-col gap-2">
+                                <div className="w-full h-8 bg-[#1e293b] rounded-none border border-gray-600"></div>
+                                <div className="w-full h-full bg-[#1e293b] rounded-none border border-gray-600"></div>
+                            </div>
+                        </div>
+                        <span className={`font-medium text-sm ${theme === "sharp-dark" ? "text-blue-600 dark:text-blue-400" : "text-gray-600 dark:text-gray-400"}`}>Keskin (Koyu)</span>
+                    </div>
+
 
                 </div>
 
