@@ -73,27 +73,34 @@ CustomNotification.displayName = 'CustomNotification';
 export function Providers({ children }: { children: React.ReactNode }) {
     return (
         <SessionProvider>
-            <SnackbarProvider
-                maxSnack={3}
-                anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-                autoHideDuration={5000}
-                classes={{
-                    containerRoot: 'mt-16'
-                }}
-                style={{
-                    marginTop: '64px'
-                }}
-                Components={{
-                    default: CustomNotification,
-                    success: (props) => <CustomNotification {...props} variant="success" />,
-                    error: (props) => <CustomNotification {...props} variant="error" />,
-                    warning: (props) => <CustomNotification {...props} variant="warning" />,
-                    info: (props) => <CustomNotification {...props} variant="info" />
-                }}
+            <ThemeProvider
+                attribute="class"
+                defaultTheme="system"
+                enableSystem
+                disableTransitionOnChange
             >
-                {children}
+                <SnackbarProvider
+                    maxSnack={3}
+                    anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+                    autoHideDuration={5000}
+                    classes={{
+                        containerRoot: 'mt-16'
+                    }}
+                    style={{
+                        marginTop: '64px'
+                    }}
+                    Components={{
+                        default: CustomNotification,
+                        success: (props) => <CustomNotification {...props} variant="success" />,
+                        error: (props) => <CustomNotification {...props} variant="error" />,
+                        warning: (props) => <CustomNotification {...props} variant="warning" />,
+                        info: (props) => <CustomNotification {...props} variant="info" />
+                    }}
+                >
+                    {children}
 
-            </SnackbarProvider>
+                </SnackbarProvider>
+            </ThemeProvider>
         </SessionProvider>
     );
 }

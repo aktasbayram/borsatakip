@@ -4,7 +4,7 @@
   Define dark mode variants to include our dark-based custom themes.
   This allows 'dark:' utilities to work in fintech and terminal modes.
 */
-@variant dark (&:where(.dark, .fintech, .terminal, .sharp-dark, .emerald, .dark *, .fintech *, .terminal *, .sharp-dark *, .emerald *));
+@variant dark (&:where(.dark, .fintech, .terminal, .dark *, .fintech *, .terminal *));
 
 @theme {
   --color-background: var(--background);
@@ -143,108 +143,7 @@
   --input: #111111;
   --ring: #ff6600;
   --radius: 0px;
-}
-
-/* 
-  -----------------------------------------
-  THEME 4: SHARP (Light & Dark Variants)
-  Identical to Minimal but with 0px radius
-  -----------------------------------------
-*/
-.sharp {
-  --background: #ffffff;
-  --foreground: #0f172a;
-  --card: #ffffff;
-  --card-foreground: #0f172a;
-  --popover: #ffffff;
-  --popover-foreground: #0f172a;
-  --primary: #2563eb;
-  --primary-foreground: #ffffff;
-  --secondary: #f1f5f9;
-  --secondary-foreground: #1e293b;
-  --muted: #f8fafc;
-  --muted-foreground: #64748b;
-  --accent: #f1f5f9;
-  --accent-foreground: #0f172a;
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #2563eb;
-  --radius: 0px;
-  --radius-xs: 0px;
-  --radius-sm: 0px;
-  --radius-md: 0px;
-  --radius-lg: 0px;
-  --radius-xl: 0px;
-  --radius-2xl: 0px;
-  --radius-3xl: 0px;
-  --radius-4xl: 0px;
-}
-
-.sharp-dark {
-  --background: #020617;
-  --foreground: #f8fafc;
-  --card: #0f172a;
-  --card-foreground: #f8fafc;
-  --popover: #0f172a;
-  --popover-foreground: #f8fafc;
-  --primary: #3b82f6;
-  --primary-foreground: #ffffff;
-  --secondary: #1e293b;
-  --secondary-foreground: #f8fafc;
-  --muted: #0f172a;
-  --muted-foreground: #94a3b8;
-  --accent: #1e293b;
-  --accent-foreground: #f8fafc;
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  --border: #1e293b;
-  --input: #1e293b;
-  --ring: #3b82f6;
-  --radius: 0px;
-  --radius-xs: 0px;
-  --radius-sm: 0px;
-  --radius-md: 0px;
-  --radius-lg: 0px;
-  --radius-xl: 0px;
-  --radius-2xl: 0px;
-  --radius-3xl: 0px;
-  --radius-4xl: 0px;
-}
-
-/* 
-  -----------------------------------------
-  THEME 5: EMERALD (Stock Market Green)
-  Deep dark green with vibrant emerald accents
-  -----------------------------------------
-*/
-.emerald {
-  --background: #020617;
-  --foreground: #ecfdf5;
-  --card: rgba(6, 78, 59, 0.4);
-  --card-foreground: #ffffff;
-  --popover: #064e3b;
-  --popover-foreground: #ecfdf5;
-  --primary: #10b981;
-  --primary-foreground: #022c22;
-  --secondary: rgba(6, 78, 59, 0.6);
-  --secondary-foreground: #ecfdf5;
-  --muted: #064e3b;
-  --muted-foreground: #6ee7b7;
-  --accent: #34d399;
-  --accent-foreground: #022c22;
-  --destructive: #ef4444;
-  --destructive-foreground: #ffffff;
-  --border: rgba(16, 185, 129, 0.2);
-  --input: #064e3b;
-  --ring: #10b981;
-  --radius: 0.5rem;
-}
-
-.emerald body {
-  background: linear-gradient(135deg, #020617 0%, #064e3b 100%);
-  background-attachment: fixed;
+  /* Sharp edges */
 }
 
 /* Global Styles for Typography */
@@ -254,6 +153,8 @@ body {
   font-family: var(--font-sans), system-ui, sans-serif;
   transition: background-color 0.3s ease, color 0.3s ease;
 }
+
+
 
 /* Glassmorphism Utilities for Fintech */
 .fintech .card,
@@ -266,4 +167,9 @@ body {
 /* Terminal Monospace Override */
 .terminal {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+.terminal * {
+  border-radius: 0 !important;
+  /* Force sharp edges everywhere */
 }
