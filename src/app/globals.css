@@ -4,7 +4,7 @@
   Define dark mode variants to include our dark-based custom themes.
   This allows 'dark:' utilities to work in fintech and terminal modes.
 */
-@variant dark (&:where(.dark, .fintech, .terminal, .sharp-dark, .cyberpunk, .dark *, .fintech *, .terminal *, .sharp-dark *, .cyberpunk *));
+@variant dark (&:where(.dark, .fintech, .terminal, .sharp-dark, .emerald, .dark *, .fintech *, .terminal *, .sharp-dark *, .emerald *));
 
 @theme {
   --color-background: var(--background);
@@ -205,40 +205,39 @@
 
 /* 
   -----------------------------------------
-  THEME 5: CYBERPUNK (Neon High-Contrast)
-  Pitch black background with neon cyan/magenta
+  THEME 5: EMERALD (Stock Market Green)
+  Deep dark green with vibrant emerald accents
   -----------------------------------------
 */
-.cyberpunk {
-  --background: #050505;
-  --foreground: #00f3ff;
-  /* Neon Cyan */
-  --card: rgba(0, 0, 0, 0.8);
+.emerald {
+  --background: #020617;
+  /* Keeping it dark enough for readability */
+  --foreground: #ecfdf5;
+  /* Mint White */
+  --card: rgba(6, 78, 59, 0.4);
+  /* Dark Emerald green */
   --card-foreground: #ffffff;
-  --popover: #000000;
-  --popover-foreground: #00f3ff;
-  --primary: #00f3ff;
-  /* Neon Cyan */
-  --primary-foreground: #000000;
-  --secondary: #ff00ff;
-  /* Neon Magenta */
-  --secondary-foreground: #ffffff;
-  --muted: #1a1a1a;
-  --muted-foreground: #888888;
-  --accent: #ffea00;
-  /* Neon Yellow */
-  --accent-foreground: #000000;
-  --destructive: #ff0044;
+  --popover: #064e3b;
+  --popover-foreground: #ecfdf5;
+  --primary: #10b981;
+  /* Emerald Green */
+  --primary-foreground: #022c22;
+  --secondary: rgba(6, 78, 59, 0.6);
+  --secondary-foreground: #ecfdf5;
+  --muted: #064e3b;
+  --muted-foreground: #6ee7b7;
+  --accent: #34d399;
+  --accent-foreground: #022c22;
+  --destructive: #ef4444;
   --destructive-foreground: #ffffff;
-  --border: #00f3ff;
-  /* Neon Cyan Border */
-  --input: #000000;
-  --ring: #ff00ff;
-  --radius: 0.25rem;
+  --border: rgba(16, 185, 129, 0.2);
+  --input: #064e3b;
+  --ring: #10b981;
+  --radius: 0.5rem;
 }
 
-.cyberpunk body {
-  background: linear-gradient(135deg, #050505 0%, #0a0a0a 101%);
+.emerald body {
+  background: linear-gradient(135deg, #020617 0%, #064e3b 100%);
   background-attachment: fixed;
 }
 
