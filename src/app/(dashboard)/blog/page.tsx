@@ -7,6 +7,7 @@ import { ChevronRight, Calendar, Clock, User, ArrowLeft, Tag } from "lucide-reac
 import ReactMarkdown from "react-markdown";
 import { FeaturedPosts } from "@/components/blog/FeaturedPosts";
 import { BlogFeedAd } from "@/components/blog/BlogFeedAd";
+import { NewsletterWidget } from "@/components/blog/NewsletterWidget";
 
 interface BlogListPageProps {
     searchParams: Promise<{
@@ -185,24 +186,7 @@ export default async function BlogListPage(props: BlogListPageProps) {
                 {/* SIDEBAR (25%) */}
                 <div className="w-full lg:w-80 shrink-0 space-y-8">
                     {/* Newsletter Widget */}
-                    <Card className="bg-primary/[0.03] border-primary/10 rounded-2xl p-6 space-y-4">
-                        <div className="space-y-1">
-                            <h3 className="text-lg font-black tracking-tight">Bültenimize Katılın</h3>
-                            <p className="text-[11px] font-medium text-muted-foreground leading-relaxed">
-                                Hemen ücretsiz üye olun ve yeni güncellemelerden haberdar olan ilk kişi olun.
-                            </p>
-                        </div>
-                        <div className="space-y-2">
-                            <input
-                                type="email"
-                                placeholder="E-Posta Adresiniz"
-                                className="w-full bg-background border-border/40 rounded-xl px-4 py-2.5 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                            />
-                            <button className="w-full bg-primary text-white rounded-xl py-2.5 text-xs font-black uppercase tracking-widest hover:bg-primary/90 transition-all shadow-lg shadow-primary/20">
-                                Abone Ol
-                            </button>
-                        </div>
-                    </Card>
+                    <NewsletterWidget />
 
                     {/* Popular Posts Widget */}
                     <div className="space-y-4">
