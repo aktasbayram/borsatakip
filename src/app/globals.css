@@ -142,8 +142,7 @@
   --border: #333333;
   --input: #111111;
   --ring: #ff6600;
-  --radius: 0px !important;
-  /* Sharp edges */
+  --radius: 0px;
 }
 
 /* 
@@ -172,15 +171,15 @@
   --border: #e2e8f0;
   --input: #e2e8f0;
   --ring: #2563eb;
-  --radius: 0px !important;
-  --radius-xs: 0px !important;
-  --radius-sm: 0px !important;
-  --radius-md: 0px !important;
-  --radius-lg: 0px !important;
-  --radius-xl: 0px !important;
-  --radius-2xl: 0px !important;
-  --radius-3xl: 0px !important;
-  --radius-4xl: 0px !important;
+  --radius: 0px;
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
 }
 
 .sharp-dark {
@@ -203,15 +202,15 @@
   --border: #1e293b;
   --input: #1e293b;
   --ring: #3b82f6;
-  --radius: 0px !important;
-  --radius-xs: 0px !important;
-  --radius-sm: 0px !important;
-  --radius-md: 0px !important;
-  --radius-lg: 0px !important;
-  --radius-xl: 0px !important;
-  --radius-2xl: 0px !important;
-  --radius-3xl: 0px !important;
-  --radius-4xl: 0px !important;
+  --radius: 0px;
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
 }
 
 

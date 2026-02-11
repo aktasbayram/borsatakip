@@ -75,6 +75,7 @@ export default async function RootLayout({
           <ThemeProvider
             attribute="class"
             defaultTheme="light"
+            themes={['light', 'dark', 'fintech', 'terminal', 'sharp', 'sharp-dark', 'emerald']}
             enableSystem={false}
             disableTransitionOnChange={false}
           >
