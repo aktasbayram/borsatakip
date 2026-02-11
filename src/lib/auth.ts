@@ -62,5 +62,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     session: {
         strategy: "jwt"
     },
+    basePath: "/api/auth",
     secret: process.env.NEXTAUTH_SECRET,
 })

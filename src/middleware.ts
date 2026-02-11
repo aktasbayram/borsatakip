@@ -50,5 +50,5 @@ export function middleware(request: NextRequest) {
 export const config = {
     // Matcher still captures everything to apply Security Headers,
     // but Rate Limit logic is now scoped inside the function.
-    matcher: ['/api/:path*', '/((?!_next/static|_next/image|favicon.ico).*)'],
+    matcher: ['/((?!api/auth|_next/static|_next/image|favicon.ico).*)', '/api/:path*'],
 };
