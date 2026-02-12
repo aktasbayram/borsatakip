@@ -12,51 +12,66 @@ const CustomNotification = React.forwardRef<HTMLDivElement, { message: string; v
 
         const variantStyles = {
             default: {
-                border: 'border-gray-200/50 dark:border-gray-700/50',
-                iconBg: 'bg-blue-500/20',
-                iconColor: 'text-blue-600 dark:text-blue-400',
+                bg: 'bg-white/90 dark:bg-gray-900/90',
+                border: 'border-white/20 dark:border-gray-800/50',
+                accent: 'bg-blue-500',
+                text: 'text-gray-900 dark:text-gray-100',
                 icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             },
             success: {
-                border: 'border-green-200/50 dark:border-green-700/50',
-                iconBg: 'bg-green-500/20',
-                iconColor: 'text-green-600 dark:text-green-400',
+                bg: 'bg-emerald-50/90 dark:bg-emerald-950/40',
+                border: 'border-emerald-200/50 dark:border-emerald-800/30',
+                accent: 'bg-emerald-500',
+                text: 'text-emerald-900 dark:text-emerald-50',
                 icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             },
             error: {
-                border: 'border-red-200/50 dark:border-red-700/50',
-                iconBg: 'bg-red-500/20',
-                iconColor: 'text-red-600 dark:text-red-400',
+                bg: 'bg-rose-50/90 dark:bg-rose-950/40',
+                border: 'border-rose-200/50 dark:border-rose-800/30',
+                accent: 'bg-rose-500',
+                text: 'text-rose-900 dark:text-rose-50',
                 icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             },
             warning: {
-                border: 'border-amber-200/50 dark:border-amber-700/50',
-                iconBg: 'bg-amber-500/20',
-                iconColor: 'text-amber-600 dark:text-amber-400',
+                bg: 'bg-amber-50/90 dark:bg-amber-950/40',
+                border: 'border-amber-200/50 dark:border-amber-800/30',
+                accent: 'bg-amber-500',
+                text: 'text-amber-900 dark:text-amber-50',
                 icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
             },
             info: {
-                border: 'border-blue-200/50 dark:border-blue-700/50',
-                iconBg: 'bg-blue-500/20',
-                iconColor: 'text-blue-600 dark:text-blue-400',
-                icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                bg: 'bg-sky-50/90 dark:bg-sky-950/40',
+                border: 'border-sky-200/50 dark:border-sky-800/30',
+                accent: 'bg-sky-500',
+                text: 'text-sky-900 dark:text-sky-50',
+                icon: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             }
         };
 
-        const style = variantStyles[variant];
+        const theme = variantStyles[variant];
 
         return (
-            <div ref={ref} className={`bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl border ${style.border} rounded-xl shadow-2xl px-4 py-3 min-w-[300px] max-w-md`}>
-                <div className="flex items-start gap-3">
-                    <div className={`flex-shrink-0 w-8 h-8 rounded-full ${style.iconBg} flex items-center justify-center`}>
-                        <svg className={`w-5 h-5 ${style.iconColor}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            {style.icon}
+            <div ref={ref} className={`relative overflow-hidden ${theme.bg} backdrop-blur-xl border ${theme.border} rounded-2xl shadow-2xl px-5 py-4 min-w-[340px] max-w-md transform transition-all duration-300 hover:scale-[1.02]`}>
+                {/* Accent line */}
+                <div className={`absolute left-0 top-0 bottom-0 w-1.5 ${theme.accent} opacity-80`} />
+
+                <div className="flex items-center gap-4">
+                    <div className={`flex-shrink-0 w-10 h-10 rounded-xl ${theme.accent} bg-opacity-10 flex items-center justify-center border border-current border-opacity-10`}>
+                        <svg className={`w-6 h-6 ${theme.text.split(' ')[0]} opacity-90`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {theme.icon}
                         </svg>
                     </div>
-                    <div className="flex-1 pt-0.5">
-                        <p className="text-sm font-medium text-gray-900 dark:text-white">{message}</p>
+
+                    <div className="flex-1">
+                        <p className={`text-[15px] font-semibold tracking-tight ${theme.text}`}>
+                            {message}
+                        </p>
                     </div>
-                    <button onClick={() => closeSnackbar(id)} className="flex-shrink-0 ml-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+
+                    <button
+                        onClick={() => closeSnackbar(id)}
+                        className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 transition-all"
+                    >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -87,7 +102,8 @@ export function Providers({ children }: { children: React.ReactNode }) {
                         containerRoot: 'mt-16'
                     }}
                     style={{
-                        marginTop: '64px'
+                        marginTop: '64px',
+                        zIndex: 9999
                     }}
                     Components={{
                         default: CustomNotification,

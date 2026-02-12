@@ -87,7 +87,9 @@ async function checkAlerts() {
                             userId: alert.userId,
                             title: `Fiyat Alarmı: ${alert.symbol}`,
                             message: `${alert.symbol} hissesi ${currentPrice} fiyatına ulaştı. (Hedef: ${alert.target})`,
-                            type: 'WARNING'
+                            type: 'WARNING',
+                            sendBrowser: true,  // Enable browser notifications
+                            sendInApp: true     // Enable in-app toast notifications
                         }
                     });
                 }

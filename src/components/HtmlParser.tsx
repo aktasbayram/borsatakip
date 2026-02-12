@@ -14,14 +14,14 @@ export const HtmlParser = ({ html, context = 'body' }: HtmlParserProps) => {
     const $ = cheerio.load(html, {
         xmlMode: true,
         decodeEntities: false
-    });
+    } as any);
 
     const elements = $.root().children().toArray().filter((el: any) => el.type === 'tag');
 
     return (
         <>
             {elements.map((el: any, index: number) => {
-                const TagName = el.tagName as keyof JSX.IntrinsicElements;
+                const TagName = el.tagName as any;
                 const Props = el.attribs || {};
 
                 // Filter invalid tags for Head context to prevent Hydration errors

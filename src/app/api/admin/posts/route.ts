@@ -84,7 +84,7 @@ export async function POST(request: Request) {
     } catch (error) {
         console.error("POST /api/admin/posts error:", error);
         if (error instanceof z.ZodError) {
-            return NextResponse.json({ error: error.errors }, { status: 400 });
+            return NextResponse.json({ error: (error as any).errors }, { status: 400 });
         }
         return NextResponse.json({ error: "Yazı oluşturulurken bir hata oluştu" }, { status: 500 });
     }

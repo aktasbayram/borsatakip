@@ -1,0 +1,9 @@
+/* Notistack Toast Notifications - Force visibility */
+.notistack-SnackbarContainer {
+    z-index: 9999 !important;
+    position: fixed !important;
+}
+
+.notistack-Snackbar {
+    z-index: 9999 !important;
+}

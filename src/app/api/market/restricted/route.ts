@@ -25,7 +25,7 @@ export async function POST(request: Request) {
 
         if (body.action === 'sync') {
             const stats = await RestrictedStockService.syncRestrictedStocks();
-            revalidateTag('restricted-stocks');
+            (revalidateTag as any)('restricted-stocks');
             revalidatePath('/admin/restricted');
             revalidatePath('/market/restricted');
             return NextResponse.json(stats);
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
 
         if (body.action === 'reorder') {
             await RestrictedStockService.reorder(body.items);
-            revalidateTag('restricted-stocks');
+            (revalidateTag as any)('restricted-stocks');
             revalidatePath('/admin/restricted');
             revalidatePath('/market/restricted');
             return NextResponse.json({ success: true });
@@ -60,7 +60,7 @@ export async function DELETE(request: Request) {
         if (!id) return new NextResponse('ID required', { status: 400 });
 
         await RestrictedStockService.delete(id);
-        revalidateTag('restricted-stocks');
+        (revalidateTag as any)('restricted-stocks');
         revalidatePath('/admin/restricted');
         revalidatePath('/market/restricted');
         return NextResponse.json({ success: true });

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bildirim Testi</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            background: #0070f3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #0051cc;
+        }
+        pre {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>🔔 Bildirim Sistemi Test Aracı</h1>
+    
+    <div class="test-section">
+        <h2>1. API Testi</h2>
+        <p>Bu test, <code>/api/notifications</code> endpoint'ini çağırır ve son bildirimleri getirir.</p>
+        <button onclick="testAPI()">API'yi Test Et</button>
+        <div id="api-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>2. Tarayıcı Bildirimi İzni</h2>
+        <p>Tarayıcı bildirimi izni durumu: <strong id="permission-status">Kontrol ediliyor...</strong></p>
+        <button onclick="requestPermission()">İzin İste</button>
+        <button onclick="testBrowserNotification()">Test Bildirimi Gönder</button>
+    </div>
+
+    <div class="test-section">
+        <h2>3. Console Logları</h2>
+        <p>Tarayıcı konsolunu (F12) açın ve aşağıdaki logları kontrol edin:</p>
+        <button onclick="testConsole()">Console'a Log Yaz</button>
+    </div>
+
+    <script>
+        // Check permission on load
+        window.addEventListener('load', () => {
+            if ('Notification' in window) {
+                document.getElementById('permission-status').textContent = Notification.permission;
+            } else {
+                document.getElementById('permission-status').textContent = 'Desteklenmiyor';
+            }
+        });
+
+        async function testAPI() {
+            const resultDiv = document.getElementById('api-result');
+            resultDiv.innerHTML = '<p>Yükleniyor...</p>';
+            
+            try {
+                const response = await fetch('/api/notifications?limit=5');
+                const data = await response.json();
+                
+                console.log('API Response:', data);
+                
+                let html = '<h3 class="success">✅ API Başarılı</h3>';
+                html += `<p>Toplam bildirim sayısı: ${data.notifications?.length || 0}</p>`;
+                html += `<p>Okunmamış: ${data.unreadCount || 0}</p>`;
+                html += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                
+                resultDiv.innerHTML = html;
+            } catch (error) {
+                console.error('API Error:', error);
+                resultDiv.innerHTML = '<h3 class="error">❌ API Hatası</h3><pre>' + error.message + '</pre>';
+            }
+        }
+
+        async function requestPermission() {
+            if (!('Notification' in window)) {
+                alert('Tarayıcınız bildirimleri desteklemiyor!');
+                return;
+            }
+
+            const permission = await Notification.requestPermission();
+            document.getElementById('permission-status').textContent = permission;
+            console.log('Permission:', permission);
+        }
+
+        function testBrowserNotification() {
+            if (Notification.permission !== 'granted') {
+                alert('Önce bildirim izni vermelisiniz!');
+                return;
+            }
+
+            new Notification('Test Bildirimi', {
+                body: 'Bu bir test bildirimidir. Eğer bunu görüyorsanız, tarayıcı bildirimleri çalışıyor!',
+                icon: '/icons/icon-192x192.png'
+            });
+            console.log('Test notification sent');
+        }
+
+        function testConsole() {
+            console.log('=== CONSOLE TEST ===');
+            console.log('Timestamp:', new Date().toISOString());
+            console.log('User Agent:', navigator.userAgent);
+            console.log('Notification Permission:', Notification.permission);
+            console.log('===================');
+        }
+    </script>
+</body>
+</html>

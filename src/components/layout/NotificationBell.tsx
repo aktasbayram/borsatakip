@@ -80,10 +80,66 @@ export function NotificationBell() {
                 if (isDeletingRef.current) return;
 
                 const newNotifications = res.data.notifications;
+
+                // Debug log
+                console.log('[NotificationBell] Fetched:', newNotifications.length, 'isPoll:', isPoll, 'lastNotifiedId:', lastNotifiedId.current);
+
+                // Check for NEW notifications to trigger alerts (only during polling)
+                if (isPoll && newNotifications.length > 0) {
+                    const latestNotification = newNotifications[0];
+
+                    // If this is a new notification we haven't seen before
+                    if (latestNotification.id !== lastNotifiedId.current) {
+                        console.log('[NotificationBell] New notification detected!', latestNotification.id);
+
+                        // Find ALL new notifications since last check
+                        const newItems: Notification[] = [];
+                        for (const n of newNotifications) {
+                            if (n.id === lastNotifiedId.current) break;
+                            newItems.push(n);
+                        }
+
+                        console.log('[NotificationBell] New items found:', newItems.length);
+
+                        // Trigger toast and browser notifications
+                        newItems.forEach((n: Notification) => {
+                            console.log('[NotificationBell] Processing:', n.id, 'sendInApp:', n.sendInApp, 'sendBrowser:', n.sendBrowser);
+
+                            // 1. In-App Toast
+                            if (n.sendInApp) {
+                                console.log('[NotificationBell] Triggering toast:', n.title);
+                                enqueueSnackbar(n.message, {
+                                    variant: (n.type?.toLowerCase() || 'info') as any,
+                                    autoHideDuration: 5000
+                                });
+                            }
+
+                            // 2. Browser Notification
+                            if (n.sendBrowser && typeof window !== 'undefined' && 'Notification' in window) {
+                                if (Notification.permission === 'granted') {
+                                    try {
+                                        console.log('[NotificationBell] Sending browser notification');
+                                        new Notification(n.title, {
+                                            body: n.message,
+                                            icon: '/icons/icon-192x192.png'
+                                        });
+                                    } catch (e) {
+                                        console.error('[NotificationBell] Browser notification failed:', e);
+                                    }
+                                }
+                            }
+                        });
+
+                        lastNotifiedId.current = latestNotification.id;
+                    }
+                } else if (!isPoll && newNotifications.length > 0) {
+                    // Initial load: just set the ref
+                    console.log('[NotificationBell] Initial load, setting lastNotifiedId to:', newNotifications[0].id);
+                    lastNotifiedId.current = newNotifications[0].id;
+                }
+
                 setNotifications(newNotifications);
                 setUnreadCount(res.data.unreadCount);
-
-                // ... (toast logic same as before)
             }
 
         } catch (error) {
@@ -92,10 +148,12 @@ export function NotificationBell() {
     };
 
     useEffect(() => {
+        if (status === 'loading') return; // Don't fetch while loading
+
         fetchNotifications();
         const interval = setInterval(() => fetchNotifications(true), 10000); // Poll every 10s
         return () => clearInterval(interval);
-    }, [status]); // Add status dependency
+    }, [status]); // Keep status dependency only
 
     const markAsRead = async (id?: string) => {
         // Guest Logic

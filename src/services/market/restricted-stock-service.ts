@@ -140,7 +140,7 @@ export class RestrictedStockService {
                     added++;
                 }
             }
-            revalidateTag('restricted-stocks');
+            (revalidateTag as any)('restricted-stocks');
             return { added, updated, skipped };
         } catch (error) {
             console.error('Restricted Stock Sync Failed:', error);

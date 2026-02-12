@@ -70,7 +70,7 @@ export async function PUT(
     } catch (error: any) {
         console.error("PUT /api/admin/posts/[id] error:", error);
         if (error instanceof z.ZodError) {
-            return NextResponse.json({ error: error.errors }, { status: 400 });
+            return NextResponse.json({ error: (error as any).errors }, { status: 400 });
         }
         return NextResponse.json({
             error: error.message || "Yazı güncellenirken bir hata oluştu"

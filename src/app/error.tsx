@@ -36,7 +36,7 @@ export default function Error({
                 Beklenmedik bir hata oluştu. Teknik ekibimiz bilgilendirildi.
             </p>
             <div className="flex gap-4">
-                <Button onClick={() => reset()} variant="default">
+                <Button onClick={() => reset()}>
                     Tekrar Dene
                 </Button>
                 <Button onClick={() => window.location.href = '/'} variant="outline">

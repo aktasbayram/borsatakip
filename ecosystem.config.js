@@ -3,7 +3,7 @@ module.exports = {
     apps: [
         {
             name: 'borsa-web',
-            script: 'npm',
+            script: 'node_modules/next/dist/bin/next',
             args: 'start',
             env: {
                 NODE_ENV: 'production',
@@ -12,8 +12,9 @@ module.exports = {
         },
         {
             name: 'borsa-worker',
-            script: 'npm',
-            args: 'run worker',
+            // Use ts-node directly to run the worker
+            script: 'node_modules/ts-node/dist/bin.js',
+            args: '-r tsconfig-paths/register --project tsconfig.script.json scripts/alert-worker.ts',
             env: {
                 NODE_ENV: 'production'
             }
