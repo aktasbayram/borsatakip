@@ -106,7 +106,7 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
                     </button>
                 </div>
 
-                <nav className="flex-1 px-4 space-y-2 py-4 lg:py-0">
+                <nav className="flex-1 px-4 space-y-1 py-4 lg:py-4 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
                     <NavLink
                         href="/admin"
                         icon={
@@ -116,6 +116,16 @@ export function AdminLayoutClient({ children }: { children: React.ReactNode }) {
                         }
                     >
                         Panel
+                    </NavLink>
+                    <NavLink
+                        href="/admin/settings/general"
+                        icon={
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                            </svg>
+                        }
+                    >
+                        Genel Ayarlar
                     </NavLink>
                     <NavLink
                         href="/admin/bulten"

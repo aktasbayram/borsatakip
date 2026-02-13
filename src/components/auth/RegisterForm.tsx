@@ -20,6 +20,7 @@ export function RegisterForm({ onSuccess, onLoginClick, embedded = false }: Regi
     const [formData, setFormData] = useState({
         name: '',
         email: '',
+        phoneNumber: '',
         password: '',
         confirmPassword: ''
     });
@@ -41,6 +42,7 @@ export function RegisterForm({ onSuccess, onLoginClick, embedded = false }: Regi
                 body: JSON.stringify({
                     name: formData.name,
                     email: formData.email,
+                    phoneNumber: formData.phoneNumber,
                     password: formData.password
                 })
             });
@@ -81,6 +83,14 @@ export function RegisterForm({ onSuccess, onLoginClick, embedded = false }: Regi
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
+                    className="h-12 bg-gray-50/50 dark:bg-gray-800/50 border-2 border-gray-200/50 dark:border-gray-700/50 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 transition-all duration-300"
+                />
+                <Input
+                    label="Telefon (Opsiyonel)"
+                    type="tel"
+                    placeholder="5XX XXX XX XX"
+                    value={formData.phoneNumber}
+                    onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
                     className="h-12 bg-gray-50/50 dark:bg-gray-800/50 border-2 border-gray-200/50 dark:border-gray-700/50 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 transition-all duration-300"
                 />
                 <Input

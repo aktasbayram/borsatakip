@@ -5,7 +5,7 @@ import { MetadataRoute } from 'next';
 const POPULAR_SYMBOLS = ['THYAO', 'ASELS', 'GARAN', 'AKBNK', 'EREGL', 'SASA', 'HEKTS', 'SISE', 'KCHOL', 'BIMAS'];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-    const baseUrl = 'https://borsatakip.app';
+    const baseUrl = 'https://e-borsa.net';
 
     // 1. Static Routes
     const routes = [

@@ -3,6 +3,9 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { auth } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
+import { ArrowLeft, ExternalLink, Calendar, Wallet, TrendingUp, TrendingDown, Clock, Shield, Bell } from 'lucide-react';
+import { UserActions } from '@/app/admin/users/user-actions';
+
 
 export default async function UserDetailPage({ params }: { params: Promise<{ id: string }> }) {
     const session = await auth();
@@ -78,13 +81,14 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
                         </div>
                     </div>
 
-                    <div className="flex gap-3">
-                        <div className="flex flex-col items-center bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/10 min-w-[120px]">
-                            <span className="text-blue-200 text-xs font-semibold uppercase tracking-wider">Kayıt Tarihi</span>
-                            <span className="text-white font-bold text-lg">{new Date(user.createdAt).toLocaleDateString('tr-TR')}</span>
-                        </div>
+                    <div className="flex flex-col items-center bg-white/10 backdrop-blur-md rounded-xl p-4 border border-white/10 min-w-[120px]">
+                        <span className="text-blue-200 text-xs font-semibold uppercase tracking-wider">Kayıt Tarihi</span>
+                        <span className="text-white font-bold text-lg">{new Date(user.createdAt).toLocaleDateString('tr-TR')}</span>
                     </div>
                 </div>
+
+
+
 
                 {/* Decorative Background Elements */}
                 <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-white/10 rounded-full blur-3xl"></div>
@@ -313,6 +317,6 @@ export default async function UserDetailPage({ params }: { params: Promise<{ id:
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 }

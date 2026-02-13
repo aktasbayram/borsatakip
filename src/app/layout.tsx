@@ -4,7 +4,7 @@ import "./globals.css";
 import "./notistack-fix.css";
 import { Providers } from "./providers";
 import { ThemeProvider } from "@/components/theme-provider";
-import { getTrackingScripts } from "@/lib/settings";
+import { getTrackingScripts, getSystemSettings } from "@/lib/settings";
 import { HtmlParser } from "@/components/HtmlParser";
 import { GoogleAdSenseScript } from "@/components/ads/GoogleAdSenseScript";
 
@@ -20,39 +20,43 @@ export const viewport = {
   maximumScale: 1,
 };
 
-export const metadata: Metadata = {
-  title: {
-    default: "Borsa Takip - Canlı Borsa ve Hisse Analizi",
-    template: "%s | Borsa Takip"
-  },
-  description: "Borsa İstanbul (BIST) ve ABD borsalarını canlı takip edin. Hisse analizleri, portföy takibi ve anlık fiyat alarmları.",
-  keywords: ["Borsa", "BIST", "Hisse Senedi", "Canlı Borsa", "Portfolio", "Analiz", "Teknik Analiz", "Temettü"],
-  authors: [{ name: "Bayram Aktaş" }],
-  openGraph: {
-    type: "website",
-    locale: "tr_TR",
-    url: "https://borsatakip.app",
-    title: "Borsa Takip - Profesyonel Borsa Analiz Platformu",
-    description: "Yapay zeka destekli analizler ve canlı verilerle yatırımlarınızı yönetin.",
-    siteName: "Borsa Takip"
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Borsa Takip",
-    description: "Canlı Borsa ve Hisse Analizi",
-    creator: "@borsatakipapp" // Placeholder
-  },
-  icons: {
-    icon: "/favicon.ico",
-    apple: "/icon-192x192.png",
-  },
-  manifest: '/manifest.json',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: "default",
-    title: "Borsa Takip",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const settings = await getSystemSettings();
+
+  return {
+    title: {
+      default: settings.seoTitle || `${settings.siteName} - Canlı Borsa ve Hisse Analizi`,
+      template: `%s | ${settings.siteName}`
+    },
+    description: settings.seoDescription || "Borsa İstanbul (BIST) ve ABD borsalarını canlı takip edin. Hisse analizleri, portföy takibi ve anlık fiyat alarmları.",
+    keywords: settings.seoKeywords ? settings.seoKeywords.split(',').map(k => k.trim()) : ["Borsa", "BIST", "Hisse Senedi", "Canlı Borsa", "Portfolio", "Analiz", "Teknik Analiz", "Temettü"],
+    authors: [{ name: "Bayram Aktaş" }],
+    openGraph: {
+      type: "website",
+      locale: "tr_TR",
+      url: "https://e-borsa.net",
+      title: settings.seoTitle || `${settings.siteName} - Profesyonel Borsa Analiz Platformu`,
+      description: settings.seoDescription || "Yapay zeka destekli analizler ve canlı verilerle yatırımlarınızı yönetin.",
+      siteName: settings.siteName
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: settings.siteName,
+      description: settings.seoDescription || "Canlı Borsa ve Hisse Analizi",
+      creator: "@eborsa"
+    },
+    icons: {
+      icon: "/favicon.ico",
+      apple: "/icon-192x192.png",
+    },
+    manifest: '/manifest.json',
+    appleWebApp: {
+      capable: true,
+      statusBarStyle: "default",
+      title: settings.siteName,
+    },
+  };
+}
 
 export default async function RootLayout({
   children,
@@ -60,9 +64,10 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const scripts = await getTrackingScripts();
+  const settings = await getSystemSettings();
 
   return (
-    <html lang="tr" suppressHydrationWarning>
+    <html lang={settings.defaultLanguage || "tr"} suppressHydrationWarning>
       <head>
         {/* Header Scripts (Google Analytics etc.) */}
         {!!scripts.header && <HtmlParser html={scripts.header} context="head" />}

@@ -18,28 +18,23 @@ export async function PUT(
         const { tier } = await request.json();
         const { id: userId } = await params;
 
-        // Validate tier
-        const validTiers = ['FREE', 'BASIC', 'PRO'];
-        if (!validTiers.includes(tier)) {
-            return NextResponse.json({ error: 'Invalid tier' }, { status: 400 });
+        // Fetch package from DB
+        const pkg = await prisma.package.findUnique({
+            where: { name: tier }
+        });
+
+        if (!pkg) {
+            return NextResponse.json({ error: 'Package not found' }, { status: 400 });
         }
-
-        // Determine credits based on tier
-        const creditsMap: Record<string, number> = {
-            'FREE': 5,
-            'BASIC': 50,
-            'PRO': 100,
-        };
-
-        const newCreditsTotal = creditsMap[tier];
 
         // Update user
         const updatedUser = await prisma.user.update({
             where: { id: userId },
             data: {
                 subscriptionTier: tier,
-                aiCreditsTotal: newCreditsTotal,
-                aiCredits: newCreditsTotal, // Reset current credits to new total
+                aiCreditsTotal: pkg.credits,
+                aiCredits: pkg.credits, // Reset current credits to new total
+                smsCredits: pkg.smsCredits // Assign SMS credits from package
             },
             select: {
                 id: true,
@@ -48,6 +43,7 @@ export async function PUT(
                 subscriptionTier: true,
                 aiCredits: true,
                 aiCreditsTotal: true,
+                smsCredits: true
             }
         });
 

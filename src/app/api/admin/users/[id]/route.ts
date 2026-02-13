@@ -92,17 +92,16 @@ export async function PATCH(
             // Or just trust DB. Let's trust DB but handle the case.
 
             let credits = 5;
+            let smsCredits = 0;
+
             if (pkg) {
                 credits = pkg.credits;
+                smsCredits = pkg.smsCredits;
             } else {
-                // Fallback logic (Optional, currently safer to return error if not found to ensure data integrity)
-                // However, for "FREE", likely no package entry exists unless inserted.
+                // Fallback logic
                 if (subscriptionTier === 'FREE') credits = 5;
-                else if (subscriptionTier === 'BASIC') credits = 50;
-                else if (subscriptionTier === 'PRO') credits = 100;
-                else {
-                    return NextResponse.json({ message: 'Paket bulunamadı.' }, { status: 400 });
-                }
+                else if (subscriptionTier === 'BASIC') { credits = 50; smsCredits = 10; }
+                else if (subscriptionTier === 'PRO') { credits = 100; smsCredits = 50; }
             }
 
             await prisma.user.update({
@@ -110,7 +109,8 @@ export async function PATCH(
                 data: {
                     subscriptionTier,
                     aiCredits: credits,
-                    aiCreditsTotal: credits
+                    aiCreditsTotal: credits,
+                    smsCredits: smsCredits
                 }
             });
             // Send notification for package update
@@ -124,6 +124,16 @@ export async function PATCH(
             });
 
             return NextResponse.json({ message: 'Paket atandı ve krediler güncellendi.' });
+        }
+
+        if (body.smsCredits !== undefined) {
+            await prisma.user.update({
+                where: { id },
+                data: {
+                    smsCredits: parseInt(body.smsCredits)
+                }
+            });
+            return NextResponse.json({ message: 'SMS kredisi güncellendi.' });
         }
 
         return NextResponse.json({ message: 'İşlem belirtilmedi.' }, { status: 400 });

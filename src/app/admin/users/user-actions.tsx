@@ -126,9 +126,6 @@ export function UserActions({ userId, currentRole, currentPackage, packages, isC
                 <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Paket Seçin</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => handlePackageChange('FREE')} className={currentPackage === 'FREE' ? 'bg-accent' : ''}>
-                        FREE (Ücretsiz)
-                    </DropdownMenuItem>
                     {packages.map(pkg => (
                         <DropdownMenuItem
                             key={pkg.name}

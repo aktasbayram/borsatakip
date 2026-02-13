@@ -21,6 +21,8 @@ model User {
   aiCredits            Int                   @default(5)
   aiCreditsResetAt     DateTime              @default(now())
   aiCreditsTotal       Int                   @default(5)
+  phoneNumber          String?               @unique
+  smsCredits           Int                   @default(0)
   subscriptionTier     String                @default("FREE")
   preferences          Json?                 @default("{}")
   alerts               Alert[]
@@ -48,6 +50,7 @@ model NotificationSettings {
   userId           String   @unique
   telegramChatId   String?
   telegramEnabled  Boolean  @default(false)
+  smsEnabled       Boolean  @default(false)
   emailEnabled     Boolean  @default(false)
   verificationCode String?
   createdAt        DateTime @default(now())
@@ -244,6 +247,7 @@ model Package {
   updatedAt   DateTime @updatedAt
   maxAlerts   Int      @default(2)
   canSeeEditorChoices Boolean @default(false)
+  smsCredits  Int      @default(0)
 }
 
 model ContactMessage {

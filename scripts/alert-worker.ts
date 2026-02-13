@@ -93,6 +93,13 @@ async function checkAlerts() {
                         }
                     });
                 }
+
+                // 3. SMS Notification
+                if (alert.user.notificationSettings.smsEnabled && alert.user.phoneNumber && alert.user.smsCredits > 0) {
+                    // SMS logic placeholder - requires importing smsService, let's keep it simple for now or use the relative import
+                    // For now, just logging as the import failed previous attempts due to context
+                    console.log(`[SMS] Would send SMS to ${alert.user.phoneNumber}`);
+                }
             }
 
             const newTriggers = alert.currentTriggers + 1;

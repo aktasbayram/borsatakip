@@ -33,7 +33,8 @@ export default function AccountSettingsPage() {
     const [profile, setProfile] = useState({
         id: '',
         name: '',
-        email: ''
+        email: '',
+        phoneNumber: ''
     });
     const [profileLoading, setProfileLoading] = useState(false);
     const [copied, setCopied] = useState(false);
@@ -50,7 +51,8 @@ export default function AccountSettingsPage() {
                 setProfile({
                     id: data.id || '',
                     name: data.name || '',
-                    email: data.email || ''
+                    email: data.email || '',
+                    phoneNumber: data.phoneNumber || ''
                 });
             }
         } catch (error) {
@@ -65,7 +67,10 @@ export default function AccountSettingsPage() {
             const res = await fetch('/api/user/profile', {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: profile.name })
+                body: JSON.stringify({
+                    name: profile.name,
+                    phoneNumber: profile.phoneNumber
+                })
             });
 
             if (!res.ok) throw new Error('Güncelleme başarısız');
@@ -196,6 +201,14 @@ export default function AccountSettingsPage() {
                                 readOnly
                                 disabled
                                 className="h-12 bg-gray-100/50 dark:bg-gray-800/50 border-2 border-gray-200/50 dark:border-gray-700/50 text-gray-500 opacity-70"
+                            />
+
+                            <Input
+                                label="Telefon Numarası"
+                                value={profile.phoneNumber}
+                                onChange={(e) => setProfile({ ...profile, phoneNumber: e.target.value })}
+                                placeholder="5XX XXX XX XX"
+                                className="h-12 bg-gray-50/50 dark:bg-gray-800/50 border-2 border-gray-200/50 dark:border-gray-700/50 focus:border-blue-500 dark:focus:border-blue-400 focus:ring-4 focus:ring-blue-500/10 transition-all duration-300"
                             />
                         </div>
 

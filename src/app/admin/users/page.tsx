@@ -8,10 +8,13 @@ import Link from "next/link";
 export default async function UsersPage() {
     const session = await auth();
     const [users, packages] = await Promise.all([
-        prisma.user.findMany({ orderBy: { createdAt: 'desc' } }),
+        prisma.user.findMany({
+            orderBy: { createdAt: 'desc' },
+            include: { notificationSettings: true } // explicit include sometimes forces type refresh or it's just stale.
+        }),
         prisma.package.findMany({
             where: { isActive: true },
-            select: { name: true, displayName: true }
+            select: { name: true, displayName: true, smsCredits: true }
         })
     ]);
 
@@ -33,6 +36,7 @@ export default async function UsersPage() {
                                     <th className="px-6 py-3">İsim / Email</th>
                                     <th className="px-6 py-3">Paket</th>
                                     <th className="px-6 py-3">Rol</th>
+                                    <th className="px-6 py-3">SMS Kredisi</th>
                                     <th className="px-6 py-3">Kayıt Tarihi</th>
                                     <th className="px-6 py-3">İşlemler</th>
                                 </tr>
@@ -63,6 +67,31 @@ export default async function UsersPage() {
                                                 }`}>
                                                 {user.role}
                                             </span>
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            {(() => {
+                                                const pkg = packages.find(p => p.name === user.subscriptionTier);
+                                                const total = pkg?.smsCredits || (user.subscriptionTier === 'PRO' ? 50 : user.subscriptionTier === 'BASIC' ? 10 : 5);
+                                                const remaining = user.smsCredits || 0;
+                                                const percentage = Math.min((remaining / total) * 100, 100);
+
+                                                return (
+                                                    <div className="flex flex-col gap-1 w-[120px]">
+                                                        <div className="flex justify-between text-xs font-mono">
+                                                            <span className={remaining === 0 ? "text-red-500 font-bold" : ""}>{remaining}</span>
+                                                            <span className="text-muted-foreground">/ {total}</span>
+                                                        </div>
+                                                        <div className="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                                            <div
+                                                                className={`h-full rounded-full transition-all ${percentage < 20 ? 'bg-red-500' :
+                                                                    percentage < 50 ? 'bg-yellow-500' : 'bg-green-500'
+                                                                    }`}
+                                                                style={{ width: `${percentage}%` }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })()}
                                         </td>
                                         <td className="px-6 py-4 text-gray-500">
                                             {new Date(user.createdAt).toLocaleDateString('tr-TR')}

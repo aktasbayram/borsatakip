@@ -6,8 +6,9 @@ import { SnackbarProvider, useSnackbar } from 'notistack';
 import { ThemeProvider } from "next-themes";
 
 // Custom notification components with close button
-const CustomNotification = React.forwardRef<HTMLDivElement, { message: string; variant: 'default' | 'success' | 'error' | 'warning' | 'info'; id: string | number }>(
-    ({ message, variant, id }, ref) => {
+// Custom notification components with close button
+const CustomNotification = React.forwardRef<HTMLDivElement, { message: string; variant: 'default' | 'success' | 'error' | 'warning' | 'info'; id: string | number; action?: React.ReactNode | ((key: any) => React.ReactNode) }>(
+    ({ message, variant, id, action }, ref) => {
         const { closeSnackbar } = useSnackbar();
 
         const variantStyles = {
@@ -67,6 +68,12 @@ const CustomNotification = React.forwardRef<HTMLDivElement, { message: string; v
                             {message}
                         </p>
                     </div>
+
+                    {action && (
+                        <div className="flex-shrink-0">
+                            {typeof action === 'function' ? action(id) : action}
+                        </div>
+                    )}
 
                     <button
                         onClick={() => closeSnackbar(id)}

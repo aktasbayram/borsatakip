@@ -5,6 +5,7 @@ import { generateTelegramCode, toggleNotification, getNotificationSettings, upda
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
+import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Loader2, Send, Mail, Server } from 'lucide-react';
@@ -26,6 +27,11 @@ export default function NotificationSettingsPage() {
         secure: false
     });
 
+    const [userCredits, setUserCredits] = useState(0);
+    const [userPackage, setUserPackage] = useState('FREE');
+    const [hasPhoneNumber, setHasPhoneNumber] = useState(false);
+    const router = useRouter();
+
     useEffect(() => {
         getNotificationSettings().then(s => {
             setSettings(s);
@@ -34,11 +40,18 @@ export default function NotificationSettingsPage() {
                     host: s.smtpHost || '',
                     port: s.smtpPort || 587,
                     user: s.smtpUser || '',
-                    password: s.smtpPassword || '', // Password might not be returned for security, but usually is for edit
+                    password: s.smtpPassword || '',
                     secure: s.smtpSecure ?? false
                 });
             }
             setLoading(false);
+        });
+
+        // Fetch user profile for credits and phone number
+        fetch('/api/user/profile').then(res => res.json()).then(data => {
+            if (data.smsCredits !== undefined) setUserCredits(data.smsCredits);
+            if (data.subscriptionTier) setUserPackage(data.subscriptionTier);
+            if (data.phoneNumber) setHasPhoneNumber(true);
         });
     }, []);
 
@@ -48,11 +61,39 @@ export default function NotificationSettingsPage() {
         enqueueSnackbar("Doğrulama kodu oluşturuldu!", { variant: 'success' });
     };
 
-    const handleToggle = async (type: 'telegram' | 'email' | 'site', checked: boolean) => {
+    const handleToggle = async (type: 'telegram' | 'email' | 'site' | 'sms', checked: boolean) => {
+        // Check for phone number first
+        if (type === 'sms' && checked && !hasPhoneNumber) {
+            enqueueSnackbar("SMS bildirimlerini açmak için önce telefon numaranızı eklemelisiniz.", {
+                variant: 'warning',
+                action: (key) => (
+                    <Button size="sm" variant="outline" onClick={() => router.push('/settings/account')}>
+                        Ekle
+                    </Button>
+                )
+            });
+            return;
+        }
+
+        // Check for SMS credits
+        if (type === 'sms' && checked && userCredits <= 0) {
+            enqueueSnackbar("SMS krediniz bitmiştir. Paket yenilemek için tıklayın.", {
+                variant: 'error',
+                action: (key) => (
+                    <Button size="sm" variant="secondary" onClick={() => router.push('/upgrade')}>
+                        Paket Al
+                    </Button>
+                ),
+                persist: true
+            });
+            return;
+        }
+
         // Optimistic update
-        const key = type === 'telegram' ? 'telegramEnabled' : type === 'email' ? 'emailEnabled' : 'siteEnabled';
+        const key = type === 'telegram' ? 'telegramEnabled' : type === 'email' ? 'emailEnabled' : type === 'site' ? 'siteEnabled' : 'smsEnabled';
         setSettings((prev: any) => ({ ...prev, [key]: checked }));
-        await toggleNotification(type, checked);
+
+        await toggleNotification(type as any, checked);
         enqueueSnackbar("Ayarlar güncellendi", { variant: 'success' });
     };
 
@@ -178,6 +219,49 @@ export default function NotificationSettingsPage() {
                                     <Switch
                                         checked={settings?.siteEnabled}
                                         onCheckedChange={(c) => handleToggle('site', c)}
+                                    />
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* SMS Notifications (Pro Only) */}
+                        <Card className={settings?.smsEnabled ? "border-blue-500/50" : ""}>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <span className="text-2xl">📱</span> SMS Bildirimleri
+                                    <span className={`ml-auto text-xs font-normal px-2 py-1 bg-gradient-to-r text-white rounded-full ${userPackage === 'PRO' ? 'from-indigo-500 to-purple-600' :
+                                        userPackage === 'BASIC' ? 'from-blue-500 to-cyan-600' : 'from-gray-500 to-gray-600'
+                                        }`}>
+                                        {userPackage}
+                                    </span>
+                                </CardTitle>
+                                <CardDescription>
+                                    Kritik ani fiyat hareketlerini SMS olarak cebinize gelsin.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/10 border border-blue-100 dark:border-blue-800 rounded-lg">
+                                    <div className="flex flex-col">
+                                        <span className="font-medium text-blue-900 dark:text-blue-100">SMS Uyarıları</span>
+                                        <span className="text-sm text-blue-600 dark:text-blue-300">
+                                            {settings?.smsEnabled ? 'Aktif' : 'Pasif'}
+                                            {/* Show credits if enabled or user has credits */}
+                                            <span className="ml-2 px-2 py-0.5 bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 rounded-full text-xs font-bold flex items-center">
+                                                Kalan: {userCredits} SMS
+                                                {userCredits <= 0 && (
+                                                    <span
+                                                        onClick={() => router.push('/upgrade')}
+                                                        className="ml-2 pl-2 border-l border-blue-400 cursor-pointer hover:underline hover:text-blue-900 dark:hover:text-blue-100"
+                                                    >
+                                                        (Yükle)
+                                                    </span>
+                                                )}
+                                            </span>
+                                        </span>
+                                    </div>
+                                    <Switch
+                                        checked={settings?.smsEnabled}
+                                        onCheckedChange={(c) => handleToggle('sms', c)}
                                     />
                                 </div>
                             </CardContent>

@@ -16,6 +16,7 @@ interface Package {
     displayName: string;
     price: number;
     credits: number;
+    smsCredits: number;
     maxAlerts: number;
     features: string[];
     isPopular: boolean;
@@ -36,6 +37,7 @@ export default function AdminPackagesPage() {
         displayName: string;
         price: string;
         credits: string;
+        smsCredits: string;
         maxAlerts: string;
         features: string[];
         isPopular: boolean;
@@ -46,6 +48,7 @@ export default function AdminPackagesPage() {
         displayName: '',
         price: '',
         credits: '',
+        smsCredits: '0',
         maxAlerts: '2',
         features: [''],
         isPopular: false,
@@ -74,6 +77,7 @@ export default function AdminPackagesPage() {
             displayName: pkg.displayName,
             price: pkg.price.toString(),
             credits: pkg.credits.toString(),
+            smsCredits: (pkg.smsCredits || 0).toString(),
             maxAlerts: (pkg.maxAlerts || 2).toString(),
             features: pkg.features.length ? pkg.features : [''],
             isPopular: pkg.isPopular,
@@ -93,6 +97,7 @@ export default function AdminPackagesPage() {
             displayName: '',
             price: '',
             credits: '',
+            smsCredits: '0',
             maxAlerts: '2',
             features: [''],
             isPopular: false,
@@ -190,12 +195,22 @@ export default function AdminPackagesPage() {
                                 />
                             </div>
                             <div className="space-y-2">
-                                <Label>Aylık Kredi</Label>
+                                <Label>Aylık Kredi (AI)</Label>
                                 <Input
                                     type="number"
                                     value={formData.credits}
                                     onChange={(e) => setFormData({ ...formData, credits: e.target.value })}
                                     placeholder="100"
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Aylık SMS Kredisi</Label>
+                                <Input
+                                    type="number"
+                                    value={formData.smsCredits}
+                                    onChange={(e) => setFormData({ ...formData, smsCredits: e.target.value })}
+                                    placeholder="50"
                                     required
                                 />
                             </div>
@@ -284,7 +299,8 @@ export default function AdminPackagesPage() {
                             </div>
                             <div className="text-right">
                                 <div className="text-2xl font-bold">{pkg.price} ₺</div>
-                                <div className="text-sm text-muted-foreground">{pkg.credits} Kredi</div>
+                                <div className="text-sm text-muted-foreground">{pkg.credits} AI Kredi</div>
+                                <div className="text-sm text-muted-foreground">{pkg.smsCredits || 0} SMS Kredi</div>
                                 <div className="text-sm text-muted-foreground">{pkg.maxAlerts || 2} Alarm</div>
                                 {pkg.canSeeEditorChoices && (
                                     <div className="text-xs text-green-600 font-bold mt-1">

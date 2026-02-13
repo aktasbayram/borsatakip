@@ -14,6 +14,7 @@ import { Chatbot } from '@/components/ai/Chatbot';
 import { NotificationBell } from '@/components/layout/NotificationBell';
 import { AuthModal } from '@/components/auth/AuthModal';
 import { AdUnit } from '@/components/ads/AdUnit';
+import { Logo } from '@/components/layout/Logo';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const { data: session, status } = useSession();
@@ -89,8 +90,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                             </button>
 
                             <div className="flex flex-col ml-2 md:ml-0">
-                                <Link href="/" className="text-xl font-bold text-primary">
-                                    BorsaTakip
+                                <Link href="/" className="flex items-center gap-2">
+                                    {/* Handle dynamic logo */}
+                                    {session?.user && (
+                                        <Logo dynamic />
+                                    )}
+                                    {!session?.user && (
+                                        <span className="text-xl font-bold text-primary">e-borsa</span>
+                                    )}
                                 </Link>
                                 <span className="text-[10px] text-muted-foreground font-medium tracking-wide">
                                     By Bayram Aktaş
@@ -282,7 +289,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <div className="flex flex-col h-full">
                     <div className="p-4 border-b border-border flex justify-between items-center">
                         <Link href="/" className="text-xl font-bold text-primary" onClick={() => setMobileMenuOpen(false)}>
-                            BorsaTakip
+                            e-borsa
                         </Link>
                         <button onClick={() => setMobileMenuOpen(false)} className="text-muted-foreground hover:text-foreground">
                             <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">

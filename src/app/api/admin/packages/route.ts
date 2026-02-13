@@ -23,6 +23,7 @@ export async function POST(req: Request) {
         name: json.name.toUpperCase(),
         price: parseFloat(json.price),
         credits: parseInt(json.credits),
+        smsCredits: parseInt(json.smsCredits || '0'),
         maxAlerts: parseInt(json.maxAlerts || '2'),
         canSeeEditorChoices: json.canSeeEditorChoices || false
     };
@@ -46,6 +47,7 @@ export async function PUT(req: Request) {
 
     if (updateData.price) updateData.price = parseFloat(updateData.price);
     if (updateData.credits) updateData.credits = parseInt(updateData.credits);
+    if (updateData.smsCredits) updateData.smsCredits = parseInt(updateData.smsCredits);
     if (updateData.maxAlerts) updateData.maxAlerts = parseInt(updateData.maxAlerts);
 
     try {

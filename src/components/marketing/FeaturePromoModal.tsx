@@ -22,7 +22,7 @@ export function FeaturePromoModal({ isOpen, onClose, onAction, feature }: Featur
             case 'AI_ANALYSIS':
                 return {
                     title: "Yapay Zeka ile Piyasanın Önünde Olun 🤖",
-                    description: "BorsaTakip'in gelişmiş yapay zeka modelleri ile hisselerin geleceğini tahmin edin. Artık karanlıkta yolunuzu aramayın.",
+                    description: "e-borsa'nın gelişmiş yapay zeka modelleri ile hisselerin geleceğini tahmin edin. Artık karanlıkta yolunuzu aramayın.",
                     items: [
                         { icon: "📈", title: "Fiyat Tahminleri", desc: "Hissenin kısa ve orta vadeli yönünü öğrenin." },
                         { icon: "🧠", title: "Derinlemesine Analiz", desc: "Teknik indikatörlerin karmaşık sinyallerini anlaşılır yorumlara çevirin." },

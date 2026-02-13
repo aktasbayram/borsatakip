@@ -44,7 +44,7 @@ export class EmailService {
             }
 
             const info = await this.transporter.sendMail({
-                from: `"Borsa Takip" <${this.smtpConfig?.user || "noreply@borsatakip.com"}>`,
+                from: `"e-borsa" <${this.smtpConfig?.user || "noreply@e-borsa.net"}>`,
                 to: options.to,
                 subject: options.subject,
                 text: options.text || options.html.replace(/<[^>]*>?/gm, ''), // Simple strip tags for text fallback

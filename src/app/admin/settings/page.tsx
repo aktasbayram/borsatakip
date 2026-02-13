@@ -132,66 +132,120 @@ export default function AdminSettingsPage() {
             )}
 
             <Tabs defaultValue="scripts" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 lg:w-[400px]">
+                <TabsList className="grid w-full grid-cols-3 lg:w-[450px]">
                     <TabsTrigger value="scripts">Takip Kodları</TabsTrigger>
+                    <TabsTrigger value="sms">SMS Ayarları</TabsTrigger>
                     <TabsTrigger value="general">Api Ayarları</TabsTrigger>
                 </TabsList>
 
                 {/* --- TRACKING SCRIPTS TAB --- */}
+                {/* --- TRACKING SCRIPTS TAB --- */}
                 <TabsContent value="scripts" className="space-y-4 mt-4">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Takip ve Analiz Kodları</CardTitle>
+                            <CardTitle>Genel Takip Kodları</CardTitle>
                             <CardDescription>
-                                Google Analytics, Facebook Pixel veya Canlı Destek scriptlerini buraya ekleyebilirsiniz.
+                                Google Analytics, Facebook Pixel veya diğer takip kodlarını buraya ekleyebilirsiniz.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             <div className="space-y-2">
-                                <label className="text-sm font-bold flex items-center gap-2">
-                                    HEAD Alanı
-                                    <span className="text-xs font-normal text-muted-foreground">(&lt;head&gt; etiketinin içine eklenir)</span>
-                                </label>
+                                <label className="text-sm font-medium">Header Kodları (&lt;head&gt; içine)</label>
                                 <Textarea
+                                    placeholder="<!-- Google Analytics -->"
                                     className="font-mono text-xs min-h-[150px]"
-                                    placeholder="<script>...</script>"
                                     value={scripts.header}
                                     onChange={(e) => setScripts({ ...scripts, header: e.target.value })}
                                 />
-                                <p className="text-xs text-muted-foreground">Google Analytics, GTM (Head) vb. için uygundur.</p>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-bold flex items-center gap-2">
-                                    BODY Başlangıcı
-                                    <span className="text-xs font-normal text-muted-foreground">(&lt;body&gt; etiketinin hemen sonrasına eklenir)</span>
-                                </label>
+                                <label className="text-sm font-medium">Body Kodları (&lt;body&gt; başlangıcına)</label>
                                 <Textarea
-                                    className="font-mono text-xs min-h-[100px]"
-                                    placeholder="<noscript>...</noscript>"
+                                    placeholder="<!-- GTM Noscript -->"
+                                    className="font-mono text-xs min-h-[150px]"
                                     value={scripts.body}
                                     onChange={(e) => setScripts({ ...scripts, body: e.target.value })}
                                 />
-                                <p className="text-xs text-muted-foreground">GTM (NoScript) vb. için uygundur.</p>
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-bold flex items-center gap-2">
-                                    FOOTER Alanı
-                                    <span className="text-xs font-normal text-muted-foreground">(&lt;/body&gt; etiketinden hemen önceye eklenir)</span>
-                                </label>
+                                <label className="text-sm font-medium">Footer Kodları (&lt;body&gt; sonuna)</label>
                                 <Textarea
-                                    className="font-mono text-xs min-h-[100px]"
-                                    placeholder="<script src='...'></script>"
+                                    placeholder="<!-- Chat Widget -->"
+                                    className="font-mono text-xs min-h-[150px]"
                                     value={scripts.footer}
                                     onChange={(e) => setScripts({ ...scripts, footer: e.target.value })}
                                 />
-                                <p className="text-xs text-muted-foreground">Canlı destek, Chat botları vb. için uygundur.</p>
                             </div>
 
-                            <Button onClick={handleSaveScripts} className="w-full md:w-auto">
-                                <Save className="mr-2 h-4 w-4" /> Değişiklikleri Kaydet
+                            <Button onClick={handleSaveScripts} className="w-full">
+                                <Save className="mr-2 h-4 w-4" /> Tüm Kodları Kaydet
                             </Button>
+                        </CardContent>
+                    </Card>
+                </TabsContent>
+
+                {/* --- NETGSM / SMS SETTINGS TAB (New) --- */}
+                <TabsContent value="sms" className="space-y-4 mt-4">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Netgsm SMS Ayarları</CardTitle>
+                            <CardDescription>
+                                SMS gönderimi için Netgsm API bilgilerinizi girin.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="grid gap-4">
+                                <div className="grid gap-2">
+                                    <label className="text-sm font-medium">Netgsm Kullanıcı Adı (850xxxxxxx)</label>
+                                    <Input
+                                        placeholder="850xxxxxxx"
+                                        value={settings.find(s => s.key === 'NETGSM_USER')?.value || ''}
+                                        onChange={(e) => {
+                                            const newSettings = settings.map(s => s.key === 'NETGSM_USER' ? { ...s, value: e.target.value } : s);
+                                            if (!settings.find(s => s.key === 'NETGSM_USER')) {
+                                                newSettings.push({ key: 'NETGSM_USER', value: e.target.value, category: 'NOTIFICATION', isSecret: false, updatedAt: new Date().toISOString() });
+                                            }
+                                            setSettings(newSettings);
+                                        }}
+                                    />
+                                    <Button size="sm" className="w-fit" onClick={() => handleUpdate({ key: 'NETGSM_USER', value: settings.find(s => s.key === 'NETGSM_USER')?.value, category: 'NOTIFICATION' })}>Kaydet</Button>
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <label className="text-sm font-medium">Netgsm Şifre</label>
+                                    <Input
+                                        type="password"
+                                        placeholder="******"
+                                        value={settings.find(s => s.key === 'NETGSM_PASSWORD')?.value || ''}
+                                        onChange={(e) => {
+                                            const newSettings = settings.map(s => s.key === 'NETGSM_PASSWORD' ? { ...s, value: e.target.value } : s);
+                                            if (!settings.find(s => s.key === 'NETGSM_PASSWORD')) {
+                                                newSettings.push({ key: 'NETGSM_PASSWORD', value: e.target.value, category: 'NOTIFICATION', isSecret: true, updatedAt: new Date().toISOString() });
+                                            }
+                                            setSettings(newSettings);
+                                        }}
+                                    />
+                                    <Button size="sm" className="w-fit" onClick={() => handleUpdate({ key: 'NETGSM_PASSWORD', value: settings.find(s => s.key === 'NETGSM_PASSWORD')?.value, category: 'NOTIFICATION', isSecret: true })}>Kaydet</Button>
+                                </div>
+
+                                <div className="grid gap-2">
+                                    <label className="text-sm font-medium">SMS Başlığı (Header)</label>
+                                    <Input
+                                        placeholder="Örn: BORSA"
+                                        value={settings.find(s => s.key === 'NETGSM_HEADER')?.value || ''}
+                                        onChange={(e) => {
+                                            const newSettings = settings.map(s => s.key === 'NETGSM_HEADER' ? { ...s, value: e.target.value } : s);
+                                            if (!settings.find(s => s.key === 'NETGSM_HEADER')) {
+                                                newSettings.push({ key: 'NETGSM_HEADER', value: e.target.value, category: 'NOTIFICATION', isSecret: false, updatedAt: new Date().toISOString() });
+                                            }
+                                            setSettings(newSettings);
+                                        }}
+                                    />
+                                    <Button size="sm" className="w-fit" onClick={() => handleUpdate({ key: 'NETGSM_HEADER', value: settings.find(s => s.key === 'NETGSM_HEADER')?.value, category: 'NOTIFICATION' })}>Kaydet</Button>
+                                </div>
+                            </div>
                         </CardContent>
                     </Card>
                 </TabsContent>

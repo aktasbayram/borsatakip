@@ -12,7 +12,14 @@ export async function GET() {
 
         const user = await prisma.user.findUnique({
             where: { email: session.user.email },
-            select: { id: true, name: true, email: true }
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                phoneNumber: true,
+                smsCredits: true,
+                subscriptionTier: true
+            }
         });
 
         if (!user) {
@@ -34,12 +41,22 @@ export async function PATCH(req: Request) {
         }
 
         const body = await req.json();
-        const { name } = body;
+        const { name, phoneNumber } = body;
 
         const updatedUser = await prisma.user.update({
             where: { email: session.user.email },
-            data: { name },
-            select: { id: true, name: true, email: true }
+            data: {
+                name,
+                phoneNumber
+            },
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                phoneNumber: true,
+                smsCredits: true,
+                subscriptionTier: true
+            }
         });
 
         return NextResponse.json(updatedUser);

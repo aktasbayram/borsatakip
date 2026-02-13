@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
             allow: '/',
             disallow: ['/admin/', '/api/', '/settings/', '/auth/'],
         },
-        sitemap: 'https://borsatakip.app/sitemap.xml',
+        sitemap: 'https://e-borsa.net/sitemap.xml',
     };
 }
